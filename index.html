@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VoiceIQ — AI Calling Platform</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ═══════════ TOPBAR ═══════════ -->
+  <header class="topbar">
+    <div class="topbar-logo">
+      <div class="logo-mark"><i class="ti ti-phone-call"></i></div>
+      <div>
+        <div class="logo-name">VoiceIQ</div>
+        <div class="logo-tag">AI Calling Platform</div>
+      </div>
+    </div>
+    <div class="topbar-center">
+      <div class="topbar-search">
+        <i class="ti ti-search"></i>
+        <input type="text" placeholder="Search agents, calls, campaigns…" onkeydown="if(event.key==='Enter')doSearch(this.value)">
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <div class="icon-btn notif-dot" id="notif-btn" onclick="toggleNotifPanel()" data-tip="Notifications">
+        <i class="ti ti-bell"></i>
+      </div>
+      <div class="icon-btn" data-tip="Help"><i class="ti ti-help-circle"></i></div>
+      <div class="user-chip">
+        <div class="user-avatar">JM</div>
+        <span class="user-name">James Mitchell</span>
+        <i class="ti ti-chevron-down" style="font-size:12px;color:var(--text3)"></i>
+      </div>
+    </div>
+    <!-- Notification Panel -->
+    <div id="notif-panel" style="display:none;position:absolute;top:58px;right:10px;width:320px;background:var(--bg-card);border:1px solid var(--border2);border-radius:var(--radius-lg);z-index:999;overflow:hidden">
+      <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:13px;font-weight:600">Notifications</span>
+        <span style="font-size:11px;color:var(--accent);cursor:pointer">Mark all read</span>
+      </div>
+      <div class="notif-item unread">
+        <div class="notif-icon" style="background:var(--green-dim)"><i class="ti ti-calendar-check" style="color:var(--green);font-size:15px"></i></div>
+        <div class="notif-text">
+          <div class="notif-msg">Sophia booked a meeting with <strong>Richard Barnes</strong> — 20 May 2pm</div>
+          <div class="notif-time">2 min ago</div>
+        </div>
+      </div>
+      <div class="notif-item unread">
+        <div class="notif-icon" style="background:var(--accent-dim)"><i class="ti ti-phone-incoming" style="color:var(--accent);font-size:15px"></i></div>
+        <div class="notif-text">
+          <div class="notif-msg">Inbound call from <strong>+44 7700 900234</strong> — answered by James</div>
+          <div class="notif-time">8 min ago</div>
+        </div>
+      </div>
+      <div class="notif-item">
+        <div class="notif-icon" style="background:var(--amber-dim)"><i class="ti ti-user-plus" style="color:var(--amber);font-size:15px"></i></div>
+        <div class="notif-text">
+          <div class="notif-msg">Lead escalated to human — <strong>Whitmore Legal Ltd</strong></div>
+          <div class="notif-time">31 min ago</div>
+        </div>
+      </div>
+      <div class="notif-item">
+        <div class="notif-icon" style="background:var(--red-dim)"><i class="ti ti-alert-circle" style="color:var(--red);font-size:15px"></i></div>
+        <div class="notif-text">
+          <div class="notif-msg">Campaign <strong>Q3 Outbound</strong> — daily limit reaching 90%</div>
+          <div class="notif-time">1 hr ago</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══════════ SIDEBAR ═══════════ -->
+  <nav class="sidebar">
+    <div class="nav-section-label">Main</div>
+    <div class="nav-item" data-page="dashboard" onclick="navigate('dashboard')">
+      <i class="ti ti-layout-dashboard"></i><span class="nav-label">Dashboard</span>
+    </div>
+    <div class="nav-item" data-page="agents" onclick="navigate('agents')">
+      <i class="ti ti-robot"></i><span class="nav-label">AI Agents</span><span class="nav-badge green">3</span>
+    </div>
+    <div class="nav-item" data-page="campaigns" onclick="navigate('campaigns')">
+      <i class="ti ti-speakerphone"></i><span class="nav-label">Campaigns</span>
+    </div>
+    <div class="nav-item" data-page="calls" onclick="navigate('calls')">
+      <i class="ti ti-phone"></i><span class="nav-label">Calls</span><span class="nav-badge">2</span>
+    </div>
+    <div class="nav-section-label">Tools</div>
+    <div class="nav-item" data-page="calendar" onclick="navigate('calendar')">
+      <i class="ti ti-calendar"></i><span class="nav-label">Calendar</span>
+    </div>
+    <div class="nav-item" data-page="prompt" onclick="navigate('prompt')">
+      <i class="ti ti-code"></i><span class="nav-label">Prompt Builder</span>
+    </div>
+    <div class="nav-item" data-page="crm" onclick="navigate('crm')">
+      <i class="ti ti-users"></i><span class="nav-label">CRM / Leads</span>
+    </div>
+    <div class="nav-item" data-page="analytics" onclick="navigate('analytics')">
+      <i class="ti ti-chart-bar"></i><span class="nav-label">Analytics</span>
+    </div>
+    <div class="nav-section-label">System</div>
+    <div class="nav-item" data-page="teams" onclick="navigate('teams')">
+      <i class="ti ti-brand-teams"></i><span class="nav-label">Microsoft Teams</span><span class="nav-badge blue">New</span>
+    </div>
+    <div class="nav-item" data-page="integrations" onclick="navigate('integrations')">
+      <i class="ti ti-plug"></i><span class="nav-label">Integrations</span>
+    </div>
+    <div class="nav-item" data-page="settings" onclick="navigate('settings')">
+      <i class="ti ti-settings"></i><span class="nav-label">Settings</span>
+    </div>
+    <div class="sidebar-footer">
+      <div class="agent-live-card">
+        <div class="live-pulse"></div>
+        <div class="agent-live-info">
+          <div class="agent-live-name">Sophia — Active</div>
+          <div class="agent-live-sub" id="agent-live-sub">2 live calls active</div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ═══════════ MAIN ═══════════ -->
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <div class="page-title" id="page-title">Dashboard</div>
+        <div class="page-sub" id="page-sub"></div>
+      </div>
+      <div class="page-actions" id="page-actions-slot"></div>
+    </div>
+
+    <!-- ══════════════════════════ DASHBOARD ══════════════════════════ -->
+    <div class="content">
+    <section class="page-section active" id="page-dashboard">
+
+      <div class="grid-4 mb-4">
+        <div class="metric-card blue">
+          <div class="metric-icon blue"><i class="ti ti-phone-outgoing"></i></div>
+          <div class="metric-label">Calls Today</div>
+          <div class="metric-value">247</div>
+          <div class="metric-trend up"><i class="ti ti-trending-up" style="font-size:13px"></i> +18% vs yesterday</div>
+        </div>
+        <div class="metric-card green">
+          <div class="metric-icon green"><i class="ti ti-calendar-check"></i></div>
+          <div class="metric-label">Bookings</div>
+          <div class="metric-value">31</div>
+          <div class="metric-trend up"><i class="ti ti-trending-up" style="font-size:13px"></i> +6 this morning</div>
+        </div>
+        <div class="metric-card purple">
+          <div class="metric-icon purple"><i class="ti ti-percentage"></i></div>
+          <div class="metric-label">Answer Rate</div>
+          <div class="metric-value">68%</div>
+          <div class="metric-trend up"><i class="ti ti-trending-up" style="font-size:13px"></i> +4% this week</div>
+        </div>
+        <div class="metric-card amber">
+          <div class="metric-icon amber"><i class="ti ti-target"></i></div>
+          <div class="metric-label">Conversion</div>
+          <div class="metric-value">12.6%</div>
+          <div class="metric-trend down"><i class="ti ti-trending-down" style="font-size:13px"></i> –0.8% vs avg</div>
+        </div>
+      </div>
+
+      <div class="grid-main mb-4">
+        <!-- Live Calls -->
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">Live Calls</div><div class="card-sub">2 active now</div></div>
+            <div class="flex items-center gap-2">
+              <div class="waveform"><div class="wave-b"></div><div class="wave-b"></div><div class="wave-b"></div><div class="wave-b"></div><div class="wave-b"></div></div>
+              <button class="btn btn-ghost btn-sm" onclick="navigate('calls')"><i class="ti ti-eye"></i> Monitor</button>
+            </div>
+          </div>
+          <table class="data-table">
+            <thead><tr><th>Caller</th><th>Number</th><th>Campaign</th><th>Duration</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><div class="flex items-center gap-2"><div class="avatar" style="width:28px;height:28px;background:var(--accent-dim);color:var(--accent)">RB</div><span class="bold">Richard Barnes</span></div></td>
+                <td class="font-mono">+44 7700 900142</td>
+                <td>Q3 Sales Follow-up</td>
+                <td class="font-mono live-timer bold" data-base="263">04:23</td>
+                <td><span class="badge live">Live</span></td>
+              </tr>
+              <tr>
+                <td><div class="flex items-center gap-2"><div class="avatar" style="width:28px;height:28px;background:var(--purple-dim);color:var(--purple)">SE</div><span class="bold">Sarah Ellis</span></div></td>
+                <td class="font-mono">+44 20 7946 0193</td>
+                <td>Demo Booking</td>
+                <td class="font-mono live-timer bold" data-base="107">01:47</td>
+                <td><span class="badge live">Live</span></td>
+              </tr>
+              <tr>
+                <td><div class="flex items-center gap-2"><div class="avatar" style="width:28px;height:28px;background:var(--green-dim);color:var(--green)">MP</div><span class="bold">Marcus Patel</span></div></td>
+                <td class="font-mono">+44 7911 123456</td>
+                <td>Appointment Booking</td>
+                <td class="font-mono bold">11:02</td>
+                <td><span class="badge booked">Booked</span></td>
+              </tr>
+              <tr>
+                <td><div class="flex items-center gap-2"><div class="avatar" style="width:28px;height:28px;background:var(--amber-dim);color:var(--amber)">CW</div><span class="bold">Claire Watson</span></div></td>
+                <td class="font-mono">+44 1632 960321</td>
+                <td>Renewal Follow-up</td>
+                <td class="font-mono bold">09:55</td>
+                <td><span class="badge pending">Follow-up</span></td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="padding:14px 18px;border-top:1px solid var(--border)">
+            <div class="card-sub mb-4" style="margin-bottom:10px">Weekly call volume</div>
+            <div class="bar-chart" id="call-chart"></div>
+          </div>
+        </div>
+
+        <!-- Right col -->
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <!-- Agents -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">AI Agents</div>
+              <button class="btn btn-ghost btn-sm" onclick="navigate('agents')"><i class="ti ti-arrow-right"></i></button>
+            </div>
+            <div style="padding:8px 0">
+              <div style="display:flex;align-items:center;gap:10px;padding:9px 18px;border-bottom:1px solid var(--border)">
+                <div style="width:34px;height:34px;background:var(--accent-dim);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px">🎙</div>
+                <div style="flex:1"><div style="font-size:12px;font-weight:500;color:var(--text1)">Sophia</div><div style="font-size:10px;color:var(--text3)">Southern British · Female</div></div>
+                <div class="status-dot on"></div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;padding:9px 18px;border-bottom:1px solid var(--border)">
+                <div style="width:34px;height:34px;background:var(--purple-dim);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px">🎙</div>
+                <div style="flex:1"><div style="font-size:12px;font-weight:500;color:var(--text1)">James</div><div style="font-size:10px;color:var(--text3)">Neutral UK Business · Male</div></div>
+                <div class="status-dot busy"></div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;padding:9px 18px">
+                <div style="width:34px;height:34px;background:var(--green-dim);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px">🎙</div>
+                <div style="flex:1"><div style="font-size:12px;font-weight:500;color:var(--text1)">Charlotte</div><div style="font-size:10px;color:var(--text3)">Friendly Conversational · Female</div></div>
+                <div class="status-dot on"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Campaigns summary -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Active Campaigns</div>
+              <div class="card-sub">3 running</div>
+            </div>
+            <div style="padding:6px 0">
+              <div style="padding:10px 18px;border-bottom:1px solid var(--border)">
+                <div class="flex justify-between items-center mb-4" style="margin-bottom:6px">
+                  <span style="font-size:12px;font-weight:500;color:var(--text1)">Q3 Outbound Sales</span>
+                  <span style="font-size:11px;font-weight:600;color:var(--accent)">74%</span>
+                </div>
+                <div class="prog-bar"><div class="prog-fill" style="width:74%;background:var(--accent)"></div></div>
+                <div style="font-size:10px;color:var(--text3);margin-top:5px">482 / 650 leads · 31 booked</div>
+              </div>
+              <div style="padding:10px 18px;border-bottom:1px solid var(--border)">
+                <div class="flex justify-between items-center" style="margin-bottom:6px">
+                  <span style="font-size:12px;font-weight:500;color:var(--text1)">Product Demo Outreach</span>
+                  <span style="font-size:11px;font-weight:600;color:var(--purple)">41%</span>
+                </div>
+                <div class="prog-bar"><div class="prog-fill" style="width:41%;background:var(--purple)"></div></div>
+                <div style="font-size:10px;color:var(--text3);margin-top:5px">205 / 500 leads · 18 booked</div>
+              </div>
+              <div style="padding:10px 18px">
+                <div class="flex justify-between items-center" style="margin-bottom:6px">
+                  <span style="font-size:12px;font-weight:500;color:var(--text1)">Renewal Follow-ups</span>
+                  <span style="font-size:11px;font-weight:600;color:var(--green)">90%</span>
+                </div>
+                <div class="prog-bar"><div class="prog-fill" style="width:90%;background:var(--green)"></div></div>
+                <div style="font-size:10px;color:var(--text3);margin-top:5px">270 / 300 leads · 44 closed</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Activity -->
+      <div class="card">
+        <div class="card-header"><div class="card-title">Recent AI Activity</div><div class="card-sub">Last 2 hours</div></div>
+        <table class="data-table">
+          <thead><tr><th>Event</th><th>Agent</th><th>Lead</th><th>Outcome</th><th>Score</th><th>Time</th></tr></thead>
+          <tbody>
+            <tr><td><span class="badge active">Meeting booked</span></td><td>Sophia</td><td class="bold">Richard Barnes</td><td>20 May 2:00pm — Google Cal invite sent</td><td style="color:var(--green);font-weight:600">4.9</td><td class="text-dim">2 min</td></tr>
+            <tr><td><span class="badge booked">Objection handled</span></td><td>James</td><td class="bold">Claire Watson</td><td>Pricing concern resolved — follow-up set</td><td style="color:var(--green);font-weight:600">4.8</td><td class="text-dim">14 min</td></tr>
+            <tr><td><span class="badge pending">Escalated</span></td><td>Charlotte</td><td class="bold">Whitmore Legal</td><td>Transferred to human — complex legal query</td><td style="color:var(--amber);font-weight:600">3.4</td><td class="text-dim">31 min</td></tr>
+            <tr><td><span class="badge" style="background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)">No answer</span></td><td>Sophia</td><td class="bold">Nexford Group</td><td>Added to follow-up queue · SMS sent</td><td style="color:var(--text3);font-weight:600">—</td><td class="text-dim">48 min</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════ AI AGENTS ══════════════════════════ -->
+    <section class="page-section" id="page-agents">
+      <div class="grid-3 mb-4">
+        <!-- Agent Card 1 -->
+        <div class="card">
+          <div class="card-header">
+            <div class="flex items-center gap-2">
+              <div style="width:38px;height:38px;background:var(--accent-dim);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px">🎙</div>
+              <div><div class="card-title">Sophia</div><div class="card-sub">Southern British · Female</div></div>
+            </div>
+            <div class="flex items-center gap-2"><div class="status-dot on"></div><span style="font-size:11px;color:var(--green)">Active</span></div>
+          </div>
+          <div class="card-body">
+            <div class="flex justify-between mb-4" style="margin-bottom:12px">
+              <div style="text-align:center"><div style="font-size:18px;font-weight:700;color:var(--text1)">156</div><div style="font-size:10px;color:var(--text3)">Calls today</div></div>
+              <div style="text-align:center"><div style="font-size:18px;font-weight:700;color:var(--green)">19</div><div style="font-size:10px;color:var(--text3)">Bookings</div></div>
+              <div style="text-align:center"><div style="font-size:18px;font-weight:700;color:var(--text1)">72%</div><div style="font-size:10px;color:var(--text3)">Answer rate</div></div>
+              <div style="text-align:center"><div style="font-size:18px;font-weight:700;color:var(--purple)">4.9</div><div style="font-size:10px;color:var(--text3)">Avg score</div></div>
+            </div>
+            <div style="margin-bottom:10px">
+              <div style="font-size:10px;color:var(--text3);margin-bottom:5px">Sentiment — last 50 calls</div>
+              <div class="sentiment-bar">
+                <div class="sent-pos" data-pct="72" style="width:0%;transition:width .8s ease"></div>
+                <div class="sent-neu" style="width:20%"></div>
+                <div class="sent-neg" style="width:8%"></div>
+              </div>
+              <div class="flex gap-3 mt-4" style="margin-top:6px">
+                <span style="font-size:10px;color:var(--green)">● Positive 72%</span>
+                <span style="font-size:10px;color:var(--amber)">● Neutral 20%</span>
+                <span style="font-size:10px;color:var(--red)">● Negative 8%</span>
+              </div>
+            </div>
+            <div class="flex gap-2" style="margin-top:14px">
+              <button class="btn btn-ghost btn-sm w-full"><i class="ti ti-settings"></i> Configure</button>
+              <button class="btn btn-danger btn-sm"><i class="ti ti-player-pause"></i> Pause</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Agent Card 2 -->
+        <div class="card">
+          <div class="card-header">
+            <div class="flex items-center gap-2">
+              <div style="width:38px;height:38px;background:var(--purple-dim);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px">🎙</div>
+              <div><div class="card-title">James</div><div class="card-sub">Neutral UK Business · Male</div></div>
+            </div>
+            <div class="flex items-center gap-2"><div class="status-dot busy"></div><span style="font-size:11px;color:var(--amber)">On call</span></div>
+          </div>
+          <div class="card-body">
+            <div class="flex justify-between mb-4" style="margin-bottom:12px">
+              <div style="text-align:center"><div style="font-size:18px;font-weight:700;color:var(--text1)">91</div><div style="font-size:10px;color:var(--text3)">Calls today</div></div>
+              <div style="text-align:center"><div style="font-size:18px;font-weight:700;color:var(--green)">12</div><div style="font-size:10px;color:var(--text3)">Bookings</div></div>
+              <div style="text-align:center"><div style="font-size:18px;font-weight:700;color:var(--text1)">65%</div><div style="font-size:10px;color:var(--text3)">Answer rate</div></div>
+              <div style="text-align:center"><div style="font-size:18px;font-weight:700;color:var(--purple)">4.7</div><div style="font-size:10px;color:var(--text3)">Avg score</div></div>
+            </div>
+            <div style="margin-bottom:10px">
+              <div style="font-size:10px;color:var(--text3);margin-bottom:5px">Sentiment — last 50 calls</div>
+              <div class="sentiment-bar">
+                <div class="sent-pos" data-pct="65" style="width:0%;transition:width .8s ease"></div>
+                <div class="sent-neu" style="width:25%"></div>
+                <div class="sent-neg" style="width:10%"></div>
+              </div>
+              <div class="flex gap-3 mt-4" style="margin-top:6px">
+                <span style="font-size:10px;color:var(--green)">● Positive 65%</span>
+                <span style="font-size:10px;color:var(--amber)">● Neutral 25%</span>
+                <span style="font-size:10px;color:var(--red)">● Negative 10%</span>
+              </div>
+            </div>
+            <div class="flex gap-2" style="margin-top:14px">
+              <button class="btn btn-ghost btn-sm w-full"><i class="ti ti-settings"></i> Configure</button>
+              <button class="btn btn-danger btn-sm"><i class="ti ti-player-pause"></i> Pause</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- New Agent Card -->
+        <div class="card" style="border-style:dashed;cursor:pointer;display:flex;align-items:center;justify-content:center;min-height:280px" onclick="openModal('new-agent')">
+          <div style="text-align:center;color:var(--text3)">
+            <i class="ti ti-plus" style="font-size:32px;display:block;margin-bottom:10px"></i>
+            <div style="font-size:13px;font-weight:500;color:var(--text2)">Create New Agent</div>
+            <div style="font-size:11px;margin-top:4px">Choose voice, accent & personality</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phone Number Settings -->
+      <div class="card">
+        <div class="card-header"><div class="card-title">Calling Numbers</div><div class="card-sub">Numbers your agents call from</div></div>
+        <div class="card-body">
+          <div class="grid-2">
+            <div style="background:var(--bg-card2);border:1px solid var(--border);border-radius:var(--radius);padding:16px">
+              <div class="flex items-center gap-2 mb-4" style="margin-bottom:12px">
+                <div style="width:36px;height:36px;background:var(--green-dim);border-radius:9px;display:flex;align-items:center;justify-content:center"><i class="ti ti-device-sim" style="color:var(--green);font-size:18px"></i></div>
+                <div><div style="font-size:13px;font-weight:600;color:var(--text1)">UK Mobile Number</div><div style="font-size:10px;color:var(--text3)">Your own number via SIP</div></div>
+                <span class="badge mobile" style="margin-left:auto">Connected</span>
+              </div>
+              <div style="font-size:22px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--text1);margin-bottom:10px">+44 7700 900142</div>
+              <div style="font-size:11px;color:var(--text3);margin-bottom:14px">SIP Provider: Vonage UK · Outbound + Inbound enabled</div>
+              <div class="flex gap-2">
+                <button class="btn btn-ghost btn-sm"><i class="ti ti-settings"></i> SIP Config</button>
+                <button class="btn btn-ghost btn-sm"><i class="ti ti-edit"></i> Change</button>
+              </div>
+            </div>
+            <div style="background:var(--bg-card2);border:1px solid rgba(85,88,175,.3);border-radius:var(--radius);padding:16px">
+              <div class="flex items-center gap-2 mb-4" style="margin-bottom:12px">
+                <div style="width:36px;height:36px;background:var(--teams-dim);border-radius:9px;display:flex;align-items:center;justify-content:center"><i class="ti ti-brand-teams" style="color:#8B8FD4;font-size:18px"></i></div>
+                <div><div style="font-size:13px;font-weight:600;color:var(--text1)">Microsoft Teams</div><div style="font-size:10px;color:var(--text3)">Phone System integration</div></div>
+                <span class="badge teams" style="margin-left:auto">Connected</span>
+              </div>
+              <div style="font-size:22px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--text1);margin-bottom:10px">+44 20 7946 0300</div>
+              <div style="font-size:11px;color:var(--text3);margin-bottom:14px">Teams Phone System · 3 lines assigned · Inbound + Outbound</div>
+              <div class="flex gap-2">
+                <button class="btn btn-teams btn-sm" onclick="navigate('teams')"><i class="ti ti-brand-teams"></i> Manage Teams</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════ CAMPAIGNS ══════════════════════════ -->
+    <section class="page-section" id="page-campaigns">
+      <div class="grid-4 mb-4">
+        <div class="metric-card blue"><div class="metric-icon blue"><i class="ti ti-speakerphone"></i></div><div class="metric-label">Active Campaigns</div><div class="metric-value">3</div><div class="metric-trend neutral">2 outbound · 1 inbound</div></div>
+        <div class="metric-card green"><div class="metric-icon green"><i class="ti ti-users"></i></div><div class="metric-label">Total Leads</div><div class="metric-value">1,450</div><div class="metric-trend up"><i class="ti ti-trending-up" style="font-size:13px"></i> 957 reached</div></div>
+        <div class="metric-card purple"><div class="metric-icon purple"><i class="ti ti-calendar-check"></i></div><div class="metric-label">Appointments</div><div class="metric-value">93</div><div class="metric-trend up"><i class="ti ti-trending-up" style="font-size:13px"></i> this month</div></div>
+        <div class="metric-card amber"><div class="metric-icon amber"><i class="ti ti-coin"></i></div><div class="metric-label">Est. Pipeline</div><div class="metric-value">£84k</div><div class="metric-trend up"><i class="ti ti-trending-up" style="font-size:13px"></i> from AI calls</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">All Campaigns</div>
+          <div class="tabs">
+            <div class="tab active" onclick="switchTab('camp','all')" data-tabgroup="camp" data-tab="all">All</div>
+            <div class="tab" onclick="switchTab('camp','active')" data-tabgroup="camp" data-tab="active">Active</div>
+            <div class="tab" onclick="switchTab('camp','draft')" data-tabgroup="camp" data-tab="draft">Draft</div>
+          </div>
+        </div>
+        <table class="data-table">
+          <thead><tr><th>Campaign</th><th>Agent</th><th>Leads</th><th>Progress</th><th>Booked</th><th>Conv. Rate</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            <tr>
+              <td class="bold">Q3 Outbound Sales</td>
+              <td>Sophia</td>
+              <td>650</td>
+              <td><div style="display:flex;align-items:center;gap:8px"><div class="prog-bar" style="flex:1;width:80px"><div class="prog-fill" style="width:74%;background:var(--accent)"></div></div><span style="font-size:11px;color:var(--accent)">74%</span></div></td>
+              <td style="color:var(--green);font-weight:600">31</td>
+              <td>13.2%</td>
+              <td><span class="badge active">Active</span></td>
+              <td><button class="btn btn-ghost btn-sm"><i class="ti ti-dots"></i></button></td>
+            </tr>
+            <tr>
+              <td class="bold">Product Demo Outreach</td>
+              <td>James</td>
+              <td>500</td>
+              <td><div style="display:flex;align-items:center;gap:8px"><div class="prog-bar" style="flex:1;width:80px"><div class="prog-fill" style="width:41%;background:var(--purple)"></div></div><span style="font-size:11px;color:var(--purple)">41%</span></div></td>
+              <td style="color:var(--green);font-weight:600">18</td>
+              <td>8.8%</td>
+              <td><span class="badge active">Active</span></td>
+              <td><button class="btn btn-ghost btn-sm"><i class="ti ti-dots"></i></button></td>
+            </tr>
+            <tr>
+              <td class="bold">Renewal Follow-ups</td>
+              <td>Charlotte</td>
+              <td>300</td>
+              <td><div style="display:flex;align-items:center;gap:8px"><div class="prog-bar" style="flex:1;width:80px"><div class="prog-fill" style="width:90%;background:var(--green)"></div></div><span style="font-size:11px;color:var(--green)">90%</span></div></td>
+              <td style="color:var(--green);font-weight:600">44</td>
+              <td>16.3%</td>
+              <td><span class="badge active">Active</span></td>
+              <td><button class="btn btn-ghost btn-sm"><i class="ti ti-dots"></i></button></td>
+            </tr>
+            <tr>
+              <td class="bold">Winter Promotion</td>
+              <td>—</td>
+              <td>800</td>
+              <td><div style="display:flex;align-items:center;gap:8px"><div class="prog-bar" style="flex:1;width:80px"><div class="prog-fill" style="width:0%;background:var(--text3)"></div></div><span style="font-size:11px;color:var(--text3)">Draft</span></div></td>
+              <td style="color:var(--text3)">—</td>
+              <td>—</td>
+              <td><span class="badge paused">Draft</span></td>
+              <td><button class="btn btn-ghost btn-sm"><i class="ti ti-dots"></i></button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════ CALLS ══════════════════════════ -->
+    <section class="page-section" id="page-calls">
+      <div class="grid-4 mb-4">
+        <div class="metric-card blue"><div class="metric-icon blue"><i class="ti ti-phone-outgoing"></i></div><div class="metric-label">Outbound Today</div><div class="metric-value">219</div><div class="metric-trend neutral">Via 2 channels</div></div>
+        <div class="metric-card green"><div class="metric-icon green"><i class="ti ti-phone-incoming"></i></div><div class="metric-label">Inbound Today</div><div class="metric-value">28</div><div class="metric-trend up"><i class="ti ti-trending-up" style="font-size:13px"></i> +6 vs avg</div></div>
+        <div class="metric-card amber"><div class="metric-icon amber"><i class="ti ti-clock"></i></div><div class="metric-label">Avg Duration</div><div class="metric-value">4:32</div><div class="metric-trend neutral">mins per call</div></div>
+        <div class="metric-card red"><div class="metric-icon red"><i class="ti ti-phone-off"></i></div><div class="metric-label">No Answer</div><div class="metric-value">79</div><div class="metric-trend neutral">SMS sent to all</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Call Log</div>
+          <div class="flex gap-2">
+            <div class="tabs">
+              <div class="tab active">All</div>
+              <div class="tab">Live</div>
+              <div class="tab">Outbound</div>
+              <div class="tab">Inbound</div>
+            </div>
+            <button class="btn btn-ghost btn-sm"><i class="ti ti-filter"></i> Filter</button>
+          </div>
+        </div>
+        <table class="data-table">
+          <thead><tr><th>Contact</th><th>Number</th><th>Channel</th><th>Direction</th><th>Duration</th><th>Outcome</th><th>AI Score</th><th>Actions</th></tr></thead>
+          <tbody>
+            <tr><td class="bold">Richard Barnes</td><td class="font-mono">+44 7700 900142</td><td><span class="badge mobile">Mobile</span></td><td><i class="ti ti-phone-outgoing" style="color:var(--accent)"></i> Out</td><td class="font-mono">04:23</td><td><span class="badge active">Booked</span></td><td style="color:var(--green);font-weight:600">4.9</td><td><button class="btn btn-ghost btn-sm"><i class="ti ti-player-play"></i></button></td></tr>
+            <tr><td class="bold">Sarah Ellis</td><td class="font-mono">+44 20 7946 0193</td><td><span class="badge teams">Teams</span></td><td><i class="ti ti-phone-outgoing" style="color:var(--accent)"></i> Out</td><td class="font-mono">01:47</td><td><span class="badge live">Live</span></td><td style="color:var(--text3);font-weight:600">—</td><td><button class="btn btn-ghost btn-sm"><i class="ti ti-eye"></i></button></td></tr>
+            <tr><td class="bold">Marcus Patel</td><td class="font-mono">+44 7911 123456</td><td><span class="badge mobile">Mobile</span></td><td><i class="ti ti-phone-outgoing" style="color:var(--accent)"></i> Out</td><td class="font-mono">11:02</td><td><span class="badge booked">Qualified</span></td><td style="color:var(--green);font-weight:600">4.7</td><td><button class="btn btn-ghost btn-sm"><i class="ti ti-player-play"></i></button></td></tr>
+            <tr><td class="bold">Whitmore Legal</td><td class="font-mono">+44 1632 960100</td><td><span class="badge teams">Teams</span></td><td><i class="ti ti-phone-incoming" style="color:var(--green)"></i> In</td><td class="font-mono">08:14</td><td><span class="badge pending">Escalated</span></td><td style="color:var(--amber);font-weight:600">3.4</td><td><button class="btn btn-ghost btn-sm"><i class="ti ti-player-play"></i></button></td></tr>
+            <tr><td class="bold">Nexford Group</td><td class="font-mono">+44 1632 960321</td><td><span class="badge mobile">Mobile</span></td><td><i class="ti ti-phone-outgoing" style="color:var(--accent)"></i> Out</td><td class="font-mono">00:00</td><td><span class="badge" style="background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)">No answer</span></td><td style="color:var(--text3)">—</td><td><button class="btn btn-ghost btn-sm"><i class="ti ti-refresh"></i></button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════ CALENDAR ══════════════════════════ -->
+    <section class="page-section" id="page-calendar">
+      <div class="grid-main mb-4">
+        <div class="card">
+          <div class="card-header">
+            <div class="flex items-center gap-2">
+              <button class="btn btn-ghost btn-sm"><i class="ti ti-chevron-left"></i></button>
+              <span style="font-size:14px;font-weight:600">May 2026</span>
+              <button class="btn btn-ghost btn-sm"><i class="ti ti-chevron-right"></i></button>
+            </div>
+            <div class="flex gap-2">
+              <span class="badge active" style="font-size:10px">Google Cal synced</span>
+              <span class="badge teams" style="font-size:10px">Teams synced</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="cal-grid" style="margin-bottom:8px">
+              <div style="font-size:10px;color:var(--text3);text-align:center;padding:4px">Mo</div>
+              <div style="font-size:10px;color:var(--text3);text-align:center;padding:4px">Tu</div>
+              <div style="font-size:10px;color:var(--text3);text-align:center;padding:4px">We</div>
+              <div style="font-size:10px;color:var(--text3);text-align:center;padding:4px">Th</div>
+              <div style="font-size:10px;color:var(--text3);text-align:center;padding:4px">Fr</div>
+              <div style="font-size:10px;color:var(--text3);text-align:center;padding:4px">Sa</div>
+              <div style="font-size:10px;color:var(--text3);text-align:center;padding:4px">Su</div>
+            </div>
+            <div class="cal-grid">
+              <div class="cal-day other-month">28</div><div class="cal-day other-month">29</div><div class="cal-day other-month">30</div><div class="cal-day other-month">1</div><div class="cal-day has-event">2</div><div class="cal-day">3</div><div class="cal-day">4</div>
+              <div class="cal-day has-event">5</div><div class="cal-day has-event">6</div><div class="cal-day">7</div><div class="cal-day booked">8</div><div class="cal-day has-event">9</div><div class="cal-day">10</div><div class="cal-day">11</div>
+              <div class="cal-day booked">12</div><div class="cal-day has-event">13</div><div class="cal-day booked">14</div><div class="cal-day today">15</div><div class="cal-day has-event">16</div><div class="cal-day">17</div><div class="cal-day">18</div>
+              <div class="cal-day has-event">19</div><div class="cal-day booked">20</div><div class="cal-day has-event">21</div><div class="cal-day booked">22</div><div class="cal-day has-event">23</div><div class="cal-day">24</div><div class="cal-day">25</div>
+              <div class="cal-day">26</div><div class="cal-day booked">27</div><div class="cal-day">28</div><div class="cal-day">29</div><div class="cal-day">30</div><div class="cal-day">31</div><div class="cal-day other-month">1</div>
+            </div>
+            <div class="flex gap-2 mt-4" style="margin-top:16px">
+              <span style="font-size:11px;color:var(--text3)"><span style="display:inline-block;width:8px;height:8px;background:var(--accent-dim);border-radius:2px;margin-right:4px"></span>Event</span>
+              <span style="font-size:11px;color:var(--text3)"><span style="display:inline-block;width:8px;height:8px;background:var(--green-dim);border-radius:2px;margin-right:4px"></span>AI Booking</span>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Today's Bookings</div><div class="card-sub">15 May 2026</div></div>
+          <div style="padding:6px 0">
+            <div style="padding:12px 18px;border-bottom:1px solid var(--border)">
+              <div class="flex justify-between items-center mb-4" style="margin-bottom:6px">
+                <span style="font-size:12px;font-weight:600;color:var(--text1)">Richard Barnes · Discovery Call</span>
+                <span class="badge booked">2:00pm</span>
+              </div>
+              <div style="font-size:11px;color:var(--text3);line-height:1.6">Booked by Sophia · Google Meet link attached<br>Priority: High · Tag: Enterprise</div>
+            </div>
+            <div style="padding:12px 18px;border-bottom:1px solid var(--border)">
+              <div class="flex justify-between items-center" style="margin-bottom:6px">
+                <span style="font-size:12px;font-weight:600;color:var(--text1)">Marcus Patel · Demo Session</span>
+                <span class="badge booked">3:30pm</span>
+              </div>
+              <div style="font-size:11px;color:var(--text3);line-height:1.6">Booked by Charlotte · Teams meeting link<br>Priority: Medium · Tag: SME</div>
+            </div>
+            <div style="padding:12px 18px">
+              <div class="flex justify-between items-center" style="margin-bottom:6px">
+                <span style="font-size:12px;font-weight:600;color:var(--text1)">Claire Watson · Follow-up</span>
+                <span class="badge pending">4:45pm</span>
+              </div>
+              <div style="font-size:11px;color:var(--text3);line-height:1.6">Booked by James · Pending confirmation<br>Priority: Low · Tag: Renewal</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════ PROMPT BUILDER ══════════════════════════ -->
+    <section class="page-section" id="page-prompt">
+      <div class="prompt-builder">
+        <div>
+          <div class="card mb-4" style="margin-bottom:14px">
+            <div class="card-header">
+              <div class="flex items-center gap-2">
+                <select class="form-select" style="width:220px">
+                  <option>Q3 Outbound Sales Script</option>
+                  <option>Product Demo Script</option>
+                  <option>Renewal Follow-up Script</option>
+                  <option>Inbound Greeting Script</option>
+                </select>
+              </div>
+              <div class="flex gap-2">
+                <button class="btn btn-ghost btn-sm"><i class="ti ti-eye"></i> Preview</button>
+                <button class="btn btn-ghost btn-sm"><i class="ti ti-player-play"></i> Test Call</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="form-group">
+                <label class="form-label">Opening Greeting</label>
+                <textarea class="prompt-editor" id="prompt-ta" rows="5">Hello, am I speaking with {{first_name}}? Brilliant — my name is {{agent_name}}, I'm calling on behalf of {{company_name}}. I hope I've caught you at a good time? 
+
+I'm reaching out because {{call_reason}}. Based on what I know about {{prospect_company}}, I think there's a real opportunity here for you.
+
+Do you have just two or three minutes to hear a little more?</textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Objection Handling — "Not interested"</label>
+                <textarea class="form-textarea" rows="3">I completely understand, {{first_name}} — I wouldn't want to take up your time if it's not relevant. Can I just ask, is that because the timing isn't right, or is it more about {{objection_reason}}? I ask only because many of our clients felt the same before they saw the actual numbers…</textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Booking Transition</label>
+                <textarea class="form-textarea" rows="3">That's great to hear! What tends to work best for people is a quick 20-minute call — no slides, no pitch, just an honest conversation. I can see {{available_slot_1}} or {{available_slot_2}} are free in the diary. Which works better for you?</textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div class="card">
+            <div class="card-header"><div class="card-title">Dynamic Variables</div></div>
+            <div class="card-body">
+              <div style="display:flex;flex-wrap:wrap;gap:6px">
+                <span class="prompt-var-tag" onclick="insertVar('first_name')">{{first_name}}</span>
+                <span class="prompt-var-tag" onclick="insertVar('last_name')">{{last_name}}</span>
+                <span class="prompt-var-tag" onclick="insertVar('company_name')">{{company_name}}</span>
+                <span class="prompt-var-tag" onclick="insertVar('agent_name')">{{agent_name}}</span>
+                <span class="prompt-var-tag" onclick="insertVar('prospect_company')">{{prospect_company}}</span>
+                <span class="prompt-var-tag" onclick="insertVar('call_reason')">{{call_reason}}</span>
+                <span class="prompt-var-tag" onclick="insertVar('available_slot_1')">{{available_slot_1}}</span>
+                <span class="prompt-var-tag" onclick="insertVar('available_slot_2')">{{available_slot_2}}</span>
+                <span class="prompt-var-tag" onclick="insertVar('objection_reason')">{{objection_reason}}</span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">AI Behaviour</div></div>
+            <div class="card-body" style="display:flex;flex-direction:column;gap:12px">
+              <div class="toggle-wrap"><div class="toggle on" onclick="toggleSwitch(this)"></div><span style="font-size:12px;color:var(--text2)">Handle interruptions naturally</span></div>
+              <div class="toggle-wrap"><div class="toggle on" onclick="toggleSwitch(this)"></div><span style="font-size:12px;color:var(--text2)">Use conversational fillers</span></div>
+              <div class="toggle-wrap"><div class="toggle on" onclick="toggleSwitch(this)"></div><span style="font-size:12px;color:var(--text2)">Auto-detect tone & mirror it</span></div>
+              <div class="toggle-wrap"><div class="toggle on" onclick="toggleSwitch(this)"></div><span style="font-size:12px;color:var(--text2)">Smart objection detection</span></div>
+              <div class="toggle-wrap"><div class="toggle" onclick="toggleSwitch(this)"></div><span style="font-size:12px;color:var(--text2)">Escalate after 2 objections</span></div>
+              <div class="toggle-wrap"><div class="toggle on" onclick="toggleSwitch(this)"></div><span style="font-size:12px;color:var(--text2)">Auto-book on verbal yes</span></div>
+              <div class="toggle-wrap"><div class="toggle on" onclick="toggleSwitch(this)"></div><span style="font-size:12px;color:var(--text2)">GDPR consent recording</span></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Tone & Compliance</div></div>
+            <div class="card-body">
+              <div class="form-group">
+                <label class="form-label">Emotional Tone</label>
+                <select class="form-select"><option>Professional & Warm</option><option>Confident & Direct</option><option>Friendly & Casual</option><option>Formal & Measured</option></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Compliance Rules</label>
+                <select class="form-select"><option>UK — OFCOM + GDPR</option><option>FCA Regulated</option><option>Custom Rules</option></select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════ CRM ══════════════════════════ -->
+    <section class="page-section" id="page-crm">
+      <div class="grid-4 mb-4">
+        <div class="metric-card blue"><div class="metric-icon blue"><i class="ti ti-users"></i></div><div class="metric-label">Total Leads</div><div class="metric-value">2,847</div><div class="metric-trend up"><i class="ti ti-trending-up" style="font-size:13px"></i> +142 this week</div></div>
+        <div class="metric-card green"><div class="metric-icon green"><i class="ti ti-circle-check"></i></div><div class="metric-label">Qualified</div><div class="metric-value">634</div><div class="metric-trend neutral">22% of total</div></div>
+        <div class="metric-card amber"><div class="metric-icon amber"><i class="ti ti-clock"></i></div><div class="metric-label">Follow-ups Due</div><div class="metric-value">47</div><div class="metric-trend down">Today's queue</div></div>
+        <div class="metric-card red"><div class="metric-icon red"><i class="ti ti-x"></i></div><div class="metric-label">Not Reached</div><div class="metric-value">312</div><div class="metric-trend neutral">SMS sent to all</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Lead Pipeline</div>
+          <div class="flex gap-2">
+            <input type="text" class="form-input" placeholder="Search leads…" style="width:200px;padding:6px 10px">
+            <button class="btn btn-ghost btn-sm"><i class="ti ti-filter"></i></button>
+          </div>
+        </div>
+        <table class="data-table">
+          <thead><tr><th>Name</th><th>Company</th><th>Number</th><th>Stage</th><th>Score</th><th>Last Contact</th><th>Agent</th><th></th></tr></thead>
+          <tbody>
+            <tr><td class="bold">Richard Barnes</td><td>Barclays PLC</td><td class="font-mono">+44 7700 900142</td><td><span class="badge booked">Meeting Set</span></td><td><span style="font-weight:700;color:var(--green)">92</span></td><td>Today</td><td>Sophia</td><td><button class="btn btn-ghost btn-sm"><i class="ti ti-edit"></i></button></td></tr>
+            <tr><td class="bold">Marcus Patel</td><td>TechBridge Ltd</td><td class="font-mono">+44 7911 123456</td><td><span class="badge active">Qualified</span></td><td><span style="font-weight:700;color:var(--green)">85</span></td><td>Today</td><td>Charlotte</td><td><button class="btn btn-ghost btn-sm"><i class="ti ti-edit"></i></button></td></tr>
+            <tr><td class="bold">Claire Watson</td><td>Watson Media</td><td class="font-mono">+44 1632 960321</td><td><span class="badge pending">Follow-up</span></td><td><span style="font-weight:700;color:var(--amber)">61</span></td><td>Today</td><td>James</td><td><button class="btn btn-ghost btn-sm"><i class="ti ti-edit"></i></button></td></tr>
+            <tr><td class="bold">Whitmore Legal</td><td>Whitmore & Co</td><td class="font-mono">+44 1632 960100</td><td><span class="badge pending">Human Review</span></td><td><span style="font-weight:700;color:var(--amber)">54</span></td><td>Today</td><td>Charlotte</td><td><button class="btn btn-ghost btn-sm"><i class="ti ti-edit"></i></button></td></tr>
+            <tr><td class="bold">Nexford Group</td><td>Nexford Industries</td><td class="font-mono">+44 1632 960321</td><td><span class="badge" style="background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)">No Answer</span></td><td><span style="font-weight:700;color:var(--red)">31</span></td><td>Today</td><td>Sophia</td><td><button class="btn btn-ghost btn-sm"><i class="ti ti-edit"></i></button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════ ANALYTICS ══════════════════════════ -->
+    <section class="page-section" id="page-analytics">
+      <div class="grid-4 mb-4">
+        <div class="metric-card blue"><div class="metric-icon blue"><i class="ti ti-phone"></i></div><div class="metric-label">Total Calls (Month)</div><div class="metric-value">4,821</div><div class="metric-trend up"><i class="ti ti-trending-up" style="font-size:13px"></i> +22% vs last month</div></div>
+        <div class="metric-card green"><div class="metric-icon green"><i class="ti ti-calendar-check"></i></div><div class="metric-label">Appointments</div><div class="metric-value">321</div><div class="metric-trend up"><i class="ti ti-trending-up" style="font-size:13px"></i> 6.7% booking rate</div></div>
+        <div class="metric-card purple"><div class="metric-icon purple"><i class="ti ti-mood-smile"></i></div><div class="metric-label">Positive Sentiment</div><div class="metric-value">71%</div><div class="metric-trend up"><i class="ti ti-trending-up" style="font-size:13px"></i> +3% this month</div></div>
+        <div class="metric-card amber"><div class="metric-icon amber"><i class="ti ti-star"></i></div><div class="metric-label">Avg AI Score</div><div class="metric-value">4.7</div><div class="metric-trend neutral">out of 5.0</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Calls vs Conversions</div><div class="card-sub">This week</div></div>
+          <div class="card-body">
+            <div class="bar-chart" id="conv-chart"></div>
+            <div class="flex gap-4 mt-4" style="margin-top:14px">
+              <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text3)"><div style="width:10px;height:10px;background:var(--green);border-radius:2px"></div>Conversions</div>
+              <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text3)"><div style="width:10px;height:10px;background:var(--accent);border-radius:2px"></div>Total calls</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Agent Performance</div><div class="card-sub">This month</div></div>
+          <div class="card-body">
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <div>
+                <div class="flex justify-between" style="margin-bottom:5px"><span style="font-size:12px;font-weight:500;color:var(--text1)">Sophia</span><span style="font-size:12px;color:var(--green);font-weight:600">4.9 · 156 calls</span></div>
+                <div class="prog-bar"><div class="prog-fill" style="width:92%;background:var(--green)"></div></div>
+              </div>
+              <div>
+                <div class="flex justify-between" style="margin-bottom:5px"><span style="font-size:12px;font-weight:500;color:var(--text1)">Charlotte</span><span style="font-size:12px;color:var(--accent);font-weight:600">4.8 · 94 calls</span></div>
+                <div class="prog-bar"><div class="prog-fill" style="width:85%;background:var(--accent)"></div></div>
+              </div>
+              <div>
+                <div class="flex justify-between" style="margin-bottom:5px"><span style="font-size:12px;font-weight:500;color:var(--text1)">James</span><span style="font-size:12px;color:var(--purple);font-weight:600">4.7 · 91 calls</span></div>
+                <div class="prog-bar"><div class="prog-fill" style="width:78%;background:var(--purple)"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════ MICROSOFT TEAMS ══════════════════════════ -->
+    <section class="page-section" id="page-teams">
+      <div id="teams-success" style="display:none">
+        <div style="text-align:center;padding:40px 20px">
+          <div style="width:64px;height:64px;background:var(--green-dim);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;border:2px solid rgba(16,185,129,.3)">
+            <i class="ti ti-check" style="font-size:28px;color:var(--green)"></i>
+          </div>
+          <div style="font-size:20px;font-weight:700;margin-bottom:8px">Microsoft Teams Connected!</div>
+          <div style="font-size:13px;color:var(--text2);max-width:420px;margin:0 auto 24px">Your Teams account is now linked to VoiceIQ. Inbound and outbound AI calling is active through your Teams Phone System numbers.</div>
+          <div class="flex gap-2" style="justify-content:center">
+            <button class="btn btn-primary" onclick="navigate('agents')"><i class="ti ti-robot"></i> Configure Agents</button>
+            <button class="btn btn-ghost" onclick="navigate('calls')"><i class="ti ti-phone"></i> View Calls</button>
+          </div>
+        </div>
+      </div>
+      <div id="teams-form">
+        <!-- Step Indicator -->
+        <div style="display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:28px">
+          <div class="step-indicator">
+            <div class="step-ind-item"><div class="step-ind-num current">1</div></div>
+            <div class="step-ind-line"></div>
+            <div class="step-ind-item"><div class="step-ind-num">2</div></div>
+            <div class="step-ind-line"></div>
+            <div class="step-ind-item"><div class="step-ind-num">3</div></div>
+            <div class="step-ind-line"></div>
+            <div class="step-ind-item"><div class="step-ind-num">4</div></div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:center;gap:0;margin-bottom:20px;font-size:11px;color:var(--text3);text-align:center">
+          <div style="width:100px">Sign in</div>
+          <div style="width:50px"></div>
+          <div style="width:100px">Select number</div>
+          <div style="width:50px"></div>
+          <div style="width:100px">Routing rules</div>
+          <div style="width:50px"></div>
+          <div style="width:100px">Confirm</div>
+        </div>
+
+        <!-- Step 1: Sign in -->
+        <div class="teams-step">
+          <div class="teams-connect-box" style="max-width:580px;margin:0 auto">
+            <div class="flex items-center gap-3 mb-4" style="margin-bottom:20px">
+              <div style="width:48px;height:48px;background:var(--teams-dim);border-radius:14px;display:flex;align-items:center;justify-content:center"><i class="ti ti-brand-teams" style="font-size:26px;color:#8B8FD4"></i></div>
+              <div><div style="font-size:18px;font-weight:700;color:var(--text1)">Connect Microsoft Teams</div><div style="font-size:12px;color:var(--text2)">Use your existing Teams Phone System for AI calls</div></div>
+            </div>
+            <div class="teams-features">
+              <div class="teams-feat"><i class="ti ti-phone-outgoing"></i> Outbound AI calling</div>
+              <div class="teams-feat"><i class="ti ti-phone-incoming"></i> Inbound AI answering</div>
+              <div class="teams-feat"><i class="ti ti-user-check"></i> Transfer to human in Teams</div>
+              <div class="teams-feat"><i class="ti ti-calendar"></i> Teams meeting booking</div>
+              <div class="teams-feat"><i class="ti ti-eye"></i> Live call monitoring</div>
+              <div class="teams-feat"><i class="ti ti-microphone"></i> Call recording</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:20px">
+              <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em">Requirements</div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <div class="flex items-center gap-2" style="font-size:12px;color:var(--text2)"><i class="ti ti-circle-check" style="color:var(--green);font-size:14px"></i> Microsoft 365 Business or Enterprise account</div>
+                <div class="flex items-center gap-2" style="font-size:12px;color:var(--text2)"><i class="ti ti-circle-check" style="color:var(--green);font-size:14px"></i> Teams Phone System licence (or Teams Phone add-on)</div>
+                <div class="flex items-center gap-2" style="font-size:12px;color:var(--text2)"><i class="ti ti-circle-check" style="color:var(--green);font-size:14px"></i> At least one UK number assigned in Teams Admin</div>
+                <div class="flex items-center gap-2" style="font-size:12px;color:var(--text2)"><i class="ti ti-circle-check" style="color:var(--green);font-size:14px"></i> Global Admin or Teams Admin permissions</div>
+              </div>
+            </div>
+            <button class="btn btn-teams w-full" style="padding:12px;font-size:13px;justify-content:center" onclick="teamsNext()">
+              <i class="ti ti-brand-teams"></i> Sign in with Microsoft 365
+            </button>
+            <div style="font-size:10px;color:var(--text3);text-align:center;margin-top:10px">VoiceIQ uses Microsoft Graph API with read-only calling permissions. Your data stays secure.</div>
+          </div>
+        </div>
+
+        <!-- Step 2: Select Number -->
+        <div class="teams-step" style="display:none">
+          <div style="max-width:580px;margin:0 auto">
+            <div class="card mb-4" style="margin-bottom:14px">
+              <div class="card-header"><div class="card-title">Teams numbers found on your account</div><div class="card-sub" style="color:var(--green)">✓ Signed in as james.mitchell@company.co.uk</div></div>
+              <div style="padding:6px 0">
+                <label style="display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .1s" onmouseenter="this.style.background='var(--bg-hover)'" onmouseleave="this.style.background='transparent'">
+                  <input type="radio" name="teams-num" checked style="accent-color:var(--accent)">
+                  <div style="flex:1">
+                    <div style="font-size:13px;font-weight:600;font-family:'JetBrains Mono',monospace;color:var(--text1)">+44 20 7946 0300</div>
+                    <div style="font-size:11px;color:var(--text3)">Main office line · Direct Routing · Outbound enabled</div>
+                  </div>
+                  <span class="badge active">Available</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer;border-bottom:1px solid var(--border)" onmouseenter="this.style.background='var(--bg-hover)'" onmouseleave="this.style.background='transparent'">
+                  <input type="radio" name="teams-num" style="accent-color:var(--accent)">
+                  <div style="flex:1">
+                    <div style="font-size:13px;font-weight:600;font-family:'JetBrains Mono',monospace;color:var(--text1)">+44 20 7946 0301</div>
+                    <div style="font-size:11px;color:var(--text3)">Sales DDI · Calling Plan · Outbound enabled</div>
+                  </div>
+                  <span class="badge active">Available</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer" onmouseenter="this.style.background='var(--bg-hover)'" onmouseleave="this.style.background='transparent'">
+                  <input type="radio" name="teams-num" style="accent-color:var(--accent)">
+                  <div style="flex:1">
+                    <div style="font-size:13px;font-weight:600;font-family:'JetBrains Mono',monospace;color:var(--text1)">+44 20 7946 0302</div>
+                    <div style="font-size:11px;color:var(--text3)">Support line · Shared line · Inbound only</div>
+                  </div>
+                  <span class="badge pending">Inbound only</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: Routing Rules -->
+        <div class="teams-step" style="display:none">
+          <div style="max-width:580px;margin:0 auto">
+            <div class="card mb-4" style="margin-bottom:14px">
+              <div class="card-header"><div class="card-title">Inbound call routing</div><div class="card-sub">How should calls be handled?</div></div>
+              <div class="card-body">
+                <div class="form-group">
+                  <label class="form-label">When a call comes in to +44 20 7946 0300</label>
+                  <select class="form-select"><option>AI Agent answers immediately</option><option>Ring once then AI answers</option><option>Human answers, AI if no response in 10s</option></select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">AI Agent to handle inbound</label>
+                  <select class="form-select"><option>Sophia (Southern British · Female)</option><option>James (Neutral UK · Male)</option><option>Charlotte (Friendly · Female)</option></select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Transfer to human trigger</label>
+                  <select class="form-select"><option>Caller requests human / says "speak to someone"</option><option>After 2 unresolved objections</option><option>Specific keywords detected</option><option>Never — AI handles all calls</option></select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Transfer destination in Teams</label>
+                  <select class="form-select"><option>Sales Team channel</option><option>james.mitchell@company.co.uk</option><option>Hunt group — All sales reps</option></select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Working hours (UK time)</label>
+                  <div class="flex gap-2">
+                    <input type="time" class="form-input" value="08:30" style="flex:1">
+                    <span style="line-height:36px;color:var(--text3)">to</span>
+                    <input type="time" class="form-input" value="18:00" style="flex:1">
+                  </div>
+                </div>
+                <div class="toggle-wrap"><div class="toggle on" onclick="toggleSwitch(this)"></div><span style="font-size:12px;color:var(--text2)">Send SMS if call unanswered</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4: Confirm -->
+        <div class="teams-step" style="display:none">
+          <div style="max-width:580px;margin:0 auto">
+            <div class="card">
+              <div class="card-header"><div class="card-title">Review & confirm</div></div>
+              <div class="card-body">
+                <div style="display:flex;flex-direction:column;gap:12px">
+                  <div class="flex justify-between" style="padding:10px 0;border-bottom:1px solid var(--border)"><span style="font-size:12px;color:var(--text3)">Microsoft account</span><span style="font-size:12px;font-weight:500;color:var(--text1)">james.mitchell@company.co.uk</span></div>
+                  <div class="flex justify-between" style="padding:10px 0;border-bottom:1px solid var(--border)"><span style="font-size:12px;color:var(--text3)">Teams number</span><span style="font-size:12px;font-weight:600;font-family:'JetBrains Mono',monospace;color:var(--text1)">+44 20 7946 0300</span></div>
+                  <div class="flex justify-between" style="padding:10px 0;border-bottom:1px solid var(--border)"><span style="font-size:12px;color:var(--text3)">AI Agent</span><span style="font-size:12px;font-weight:500;color:var(--text1)">Sophia — Southern British Female</span></div>
+                  <div class="flex justify-between" style="padding:10px 0;border-bottom:1px solid var(--border)"><span style="font-size:12px;color:var(--text3)">Call direction</span><span style="font-size:12px;font-weight:500;color:var(--green)">Inbound + Outbound</span></div>
+                  <div class="flex justify-between" style="padding:10px 0;border-bottom:1px solid var(--border)"><span style="font-size:12px;color:var(--text3)">Human transfer</span><span style="font-size:12px;font-weight:500;color:var(--text1)">Sales Team channel</span></div>
+                  <div class="flex justify-between" style="padding:10px 0"><span style="font-size:12px;color:var(--text3)">Working hours</span><span style="font-size:12px;font-weight:500;color:var(--text1)">08:30 – 18:00 UK time</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Nav Buttons -->
+        <div class="flex justify-between" style="max-width:580px;margin:20px auto 0">
+          <button id="teams-prev-btn" class="btn btn-ghost" onclick="teamsPrev()" style="display:none"><i class="ti ti-arrow-left"></i> Back</button>
+          <div style="flex:1"></div>
+          <button id="teams-next-btn" class="btn btn-primary" onclick="teamsNext()">Continue <i class="ti ti-arrow-right"></i></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════ INTEGRATIONS ══════════════════════════ -->
+    <section class="page-section" id="page-integrations">
+      <div class="int-grid">
+        <div class="int-card connected">
+          <div class="int-logo" style="background:var(--teams-dim)"><i class="ti ti-brand-teams" style="color:#8B8FD4"></i></div>
+          <div><div class="int-name">Microsoft Teams</div><div class="int-desc">AI calling via Teams Phone System. Inbound, outbound, and live transfer.</div></div>
+          <div class="int-status-row"><span class="badge active">Connected</span><button class="btn btn-ghost btn-sm" onclick="navigate('teams')">Manage</button></div>
+        </div>
+        <div class="int-card connected">
+          <div class="int-logo" style="background:var(--green-dim)"><i class="ti ti-brand-google" style="color:var(--green)"></i></div>
+          <div><div class="int-name">Google Calendar</div><div class="int-desc">Auto-book meetings, send invites, avoid double-bookings.</div></div>
+          <div class="int-status-row"><span class="badge active">Connected</span><button class="btn btn-ghost btn-sm">Manage</button></div>
+        </div>
+        <div class="int-card connected">
+          <div class="int-logo" style="background:var(--amber-dim)"><i class="ti ti-microphone" style="color:var(--amber)"></i></div>
+          <div><div class="int-name">ElevenLabs</div><div class="int-desc">Premium British AI voices — Southern, Neutral UK, Conversational.</div></div>
+          <div class="int-status-row"><span class="badge active">Connected</span><button class="btn btn-ghost btn-sm">Manage</button></div>
+        </div>
+        <div class="int-card">
+          <div class="int-logo" style="background:var(--green-dim)"><i class="ti ti-device-sim" style="color:var(--green)"></i></div>
+          <div><div class="int-name">UK Mobile / SIP</div><div class="int-desc">Connect your own UK number via SIP trunk or call forwarding.</div></div>
+          <div class="int-status-row"><span class="badge mobile">Connected</span><button class="btn btn-ghost btn-sm">Configure</button></div>
+        </div>
+        <div class="int-card">
+          <div class="int-logo" style="background:var(--purple-dim)"><i class="ti ti-database" style="color:var(--purple)"></i></div>
+          <div><div class="int-name">HubSpot CRM</div><div class="int-desc">Sync leads, contacts, deals and call outcomes to HubSpot.</div></div>
+          <div class="int-status-row"><span class="badge pending">Pending</span><button class="btn btn-primary btn-sm">Connect</button></div>
+        </div>
+        <div class="int-card">
+          <div class="int-logo" style="background:var(--accent-dim)"><i class="ti ti-brand-openai" style="color:var(--accent)"></i></div>
+          <div><div class="int-name">OpenAI Realtime</div><div class="int-desc">Real-time AI conversation engine for ultra-low latency responses.</div></div>
+          <div class="int-status-row"><span class="badge active">Connected</span><button class="btn btn-ghost btn-sm">Manage</button></div>
+        </div>
+        <div class="int-card">
+          <div class="int-logo" style="background:var(--red-dim)"><i class="ti ti-message-circle" style="color:var(--red)"></i></div>
+          <div><div class="int-name">WhatsApp Business</div><div class="int-desc">AI-powered WhatsApp follow-ups after calls.</div></div>
+          <div class="int-status-row"><span class="badge paused">Coming soon</span><button class="btn btn-ghost btn-sm" disabled>Connect</button></div>
+        </div>
+        <div class="int-card">
+          <div class="int-logo" style="background:var(--green-dim)"><i class="ti ti-brand-salesforce" style="color:var(--green)"></i></div>
+          <div><div class="int-name">Salesforce</div><div class="int-desc">Push call logs, AI summaries and lead scores to Salesforce.</div></div>
+          <div class="int-status-row"><span class="badge paused">Not connected</span><button class="btn btn-primary btn-sm">Connect</button></div>
+        </div>
+        <div class="int-card">
+          <div class="int-logo" style="background:var(--amber-dim)"><i class="ti ti-brand-zapier" style="color:var(--amber)"></i></div>
+          <div><div class="int-name">Zapier / Webhooks</div><div class="int-desc">Trigger automations on call events, bookings and outcomes.</div></div>
+          <div class="int-status-row"><span class="badge paused">Not connected</span><button class="btn btn-primary btn-sm">Connect</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════ SETTINGS ══════════════════════════ -->
+    <section class="page-section" id="page-settings">
+      <div class="grid-2">
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div class="card">
+            <div class="card-header"><div class="card-title">Account Details</div></div>
+            <div class="card-body">
+              <div class="form-group"><label class="form-label">Full name</label><input class="form-input" value="James Mitchell"></div>
+              <div class="form-group"><label class="form-label">Email</label><input class="form-input" value="james.mitchell@company.co.uk"></div>
+              <div class="form-group"><label class="form-label">Company</label><input class="form-input" value="Mitchell Sales Ltd"></div>
+              <div class="form-group"><label class="form-label">UK timezone</label><select class="form-select"><option>Europe/London (GMT+1)</option></select></div>
+              <button class="btn btn-primary btn-sm"><i class="ti ti-device-floppy"></i> Save changes</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Calling Preferences</div></div>
+            <div class="card-body" style="display:flex;flex-direction:column;gap:12px">
+              <div class="form-group"><label class="form-label">Max concurrent calls</label><select class="form-select"><option>5</option><option>10</option><option>20</option></select></div>
+              <div class="form-group"><label class="form-label">Working hours</label><div class="flex gap-2"><input type="time" class="form-input" value="08:30"><input type="time" class="form-input" value="18:00"></div></div>
+              <div class="toggle-wrap"><div class="toggle on" onclick="toggleSwitch(this)"></div><span style="font-size:12px;color:var(--text2)">Auto SMS on no answer</span></div>
+              <div class="toggle-wrap"><div class="toggle on" onclick="toggleSwitch(this)"></div><span style="font-size:12px;color:var(--text2)">GDPR consent recording</span></div>
+              <div class="toggle-wrap"><div class="toggle on" onclick="toggleSwitch(this)"></div><span style="font-size:12px;color:var(--text2)">Do Not Call list enforcement</span></div>
+              <div class="toggle-wrap"><div class="toggle" onclick="toggleSwitch(this)"></div><span style="font-size:12px;color:var(--text2)">Call on weekends</span></div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div class="card">
+            <div class="card-header"><div class="card-title">Security & Compliance</div></div>
+            <div class="card-body" style="display:flex;flex-direction:column;gap:12px">
+              <div class="toggle-wrap"><div class="toggle on" onclick="toggleSwitch(this)"></div><span style="font-size:12px;color:var(--text2)">Two-factor authentication</span></div>
+              <div class="toggle-wrap"><div class="toggle on" onclick="toggleSwitch(this)"></div><span style="font-size:12px;color:var(--text2)">Encrypted call recordings</span></div>
+              <div class="toggle-wrap"><div class="toggle on" onclick="toggleSwitch(this)"></div><span style="font-size:12px;color:var(--text2)">GDPR data controls</span></div>
+              <div class="toggle-wrap"><div class="toggle on" onclick="toggleSwitch(this)"></div><span style="font-size:12px;color:var(--text2)">Audit logging</span></div>
+              <div class="divider"></div>
+              <div class="form-group"><label class="form-label">Data region</label><select class="form-select"><option>UK — London (eu-west-2)</option><option>EU — Frankfurt</option></select></div>
+              <button class="btn btn-ghost btn-sm"><i class="ti ti-download"></i> Download audit log</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Notifications</div></div>
+            <div class="card-body" style="display:flex;flex-direction:column;gap:12px">
+              <div class="toggle-wrap"><div class="toggle on" onclick="toggleSwitch(this)"></div><span style="font-size:12px;color:var(--text2)">Meeting booked alerts</span></div>
+              <div class="toggle-wrap"><div class="toggle on" onclick="toggleSwitch(this)"></div><span style="font-size:12px;color:var(--text2)">Call escalation alerts</span></div>
+              <div class="toggle-wrap"><div class="toggle" onclick="toggleSwitch(this)"></div><span style="font-size:12px;color:var(--text2)">Daily summary email</span></div>
+              <div class="toggle-wrap"><div class="toggle on" onclick="toggleSwitch(this)"></div><span style="font-size:12px;color:var(--text2)">Campaign completion alert</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    </div><!-- /content -->
+  </main>
+</div>
+
+<!-- ═══════════ MODALS ═══════════ -->
+
+<!-- New Campaign Modal -->
+<div class="modal-overlay" id="modal-new-campaign">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Create New Campaign</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('new-campaign')"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Campaign name</label><input class="form-input" placeholder="e.g. Q4 Outbound Sales"></div>
+      <div class="form-group"><label class="form-label">AI Agent</label><select class="form-select"><option>Sophia — Southern British Female</option><option>James — Neutral UK Male</option><option>Charlotte — Friendly Female</option></select></div>
+      <div class="form-group"><label class="form-label">Calling number</label><select class="form-select"><option>+44 7700 900142 (Mobile / SIP)</option><option>+44 20 7946 0300 (Teams)</option><option>+44 20 7946 0301 (Teams DDI)</option></select></div>
+      <div class="form-group"><label class="form-label">Script / Prompt</label><select class="form-select"><option>Q3 Outbound Sales Script</option><option>Product Demo Script</option><option>Renewal Follow-up</option></select></div>
+      <div class="grid-2">
+        <div class="form-group"><label class="form-label">Start date</label><input type="date" class="form-input"></div>
+        <div class="form-group"><label class="form-label">Daily call limit</label><input type="number" class="form-input" placeholder="200"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Upload leads (CSV)</label><input type="file" class="form-input" accept=".csv"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('new-campaign')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('new-campaign')"><i class="ti ti-player-play"></i> Launch Campaign</button>
+    </div>
+  </div>
+</div>
+
+<!-- New Agent Modal -->
+<div class="modal-overlay" id="modal-new-agent">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Create AI Voice Agent</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('new-agent')"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Agent name</label><input class="form-input" placeholder="e.g. Emily"></div>
+      <div class="form-group"><label class="form-label">Voice accent</label><select class="form-select"><option>Southern British (Professional)</option><option>Neutral UK Business</option><option>Friendly Conversational UK</option><option>Northern English</option><option>Scottish</option></select></div>
+      <div class="form-group"><label class="form-label">Gender</label><select class="form-select"><option>Female</option><option>Male</option></select></div>
+      <div class="form-group"><label class="form-label">Speaking speed</label><select class="form-select"><option>Natural (recommended)</option><option>Slightly slower</option><option>Slightly faster</option></select></div>
+      <div class="form-group"><label class="form-label">Default script</label><select class="form-select"><option>Q3 Outbound Sales</option><option>Inbound Greeting</option><option>Appointment Booking</option></select></div>
+      <div class="form-group"><label class="form-label">Assign number</label><select class="form-select"><option>+44 7700 900142 (Mobile)</option><option>+44 20 7946 0300 (Teams)</option></select></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('new-agent')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('new-agent')"><i class="ti ti-check"></i> Create Agent</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
