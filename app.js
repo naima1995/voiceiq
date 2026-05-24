@@ -1,5 +1,121 @@
 // VoiceIQ — Main App Logic
 
+// ─── API Layer ────────────────────────────────────────────────────────────────
+const API_BASE = window.location.hostname === 'localhost'
+  ? 'http://localhost:3001'
+  : 'https://voiceiq-api.up.railway.app'; // update when backend is deployed
+
+const API_KEY = 'voiceiq-frontend-api-key-2026-change-this'; // must match .env API_KEY
+
+async function api(path, options = {}) {
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': API_KEY,
+      ...(options.headers || {}),
+    },
+  });
+  if (!res.ok) throw new Error(`API error ${res.status}: ${path}`);
+  return res.json();
+}
+
+// ─── WebSocket for live call updates ─────────────────────────────────────────
+function connectWebSocket() {
+  const wsUrl = API_BASE.replace('http', 'ws') + '/ws';
+  const ws = new WebSocket(wsUrl);
+
+  ws.onopen = () => console.log('WS connected');
+  ws.onmessage = (e) => {
+    try {
+      const msg = JSON.parse(e.data);
+      handleLiveEvent(msg);
+    } catch {}
+  };
+  ws.onclose = () => setTimeout(connectWebSocket, 3000); // auto-reconnect
+  return ws;
+}
+
+function handleLiveEvent(msg) {
+  if (msg.type === 'call.started') {
+    showToast(`📞 New call started — ${msg.data?.fromNumber || ''}`, 'info');
+  } else if (msg.type === 'call.ended') {
+    showToast(`✅ Call ended — ${msg.data?.duration}s`, 'success');
+  } else if (msg.type === 'call.summary') {
+    showToast(`📋 Call summary ready`, 'success');
+  }
+}
+
+// ─── Toast notifications ──────────────────────────────────────────────────────
+function showToast(message, type = 'info') {
+  const toast = document.createElement('div');
+  toast.style.cssText = `
+    position:fixed;bottom:24px;right:24px;padding:12px 18px;border-radius:10px;
+    background:var(--bg-card);border:1px solid var(--border2);color:var(--text1);
+    font-size:13px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.4);
+    animation:fadeIn .2s ease;max-width:320px;
+  `;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 4000);
+}
+
+// ─── Load dashboard data ──────────────────────────────────────────────────────
+async function loadDashboard() {
+  try {
+    const [callsData, eventsData] = await Promise.allSettled([
+      api('/api/calls'),
+      api('/api/calendar/events?maxResults=5&daysAhead=7'),
+    ]);
+
+    // Update calls count if data available
+    if (callsData.status === 'fulfilled' && callsData.value?.calls) {
+      const calls = callsData.value.calls;
+      const todayCalls = calls.filter(c => {
+        const d = new Date(c.startedAt || c.createdAt);
+        return d.toDateString() === new Date().toDateString();
+      });
+      const metricEl = document.querySelector('.metric-card.blue .metric-value');
+      if (metricEl && todayCalls.length > 0) metricEl.textContent = todayCalls.length;
+    }
+
+    // Update upcoming bookings
+    if (eventsData.status === 'fulfilled' && eventsData.value?.events) {
+      console.log('Calendar events loaded:', eventsData.value.events.length);
+    }
+  } catch (err) {
+    console.warn('Dashboard load error (using mock data):', err.message);
+  }
+}
+
+// ─── Make outbound call ───────────────────────────────────────────────────────
+async function makeCall({ toNumber, agentId = 'sophia', leadData = {} }) {
+  try {
+    showToast(`📞 Initiating call to ${toNumber}...`, 'info');
+    const result = await api('/api/teams/call', {
+      method: 'POST',
+      body: JSON.stringify({ toNumber, agentId, leadData }),
+    });
+    showToast(`✅ Call initiated — ID: ${result.callId}`, 'success');
+    return result;
+  } catch (err) {
+    showToast(`❌ Call failed: ${err.message}`, 'error');
+    throw err;
+  }
+}
+
+// ─── Load calendar events ─────────────────────────────────────────────────────
+async function loadCalendarEvents() {
+  try {
+    const data = await api('/api/calendar/events?maxResults=10&daysAhead=14');
+    console.log('Calendar events:', data.events);
+    return data.events;
+  } catch (err) {
+    console.warn('Calendar load error:', err.message);
+    return [];
+  }
+}
+
 // NAV
 function navigate(page) {
   document.querySelectorAll('.nav-item').forEach(el => {
@@ -213,4 +329,8 @@ window.addEventListener('DOMContentLoaded', () => {
     {l:'Mon',v:11},{l:'Tue',v:13},{l:'Wed',v:10},{l:'Thu',v:14},{l:'Fri',v:13,today:true},{l:'Sat',v:4},{l:'Sun',v:1}
   ], 'var(--green)');
   renderTeamsStep();
+
+  // Connect to backend
+  connectWebSocket();
+  loadDashboard();
 });
