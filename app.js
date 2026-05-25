@@ -60,17 +60,27 @@ function showToast(message, type = 'info') {
 // ─── Load & render all dashboard data ────────────────────────────────────────
 async function loadDashboard() {
   try {
-    const [agentsRes, callsRes, eventsRes] = await Promise.allSettled([
+    const [analyticsRes, agentsRes, callsRes, eventsRes] = await Promise.allSettled([
+      api('/api/calls/analytics/summary'),
       api('/api/agents'),
       api('/api/calls'),
       api('/api/calendar/events?maxResults=5&daysAhead=1'),
     ]);
 
+    // Metric cards — from real computed analytics
+    if (analyticsRes.status === 'fulfilled') {
+      renderDashboardMetrics(analyticsRes.value?.today || {});
+    }
+
     if (agentsRes.status === 'fulfilled' && agentsRes.value?.agents) {
       const agents = agentsRes.value.agents;
-      renderDashboardMetrics(agents);
       renderDashboardAgents(agents);
       renderAgentsPage(agents);
+      // Update active agent count in subtitle
+      const activeCount = agents.filter(a => a.status === 'active').length;
+      const sub = document.getElementById('page-sub');
+      const today = new Date().toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long' });
+      if (sub) sub.textContent = `${today} · UK Business Hours · ${activeCount} agent${activeCount !== 1 ? 's' : ''} active`;
     }
 
     if (callsRes.status === 'fulfilled') {
@@ -90,25 +100,14 @@ async function loadDashboard() {
 }
 
 // ─── Dashboard metric cards ───────────────────────────────────────────────────
-function renderDashboardMetrics(agents) {
-  const totalCalls    = agents.reduce((s, a) => s + (a.stats?.callsToday || 0), 0);
-  const totalBookings = agents.reduce((s, a) => s + (a.stats?.bookings   || 0), 0);
-  const avgAnswer     = agents.length
-    ? Math.round(agents.reduce((s, a) => s + (a.stats?.answerRate || 0), 0) / agents.length * 100)
-    : 0;
-  const conversion = totalCalls ? ((totalBookings / totalCalls) * 100).toFixed(1) : '0.0';
-
+function renderDashboardMetrics(today) {
+  // today = { total, answered, answerRate, booked, bookingRate, avgScore }
+  const conversion = today.bookingRate != null ? today.bookingRate + '%' : '—';
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-  set('dash-calls-today',  totalCalls);
-  set('dash-bookings',     totalBookings);
-  set('dash-answer-rate',  avgAnswer + '%');
-  set('dash-conversion',   conversion + '%');
-
-  // Update the page sub with live agent count
-  const activeCount = agents.filter(a => a.status === 'active').length;
-  const sub = document.getElementById('page-sub');
-  const today = new Date().toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long' });
-  if (sub) sub.textContent = `${today} · UK Business Hours · ${activeCount} agent${activeCount !== 1 ? 's' : ''} active`;
+  set('dash-calls-today',  today.total      ?? 0);
+  set('dash-bookings',     today.booked     ?? 0);
+  set('dash-answer-rate',  (today.answerRate ?? 0) + '%');
+  set('dash-conversion',   conversion);
 }
 
 // ─── Live calls table ─────────────────────────────────────────────────────────
