@@ -397,10 +397,53 @@ function switchTab(group, id) {
 
 // TEAMS CONNECT FLOW
 let teamsStep = 1;
+let teamsNumbers = [];
+
 function startTeamsConnect() {
   navigate('teams');
 }
+
+// Step 1 button — verify Azure connection then advance
+async function teamsSignIn() {
+  const btn = document.querySelector('.teams-step button.btn-teams');
+  if (btn) { btn.textContent = '⏳ Connecting…'; btn.disabled = true; }
+
+  try {
+    const status = await api('/api/teams/status');
+    if (status.connected) {
+      teamsNumbers = status.numbers || [];
+      renderTeamsNumbersList(teamsNumbers);
+      teamsStep = 2;
+      renderTeamsStep();
+      showToast(`✅ Connected — ${status.numbersFound} number(s) found`, 'success');
+    } else {
+      // Fall back to OAuth delegated sign-in
+      const { url } = await api('/api/teams/oauth/url');
+      window.location.href = url;
+    }
+  } catch (err) {
+    showToast(`❌ Teams connection failed: ${err.message}`, 'error');
+    if (btn) { btn.innerHTML = '<i class="ti ti-brand-teams"></i> Sign in with Microsoft 365'; btn.disabled = false; }
+  }
+}
+
+function renderTeamsNumbersList(numbers) {
+  const container = document.querySelector('.teams-step:nth-child(2) .card > div:last-child, [data-teams-numbers]');
+  if (!container || !numbers.length) return;
+  container.innerHTML = numbers.map((n, i) => `
+    <label style="display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer;border-bottom:1px solid var(--border)" onmouseenter="this.style.background='var(--bg-hover)'" onmouseleave="this.style.background='transparent'">
+      <input type="radio" name="teams-num" ${i === 0 ? 'checked' : ''} style="accent-color:var(--accent)">
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600;font-family:'JetBrains Mono',monospace;color:var(--text1)">${n.phoneNumbers?.[0] || '—'}</div>
+        <div style="font-size:11px;color:var(--text3)">${n.name} · ${n.email || ''}</div>
+      </div>
+      <span class="badge active">Available</span>
+    </label>
+  `).join('');
+}
+
 function teamsNext() {
+  if (teamsStep === 1) { teamsSignIn(); return; }
   teamsStep++;
   renderTeamsStep();
 }
@@ -513,6 +556,19 @@ function doSearch(q) {
 
 // INIT
 window.addEventListener('DOMContentLoaded', () => {
+  // Handle OAuth redirect back from Microsoft
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('teams_connected')) {
+    const account = params.get('account') || '';
+    showToast(`✅ Microsoft Teams connected${account ? ' — ' + account : ''}`, 'success');
+    navigate('teams');
+    history.replaceState({}, '', window.location.pathname); // clean URL
+  } else if (params.get('teams_error')) {
+    showToast(`❌ Teams error: ${params.get('teams_error')}`, 'error');
+    navigate('teams');
+    history.replaceState({}, '', window.location.pathname);
+  }
+
   navigate('dashboard');
   initLiveTimers();
   setTimeout(animateSentiment, 500);
