@@ -284,15 +284,15 @@ function renderRecentActivity(calls) {
   }).join('');
 }
 
-// ─── Make outbound call ───────────────────────────────────────────────────────
+// ─── Make outbound call (Twilio) ─────────────────────────────────────────────
 async function makeCall({ toNumber, agentId = 'sophia', leadData = {} }) {
   try {
     showToast(`📞 Initiating call to ${toNumber}...`, 'info');
-    const result = await api('/api/teams/call', {
+    const result = await api('/api/twilio/call', {
       method: 'POST',
       body: JSON.stringify({ toNumber, agentId, leadData }),
     });
-    showToast(`✅ Call initiated — ID: ${result.callId}`, 'success');
+    showToast(`✅ Call initiated — ${result.twilioCallSid}`, 'success');
     return result;
   } catch (err) {
     showToast(`❌ Call failed: ${err.message}`, 'error');
