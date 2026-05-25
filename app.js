@@ -5,7 +5,7 @@ const API_BASE = window.location.hostname === 'localhost'
   ? 'http://localhost:3001'
   : 'https://voiceiq-backend-production-2b83.up.railway.app';
 
-const API_KEY = 'voiceiq-frontend-api-key-2026-change-this'; // must match .env API_KEY
+const API_KEY = 'voiceiq-api-key-2026'; // must match API_KEY in backend .env and Railway
 
 async function api(path, options = {}) {
   const res = await fetch(`${API_BASE}${path}`, {
