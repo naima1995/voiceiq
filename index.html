@@ -142,25 +142,25 @@
         <div class="metric-card blue">
           <div class="metric-icon blue"><i class="ti ti-phone-outgoing"></i></div>
           <div class="metric-label">Calls Today</div>
-          <div class="metric-value">247</div>
+          <div class="metric-value" id="dash-calls-today">247</div>
           <div class="metric-trend up"><i class="ti ti-trending-up" style="font-size:13px"></i> +18% vs yesterday</div>
         </div>
         <div class="metric-card green">
           <div class="metric-icon green"><i class="ti ti-calendar-check"></i></div>
           <div class="metric-label">Bookings</div>
-          <div class="metric-value">31</div>
+          <div class="metric-value" id="dash-bookings">31</div>
           <div class="metric-trend up"><i class="ti ti-trending-up" style="font-size:13px"></i> +6 this morning</div>
         </div>
         <div class="metric-card purple">
           <div class="metric-icon purple"><i class="ti ti-percentage"></i></div>
           <div class="metric-label">Answer Rate</div>
-          <div class="metric-value">68%</div>
+          <div class="metric-value" id="dash-answer-rate">68%</div>
           <div class="metric-trend up"><i class="ti ti-trending-up" style="font-size:13px"></i> +4% this week</div>
         </div>
         <div class="metric-card amber">
           <div class="metric-icon amber"><i class="ti ti-target"></i></div>
           <div class="metric-label">Conversion</div>
-          <div class="metric-value">12.6%</div>
+          <div class="metric-value" id="dash-conversion">12.6%</div>
           <div class="metric-trend down"><i class="ti ti-trending-down" style="font-size:13px"></i> –0.8% vs avg</div>
         </div>
       </div>
@@ -169,7 +169,7 @@
         <!-- Live Calls -->
         <div class="card">
           <div class="card-header">
-            <div><div class="card-title">Live Calls</div><div class="card-sub">2 active now</div></div>
+            <div><div class="card-title">Live Calls</div><div class="card-sub" id="live-calls-count">2 active now</div></div>
             <div class="flex items-center gap-2">
               <div class="waveform"><div class="wave-b"></div><div class="wave-b"></div><div class="wave-b"></div><div class="wave-b"></div><div class="wave-b"></div></div>
               <button class="btn btn-ghost btn-sm" onclick="navigate('calls')"><i class="ti ti-eye"></i> Monitor</button>
@@ -177,35 +177,8 @@
           </div>
           <table class="data-table">
             <thead><tr><th>Caller</th><th>Number</th><th>Campaign</th><th>Duration</th><th>Status</th></tr></thead>
-            <tbody>
-              <tr>
-                <td><div class="flex items-center gap-2"><div class="avatar" style="width:28px;height:28px;background:var(--accent-dim);color:var(--accent)">RB</div><span class="bold">Richard Barnes</span></div></td>
-                <td class="font-mono">+44 7700 900142</td>
-                <td>Q3 Sales Follow-up</td>
-                <td class="font-mono live-timer bold" data-base="263">04:23</td>
-                <td><span class="badge live">Live</span></td>
-              </tr>
-              <tr>
-                <td><div class="flex items-center gap-2"><div class="avatar" style="width:28px;height:28px;background:var(--purple-dim);color:var(--purple)">SE</div><span class="bold">Sarah Ellis</span></div></td>
-                <td class="font-mono">+44 20 7946 0193</td>
-                <td>Demo Booking</td>
-                <td class="font-mono live-timer bold" data-base="107">01:47</td>
-                <td><span class="badge live">Live</span></td>
-              </tr>
-              <tr>
-                <td><div class="flex items-center gap-2"><div class="avatar" style="width:28px;height:28px;background:var(--green-dim);color:var(--green)">MP</div><span class="bold">Marcus Patel</span></div></td>
-                <td class="font-mono">+44 7911 123456</td>
-                <td>Appointment Booking</td>
-                <td class="font-mono bold">11:02</td>
-                <td><span class="badge booked">Booked</span></td>
-              </tr>
-              <tr>
-                <td><div class="flex items-center gap-2"><div class="avatar" style="width:28px;height:28px;background:var(--amber-dim);color:var(--amber)">CW</div><span class="bold">Claire Watson</span></div></td>
-                <td class="font-mono">+44 1632 960321</td>
-                <td>Renewal Follow-up</td>
-                <td class="font-mono bold">09:55</td>
-                <td><span class="badge pending">Follow-up</span></td>
-              </tr>
+            <tbody id="live-calls-tbody">
+              <tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text3)">Loading…</td></tr>
             </tbody>
           </table>
           <div style="padding:14px 18px;border-top:1px solid var(--border)">
@@ -222,22 +195,8 @@
               <div class="card-title">AI Agents</div>
               <button class="btn btn-ghost btn-sm" onclick="navigate('agents')"><i class="ti ti-arrow-right"></i></button>
             </div>
-            <div style="padding:8px 0">
-              <div style="display:flex;align-items:center;gap:10px;padding:9px 18px;border-bottom:1px solid var(--border)">
-                <div style="width:34px;height:34px;background:var(--accent-dim);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px">🎙</div>
-                <div style="flex:1"><div style="font-size:12px;font-weight:500;color:var(--text1)">Sophia</div><div style="font-size:10px;color:var(--text3)">Southern British · Female</div></div>
-                <div class="status-dot on"></div>
-              </div>
-              <div style="display:flex;align-items:center;gap:10px;padding:9px 18px;border-bottom:1px solid var(--border)">
-                <div style="width:34px;height:34px;background:var(--purple-dim);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px">🎙</div>
-                <div style="flex:1"><div style="font-size:12px;font-weight:500;color:var(--text1)">James</div><div style="font-size:10px;color:var(--text3)">Neutral UK Business · Male</div></div>
-                <div class="status-dot busy"></div>
-              </div>
-              <div style="display:flex;align-items:center;gap:10px;padding:9px 18px">
-                <div style="width:34px;height:34px;background:var(--green-dim);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px">🎙</div>
-                <div style="flex:1"><div style="font-size:12px;font-weight:500;color:var(--text1)">Charlotte</div><div style="font-size:10px;color:var(--text3)">Friendly Conversational · Female</div></div>
-                <div class="status-dot on"></div>
-              </div>
+            <div style="padding:8px 0" id="dash-agents-list">
+              <div style="padding:16px 18px;color:var(--text3);font-size:12px">Loading agents…</div>
             </div>
           </div>
 
@@ -282,7 +241,7 @@
         <div class="card-header"><div class="card-title">Recent AI Activity</div><div class="card-sub">Last 2 hours</div></div>
         <table class="data-table">
           <thead><tr><th>Event</th><th>Agent</th><th>Lead</th><th>Outcome</th><th>Score</th><th>Time</th></tr></thead>
-          <tbody>
+          <tbody id="recent-activity-tbody">
             <tr><td><span class="badge active">Meeting booked</span></td><td>Sophia</td><td class="bold">Richard Barnes</td><td>20 May 2:00pm — Google Cal invite sent</td><td style="color:var(--green);font-weight:600">4.9</td><td class="text-dim">2 min</td></tr>
             <tr><td><span class="badge booked">Objection handled</span></td><td>James</td><td class="bold">Claire Watson</td><td>Pricing concern resolved — follow-up set</td><td style="color:var(--green);font-weight:600">4.8</td><td class="text-dim">14 min</td></tr>
             <tr><td><span class="badge pending">Escalated</span></td><td>Charlotte</td><td class="bold">Whitmore Legal</td><td>Transferred to human — complex legal query</td><td style="color:var(--amber);font-weight:600">3.4</td><td class="text-dim">31 min</td></tr>
@@ -294,7 +253,7 @@
 
     <!-- ══════════════════════════ AI AGENTS ══════════════════════════ -->
     <section class="page-section" id="page-agents">
-      <div class="grid-3 mb-4">
+      <div class="grid-3 mb-4" id="agents-grid">
         <!-- Agent Card 1 -->
         <div class="card">
           <div class="card-header">
@@ -549,8 +508,8 @@
           </div>
         </div>
         <div class="card">
-          <div class="card-header"><div class="card-title">Today's Bookings</div><div class="card-sub">15 May 2026</div></div>
-          <div style="padding:6px 0">
+          <div class="card-header"><div class="card-title">Today's Bookings</div><div class="card-sub" id="bookings-date">15 May 2026</div></div>
+          <div style="padding:6px 0" id="upcoming-bookings">
             <div style="padding:12px 18px;border-bottom:1px solid var(--border)">
               <div class="flex justify-between items-center mb-4" style="margin-bottom:6px">
                 <span style="font-size:12px;font-weight:600;color:var(--text1)">Richard Barnes · Discovery Call</span>

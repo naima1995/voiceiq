@@ -57,32 +57,232 @@ function showToast(message, type = 'info') {
   setTimeout(() => toast.remove(), 4000);
 }
 
-// ─── Load dashboard data ──────────────────────────────────────────────────────
+// ─── Load & render all dashboard data ────────────────────────────────────────
 async function loadDashboard() {
   try {
-    const [callsData, eventsData] = await Promise.allSettled([
+    const [agentsRes, callsRes, eventsRes] = await Promise.allSettled([
+      api('/api/agents'),
       api('/api/calls'),
-      api('/api/calendar/events?maxResults=5&daysAhead=7'),
+      api('/api/calendar/events?maxResults=5&daysAhead=1'),
     ]);
 
-    // Update calls count if data available
-    if (callsData.status === 'fulfilled' && callsData.value?.calls) {
-      const calls = callsData.value.calls;
-      const todayCalls = calls.filter(c => {
-        const d = new Date(c.startedAt || c.createdAt);
-        return d.toDateString() === new Date().toDateString();
-      });
-      const metricEl = document.querySelector('.metric-card.blue .metric-value');
-      if (metricEl && todayCalls.length > 0) metricEl.textContent = todayCalls.length;
+    if (agentsRes.status === 'fulfilled' && agentsRes.value?.agents) {
+      const agents = agentsRes.value.agents;
+      renderDashboardMetrics(agents);
+      renderDashboardAgents(agents);
+      renderAgentsPage(agents);
     }
 
-    // Update upcoming bookings
-    if (eventsData.status === 'fulfilled' && eventsData.value?.events) {
-      console.log('Calendar events loaded:', eventsData.value.events.length);
+    if (callsRes.status === 'fulfilled') {
+      const calls = callsRes.value?.calls || [];
+      renderLiveCalls(calls);
+      renderRecentActivity(calls);
+    }
+
+    if (eventsRes.status === 'fulfilled' && eventsRes.value?.events) {
+      const events = eventsRes.value.events;
+      renderUpcomingBookings(events);
+      console.log('Calendar events loaded:', events.length);
     }
   } catch (err) {
-    console.warn('Dashboard load error (using mock data):', err.message);
+    console.warn('Dashboard load error:', err.message);
   }
+}
+
+// ─── Dashboard metric cards ───────────────────────────────────────────────────
+function renderDashboardMetrics(agents) {
+  const totalCalls    = agents.reduce((s, a) => s + (a.stats?.callsToday || 0), 0);
+  const totalBookings = agents.reduce((s, a) => s + (a.stats?.bookings   || 0), 0);
+  const avgAnswer     = agents.length
+    ? Math.round(agents.reduce((s, a) => s + (a.stats?.answerRate || 0), 0) / agents.length * 100)
+    : 0;
+  const conversion = totalCalls ? ((totalBookings / totalCalls) * 100).toFixed(1) : '0.0';
+
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  set('dash-calls-today',  totalCalls);
+  set('dash-bookings',     totalBookings);
+  set('dash-answer-rate',  avgAnswer + '%');
+  set('dash-conversion',   conversion + '%');
+
+  // Update the page sub with live agent count
+  const activeCount = agents.filter(a => a.status === 'active').length;
+  const sub = document.getElementById('page-sub');
+  const today = new Date().toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long' });
+  if (sub) sub.textContent = `${today} · UK Business Hours · ${activeCount} agent${activeCount !== 1 ? 's' : ''} active`;
+}
+
+// ─── Live calls table ─────────────────────────────────────────────────────────
+function renderLiveCalls(calls) {
+  const tbody   = document.getElementById('live-calls-tbody');
+  const countEl = document.getElementById('live-calls-count');
+  if (!tbody) return;
+
+  const live = calls.filter(c => c.status === 'active' || c.status === 'live');
+  if (countEl) countEl.textContent = live.length ? `${live.length} active now` : 'No active calls';
+
+  if (!live.length) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text3)">No live calls right now</td></tr>`;
+    return;
+  }
+
+  const colors = [
+    ['var(--accent-dim)','var(--accent)'],
+    ['var(--purple-dim)','var(--purple)'],
+    ['var(--green-dim)', 'var(--green)'],
+    ['var(--amber-dim)', 'var(--amber)'],
+  ];
+  tbody.innerHTML = live.map((c, i) => {
+    const name     = c.leadData?.name || c.toNumber || 'Unknown';
+    const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    const [bg, fg] = colors[i % colors.length];
+    return `<tr>
+      <td><div class="flex items-center gap-2">
+        <div class="avatar" style="width:28px;height:28px;background:${bg};color:${fg}">${initials}</div>
+        <span class="bold">${name}</span>
+      </div></td>
+      <td class="font-mono">${c.toNumber || '—'}</td>
+      <td>${c.campaignName || '—'}</td>
+      <td class="font-mono live-timer bold" data-base="0">00:00</td>
+      <td><span class="badge live">Live</span></td>
+    </tr>`;
+  }).join('');
+  initLiveTimers();
+}
+
+// ─── Dashboard agents mini-panel ──────────────────────────────────────────────
+function renderDashboardAgents(agents) {
+  const el = document.getElementById('dash-agents-list');
+  if (!el) return;
+  const colors = ['var(--accent-dim)', 'var(--purple-dim)', 'var(--green-dim)', 'var(--amber-dim)'];
+  el.innerHTML = agents.map((a, i) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:9px 18px;${i < agents.length - 1 ? 'border-bottom:1px solid var(--border)' : ''}">
+      <div style="width:34px;height:34px;background:${colors[i % colors.length]};border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px">🎙</div>
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:500;color:var(--text1)">${a.name}</div>
+        <div style="font-size:10px;color:var(--text3)">${a.accent} · ${a.gender}</div>
+      </div>
+      <div class="status-dot ${a.status === 'active' ? 'on' : 'off'}"></div>
+    </div>
+  `).join('');
+}
+
+// ─── Agents page cards ────────────────────────────────────────────────────────
+function renderAgentsPage(agents) {
+  const grid = document.getElementById('agents-grid');
+  if (!grid) return;
+
+  // Keep the "New Agent" dashed card (last child)
+  const newCard = grid.querySelector('[onclick*="new-agent"]')?.closest('.card') || grid.lastElementChild;
+  [...grid.children].forEach(c => { if (c !== newCard) c.remove(); });
+
+  const colors = ['var(--accent-dim)', 'var(--purple-dim)', 'var(--green-dim)', 'var(--amber-dim)'];
+  agents.forEach((a, i) => {
+    const posPct = Math.round((a.stats?.answerRate || 0.7) * 90);
+    const neuPct = 20;
+    const negPct = Math.max(0, 100 - posPct - neuPct);
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="card-header">
+        <div class="flex items-center gap-2">
+          <div style="width:38px;height:38px;background:${colors[i % colors.length]};border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px">🎙</div>
+          <div><div class="card-title">${a.name}</div><div class="card-sub">${a.accent} · ${a.gender}</div></div>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="status-dot ${a.status === 'active' ? 'on' : 'off'}"></div>
+          <span style="font-size:11px;color:${a.status === 'active' ? 'var(--green)' : 'var(--text3)'}">${a.status === 'active' ? 'Active' : 'Paused'}</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="flex justify-between mb-4" style="margin-bottom:12px">
+          <div style="text-align:center"><div style="font-size:18px;font-weight:700;color:var(--text1)">${a.stats?.callsToday || 0}</div><div style="font-size:10px;color:var(--text3)">Calls today</div></div>
+          <div style="text-align:center"><div style="font-size:18px;font-weight:700;color:var(--green)">${a.stats?.bookings || 0}</div><div style="font-size:10px;color:var(--text3)">Bookings</div></div>
+          <div style="text-align:center"><div style="font-size:18px;font-weight:700;color:var(--text1)">${Math.round((a.stats?.answerRate || 0) * 100)}%</div><div style="font-size:10px;color:var(--text3)">Answer rate</div></div>
+          <div style="text-align:center"><div style="font-size:18px;font-weight:700;color:var(--purple)">${a.stats?.avgScore || '—'}</div><div style="font-size:10px;color:var(--text3)">Avg score</div></div>
+        </div>
+        <div style="margin-bottom:10px">
+          <div style="font-size:10px;color:var(--text3);margin-bottom:5px">Sentiment — last 50 calls</div>
+          <div class="sentiment-bar">
+            <div class="sent-pos" data-pct="${posPct}" style="width:0%;transition:width .8s ease"></div>
+            <div class="sent-neu" style="width:${neuPct}%"></div>
+            <div class="sent-neg" style="width:${negPct}%"></div>
+          </div>
+          <div class="flex gap-3 mt-4" style="margin-top:6px">
+            <span style="font-size:10px;color:var(--green)">● Positive ${posPct}%</span>
+            <span style="font-size:10px;color:var(--amber)">● Neutral ${neuPct}%</span>
+            <span style="font-size:10px;color:var(--red)">● Negative ${negPct}%</span>
+          </div>
+        </div>
+        <div class="flex gap-2" style="margin-top:14px">
+          <button class="btn btn-ghost btn-sm w-full"><i class="ti ti-settings"></i> Configure</button>
+          <button class="btn btn-danger btn-sm"><i class="ti ti-player-pause"></i> Pause</button>
+        </div>
+      </div>`;
+    grid.insertBefore(card, newCard);
+  });
+
+  setTimeout(animateSentiment, 300);
+}
+
+// ─── Today's bookings (calendar) ──────────────────────────────────────────────
+function renderUpcomingBookings(events) {
+  const el      = document.getElementById('upcoming-bookings');
+  const dateEl  = document.getElementById('bookings-date');
+  if (!el) return;
+
+  if (dateEl) {
+    dateEl.textContent = new Date().toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
+  }
+
+  if (!events.length) {
+    el.innerHTML = `<div style="padding:24px 18px;text-align:center;color:var(--text3);font-size:12px">No bookings today</div>`;
+    return;
+  }
+
+  el.innerHTML = events.map((ev, i) => {
+    const start   = new Date(ev.start);
+    const timeStr = start.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+    const attendees = ev.attendees?.map(a => a.email || a).join(', ') || 'No attendees';
+    return `
+      <div style="padding:12px 18px;${i < events.length - 1 ? 'border-bottom:1px solid var(--border)' : ''}">
+        <div class="flex justify-between items-center mb-4" style="margin-bottom:6px">
+          <span style="font-size:12px;font-weight:600;color:var(--text1)">${ev.title}</span>
+          <span class="badge booked">${timeStr}</span>
+        </div>
+        <div style="font-size:11px;color:var(--text3);line-height:1.6">
+          ${attendees}${ev.meetLink ? ` · <a href="${ev.meetLink}" target="_blank" style="color:var(--accent)">Join Meet</a>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ─── Recent AI activity ───────────────────────────────────────────────────────
+function renderRecentActivity(calls) {
+  const tbody = document.getElementById('recent-activity-tbody');
+  if (!tbody) return;
+
+  const recent = calls.filter(c => c.status !== 'active' && c.status !== 'live').slice(0, 5);
+  if (!recent.length) return; // Keep static placeholder rows until real calls exist
+
+  const outcomeMap = {
+    booked:    { cls: 'badge active',  label: 'Meeting booked' },
+    qualified: { cls: 'badge booked',  label: 'Qualified' },
+    escalated: { cls: 'badge pending', label: 'Escalated' },
+    'no-answer': { cls: 'badge', label: 'No answer', style: 'background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)' },
+  };
+  tbody.innerHTML = recent.map(c => {
+    const name = c.leadData?.name || c.toNumber || 'Unknown';
+    const o    = outcomeMap[c.outcome] || { cls: 'badge pending', label: c.outcome || 'Completed' };
+    const scoreColor = c.score >= 4 ? 'var(--green)' : c.score >= 3 ? 'var(--amber)' : 'var(--text3)';
+    return `<tr>
+      <td><span class="${o.cls}" ${o.style ? `style="${o.style}"` : ''}>${o.label}</span></td>
+      <td>${c.agentId || '—'}</td>
+      <td class="bold">${name}</td>
+      <td>${c.summary || '—'}</td>
+      <td style="color:${scoreColor};font-weight:600">${c.score || '—'}</td>
+      <td class="text-dim">${c.duration ? Math.floor(c.duration / 60) + ' min' : '—'}</td>
+    </tr>`;
+  }).join('');
 }
 
 // ─── Make outbound call ───────────────────────────────────────────────────────
@@ -101,11 +301,10 @@ async function makeCall({ toNumber, agentId = 'sophia', leadData = {} }) {
   }
 }
 
-// ─── Load calendar events ─────────────────────────────────────────────────────
+// ─── Load calendar events (used by Calendar page) ────────────────────────────
 async function loadCalendarEvents() {
   try {
     const data = await api('/api/calendar/events?maxResults=10&daysAhead=14');
-    console.log('Calendar events:', data.events);
     return data.events;
   } catch (err) {
     console.warn('Calendar load error:', err.message);
@@ -140,7 +339,7 @@ const pageTitles = {
   teams: 'Microsoft Teams'
 };
 const pageSubs = {
-  dashboard: 'Friday 15 May · UK Business Hours · 3 agents active',
+  dashboard: new Date().toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long' }) + ' · UK Business Hours',
   agents: 'Create and manage your AI voice agents',
   campaigns: 'Outbound calling campaigns',
   calls: 'Live and historical call data',
