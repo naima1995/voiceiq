@@ -3,7 +3,7 @@
 // ─── API Layer ────────────────────────────────────────────────────────────────
 const API_BASE = window.location.hostname === 'localhost'
   ? 'http://localhost:3001'
-  : 'https://voiceiq-api.up.railway.app'; // update when backend is deployed
+  : 'https://voiceiq-backend-production-2b83.up.railway.app';
 
 const API_KEY = 'voiceiq-frontend-api-key-2026-change-this'; // must match .env API_KEY
 
