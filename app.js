@@ -284,15 +284,15 @@ function renderRecentActivity(calls) {
   }).join('');
 }
 
-// ─── Make outbound call (Twilio) ─────────────────────────────────────────────
-async function makeCall({ toNumber, agentId = 'sophia', leadData = {} }) {
+// ─── Make outbound call (Microsoft Teams) ────────────────────────────────────
+async function makeCall({ toNumber, agentId = 'james', leadData = {} }) {
   try {
     showToast(`📞 Initiating call to ${toNumber}...`, 'info');
-    const result = await api('/api/twilio/call', {
+    const result = await api('/api/teams/call', {
       method: 'POST',
       body: JSON.stringify({ toNumber, agentId, leadData }),
     });
-    showToast(`✅ Call initiated — ${result.twilioCallSid}`, 'success');
+    showToast(`✅ Call initiated via Teams — ${result.teamsCallId}`, 'success');
     return result;
   } catch (err) {
     showToast(`❌ Call failed: ${err.message}`, 'error');
