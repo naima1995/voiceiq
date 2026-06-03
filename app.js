@@ -335,7 +335,7 @@ const pageTitles = {
   analytics: 'Analytics',
   integrations: 'Integrations',
   settings: 'Settings',
-  teams: 'Microsoft Teams'
+  teams: 'Twilio Calling'
 };
 const pageSubs = {
   dashboard: new Date().toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long' }) + ' · UK Business Hours',
@@ -348,7 +348,7 @@ const pageSubs = {
   analytics: 'Performance metrics and insights',
   integrations: 'Connected services and APIs',
   settings: 'Account, billing and preferences',
-  teams: 'Microsoft Teams calling integration'
+  teams: 'Twilio outbound calling integration'
 };
 
 function renderPageActions(page) {
@@ -363,7 +363,7 @@ function renderPageActions(page) {
     crm: `<button class="btn btn-ghost btn-sm"><i class="ti ti-upload"></i> Import CSV</button><button class="btn btn-primary"><i class="ti ti-plus"></i> Add Lead</button>`,
     analytics: `<select class="form-select" style="width:130px;padding:7px 10px"><option>Last 7 days</option><option>Last 30 days</option><option>This month</option></select>`,
     integrations: `<button class="btn btn-ghost btn-sm"><i class="ti ti-refresh"></i> Refresh</button>`,
-    teams: `<button class="btn btn-teams" onclick="startTeamsConnect()"><i class="ti ti-brand-teams"></i> Connect Teams</button>`,
+    teams: `<span id="twilio-status"></span>`,
     settings: ``
   };
   el.innerHTML = map[page] || '';
@@ -395,78 +395,18 @@ function switchTab(group, id) {
   });
 }
 
-// TEAMS CONNECT FLOW
-let teamsStep = 1;
-let teamsNumbers = [];
-
-function startTeamsConnect() {
-  navigate('teams');
-}
-
-// Step 1 button — verify Azure connection then advance
-async function teamsSignIn() {
-  const btn = document.querySelector('.teams-step button.btn-teams');
-  if (btn) { btn.textContent = '⏳ Connecting…'; btn.disabled = true; }
-
+// TWILIO STATUS
+async function loadTwilioStatus() {
   try {
-    const status = await api('/api/teams/status');
+    const status = await api('/api/twilio/status');
+    const el = document.getElementById('twilio-status');
+    if (!el) return;
     if (status.connected) {
-      teamsNumbers = status.numbers || [];
-      renderTeamsNumbersList(teamsNumbers);
-      teamsStep = 2;
-      renderTeamsStep();
-      showToast(`✅ Connected — ${status.numbersFound} number(s) found`, 'success');
+      el.innerHTML = `<span class="badge active">Connected</span> <span style="font-size:12px;color:var(--text3)">${status.defaultNumber || ''}</span>`;
     } else {
-      // Fall back to OAuth delegated sign-in
-      const { url } = await api('/api/teams/oauth/url');
-      window.location.href = url;
+      el.innerHTML = `<span class="badge" style="background:var(--red-dim);color:var(--red)">Not connected</span>`;
     }
-  } catch (err) {
-    showToast(`❌ Teams connection failed: ${err.message}`, 'error');
-    if (btn) { btn.innerHTML = '<i class="ti ti-brand-teams"></i> Sign in with Microsoft 365'; btn.disabled = false; }
-  }
-}
-
-function renderTeamsNumbersList(numbers) {
-  const container = document.querySelector('.teams-step:nth-child(2) .card > div:last-child, [data-teams-numbers]');
-  if (!container || !numbers.length) return;
-  container.innerHTML = numbers.map((n, i) => `
-    <label style="display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer;border-bottom:1px solid var(--border)" onmouseenter="this.style.background='var(--bg-hover)'" onmouseleave="this.style.background='transparent'">
-      <input type="radio" name="teams-num" ${i === 0 ? 'checked' : ''} style="accent-color:var(--accent)">
-      <div style="flex:1">
-        <div style="font-size:13px;font-weight:600;font-family:'JetBrains Mono',monospace;color:var(--text1)">${n.phoneNumbers?.[0] || '—'}</div>
-        <div style="font-size:11px;color:var(--text3)">${n.name} · ${n.email || ''}</div>
-      </div>
-      <span class="badge active">Available</span>
-    </label>
-  `).join('');
-}
-
-function teamsNext() {
-  if (teamsStep === 1) { teamsSignIn(); return; }
-  teamsStep++;
-  renderTeamsStep();
-}
-function teamsPrev() {
-  if (teamsStep > 1) { teamsStep--; renderTeamsStep(); }
-}
-function renderTeamsStep() {
-  const steps = document.querySelectorAll('.teams-step');
-  steps.forEach((el, i) => el.style.display = i === (teamsStep - 1) ? 'block' : 'none');
-  const inds = document.querySelectorAll('.step-ind-num');
-  inds.forEach((el, i) => {
-    el.className = 'step-ind-num' + (i < teamsStep - 1 ? ' done' : i === teamsStep - 1 ? ' current' : '');
-  });
-  const lines = document.querySelectorAll('.step-ind-line');
-  lines.forEach((el, i) => el.classList.toggle('done', i < teamsStep - 1));
-  document.getElementById('teams-prev-btn').style.display = teamsStep > 1 ? 'flex' : 'none';
-  document.getElementById('teams-next-btn').textContent = teamsStep === 4 ? '✓ Complete Setup' : 'Continue';
-  if (teamsStep === 4) {
-    setTimeout(() => {
-      document.getElementById('teams-success').style.display = 'block';
-      document.getElementById('teams-form').style.display = 'none';
-    }, 100);
-  }
+  } catch {}
 }
 
 // CALL TIMER
@@ -556,19 +496,6 @@ function doSearch(q) {
 
 // INIT
 window.addEventListener('DOMContentLoaded', () => {
-  // Handle OAuth redirect back from Microsoft
-  const params = new URLSearchParams(window.location.search);
-  if (params.get('teams_connected')) {
-    const account = params.get('account') || '';
-    showToast(`✅ Microsoft Teams connected${account ? ' — ' + account : ''}`, 'success');
-    navigate('teams');
-    history.replaceState({}, '', window.location.pathname); // clean URL
-  } else if (params.get('teams_error')) {
-    showToast(`❌ Teams error: ${params.get('teams_error')}`, 'error');
-    navigate('teams');
-    history.replaceState({}, '', window.location.pathname);
-  }
-
   navigate('dashboard');
   initLiveTimers();
   setTimeout(animateSentiment, 500);
@@ -579,7 +506,7 @@ window.addEventListener('DOMContentLoaded', () => {
   buildBarChart('conv-chart', [
     {l:'Mon',v:11},{l:'Tue',v:13},{l:'Wed',v:10},{l:'Thu',v:14},{l:'Fri',v:13,today:true},{l:'Sat',v:4},{l:'Sun',v:1}
   ], 'var(--green)');
-  renderTeamsStep();
+  loadTwilioStatus();
 
   // Connect to backend
   connectWebSocket();
