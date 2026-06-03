@@ -805,26 +805,101 @@ Do you have just two or three minutes to hear a little more?</textarea>
 
 <!-- New Campaign Modal -->
 <div class="modal-overlay" id="modal-new-campaign">
-  <div class="modal">
+  <div class="modal" style="max-width:560px">
     <div class="modal-header">
       <div class="modal-title">Create New Campaign</div>
       <button class="btn btn-ghost btn-sm" onclick="closeModal('new-campaign')"><i class="ti ti-x"></i></button>
     </div>
-    <div class="modal-body">
-      <div class="form-group"><label class="form-label">Campaign name</label><input id="camp-name" class="form-input" placeholder="e.g. Q4 Outbound Sales"></div>
-      <div class="form-group"><label class="form-label">AI Agent</label>
-        <select id="camp-agent" class="form-select">
-          <option value="james">James — Neutral UK Male</option>
-          <option value="rachel">Rachel — Southern British Female</option>
-          <option value="shelley">Shelley — Warm British Professional</option>
-          <option value="alexis">Alexis — Clear Confident British</option>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:14px">
+
+      <!-- Campaign name -->
+      <div class="form-group">
+        <label class="form-label">Campaign name</label>
+        <input id="camp-name" class="form-input" placeholder="e.g. Q4 Outbound Sales">
+      </div>
+
+      <!-- AI Agent + Daily limit -->
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">AI Agent</label>
+          <select id="camp-agent" class="form-select">
+            <option value="james">James — Neutral UK Male</option>
+            <option value="rachel">Rachel — Southern British Female</option>
+            <option value="shelley">Shelley — Warm British Professional</option>
+            <option value="alexis">Alexis — Clear Confident British</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Daily call limit</label>
+          <input id="camp-daily-limit" type="number" class="form-input" placeholder="200" min="1" max="10000">
+        </div>
+      </div>
+
+      <!-- Start date (native calendar picker) -->
+      <div class="form-group">
+        <label class="form-label"><i class="ti ti-calendar" style="font-size:13px;margin-right:4px"></i>Start date</label>
+        <input id="camp-start-date" type="date" class="form-input" style="color-scheme:dark">
+      </div>
+
+      <!-- Timezone -->
+      <div class="form-group">
+        <label class="form-label"><i class="ti ti-world" style="font-size:13px;margin-right:4px"></i>Timezone</label>
+        <select id="camp-timezone" class="form-select">
+          <option value="Europe/London">🇬🇧 UK — London (GMT/BST)</option>
+          <option value="Europe/Dublin">🇮🇪 Ireland — Dublin (GMT/IST)</option>
+          <option value="Europe/Paris">🇫🇷 Europe — Paris (CET/CEST)</option>
+          <option value="Europe/Berlin">🇩🇪 Europe — Berlin (CET/CEST)</option>
+          <option value="America/New_York">🇺🇸 US East — New York (EST/EDT)</option>
+          <option value="America/Chicago">🇺🇸 US Central — Chicago (CST/CDT)</option>
+          <option value="America/Los_Angeles">🇺🇸 US West — Los Angeles (PST/PDT)</option>
+          <option value="Asia/Dubai">🇦🇪 UAE — Dubai (GST)</option>
+          <option value="Asia/Karachi">🇵🇰 Pakistan — Karachi (PKT)</option>
+          <option value="Asia/Kolkata">🇮🇳 India — Mumbai (IST)</option>
+          <option value="Australia/Sydney">🇦🇺 Australia — Sydney (AEST)</option>
         </select>
       </div>
-      <div class="grid-2">
-        <div class="form-group"><label class="form-label">Start date</label><input id="camp-start-date" type="date" class="form-input"></div>
-        <div class="form-group"><label class="form-label">Daily call limit</label><input id="camp-daily-limit" type="number" class="form-input" placeholder="200"></div>
+
+      <!-- Calling hours -->
+      <div class="form-group">
+        <label class="form-label"><i class="ti ti-clock" style="font-size:13px;margin-right:4px"></i>Calling hours <span style="color:var(--text3);font-size:11px">— times in selected timezone</span></label>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="flex:1">
+            <label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px">From</label>
+            <select id="camp-hours-from" class="form-select">
+              <option value="07:00">7:00 AM</option>
+              <option value="08:00" selected>8:00 AM</option>
+              <option value="08:30">8:30 AM</option>
+              <option value="09:00">9:00 AM</option>
+              <option value="09:30">9:30 AM</option>
+              <option value="10:00">10:00 AM</option>
+              <option value="11:00">11:00 AM</option>
+              <option value="12:00">12:00 PM</option>
+            </select>
+          </div>
+          <div style="color:var(--text3);margin-top:16px">→</div>
+          <div style="flex:1">
+            <label style="font-size:10px;color:var(--text3);display:block;margin-bottom:4px">To</label>
+            <select id="camp-hours-to" class="form-select">
+              <option value="16:00">4:00 PM</option>
+              <option value="17:00">5:00 PM</option>
+              <option value="17:30">5:30 PM</option>
+              <option value="18:00" selected>6:00 PM</option>
+              <option value="18:30">6:30 PM</option>
+              <option value="19:00">7:00 PM</option>
+              <option value="20:00">8:00 PM</option>
+              <option value="21:00">9:00 PM</option>
+            </select>
+          </div>
+        </div>
+        <div id="camp-hours-preview" style="font-size:11px;color:var(--accent);margin-top:6px">📞 Calls run 8:00 AM – 6:00 PM (Europe/London)</div>
       </div>
-      <div class="form-group"><label class="form-label">Upload leads (Excel) <span style="color:var(--text3);font-size:11px">optional — can upload later</span></label><input id="camp-leads-file" type="file" class="form-input" accept=".xlsx,.xls"></div>
+
+      <!-- Upload leads -->
+      <div class="form-group">
+        <label class="form-label"><i class="ti ti-file-spreadsheet" style="font-size:13px;margin-right:4px"></i>Upload leads (Excel) <span style="color:var(--text3);font-size:11px">optional — can upload later</span></label>
+        <input id="camp-leads-file" type="file" class="form-input" accept=".xlsx,.xls">
+      </div>
+
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('new-campaign')">Cancel</button>

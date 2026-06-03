@@ -542,11 +542,25 @@ async function loadCampaigns() {
   }
 }
 
+// Live preview of calling hours
+function updateHoursPreview() {
+  const from     = document.getElementById('camp-hours-from')?.value || '08:00';
+  const to       = document.getElementById('camp-hours-to')?.value   || '18:00';
+  const timezone = document.getElementById('camp-timezone')?.value   || 'Europe/London';
+  const preview  = document.getElementById('camp-hours-preview');
+  if (!preview) return;
+  const fmt = t => { const [h, m] = t.split(':'); const hr = +h; return `${hr > 12 ? hr-12 : hr || 12}:${m} ${hr >= 12 ? 'PM' : 'AM'}`; };
+  preview.textContent = `📞 Calls run ${fmt(from)} – ${fmt(to)} (${timezone})`;
+}
+
 async function createCampaign() {
   const name       = document.getElementById('camp-name')?.value?.trim();
   const agentId    = document.getElementById('camp-agent')?.value;
   const dailyLimit = document.getElementById('camp-daily-limit')?.value;
   const startDate  = document.getElementById('camp-start-date')?.value;
+  const timezone   = document.getElementById('camp-timezone')?.value   || 'Europe/London';
+  const hoursFrom  = document.getElementById('camp-hours-from')?.value || '08:00';
+  const hoursTo    = document.getElementById('camp-hours-to')?.value   || '18:00';
   const fileInput  = document.getElementById('camp-leads-file');
 
   if (!name) { showToast('Campaign name is required', 'error'); return; }
@@ -555,7 +569,7 @@ async function createCampaign() {
     // Create the campaign
     const campaign = await api('/api/campaigns', {
       method: 'POST',
-      body: JSON.stringify({ name, agentId, dailyLimit, startDate }),
+      body: JSON.stringify({ name, agentId, dailyLimit, startDate, timezone, hoursFrom, hoursTo }),
     });
 
     // Upload leads file if provided
