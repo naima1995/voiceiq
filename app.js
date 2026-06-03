@@ -440,11 +440,11 @@ function renderPageActions(page) {
   const map = {
     dashboard: `<button class="btn btn-primary" onclick="openModal('new-campaign')"><i class="ti ti-plus"></i> New Campaign</button>`,
     agents: `<button class="btn btn-ghost btn-sm"><i class="ti ti-upload"></i> Import</button><button class="btn btn-primary" onclick="openModal('new-agent')"><i class="ti ti-plus"></i> New Agent</button>`,
-    campaigns: `<button class="btn btn-ghost btn-sm"><i class="ti ti-upload"></i> Upload CSV</button><button class="btn btn-primary" onclick="openModal('new-campaign')"><i class="ti ti-plus"></i> New Campaign</button>`,
+    campaigns: `<label class="btn btn-ghost btn-sm" style="cursor:pointer"><i class="ti ti-upload"></i> Upload Excel<input type="file" accept=".xlsx,.xls" style="display:none" onchange="uploadLeads(this)"></label><button class="btn btn-primary" onclick="openModal('new-campaign')"><i class="ti ti-plus"></i> New Campaign</button>`,
     calls: `<button class="btn btn-ghost btn-sm"><i class="ti ti-download"></i> Export</button>`,
     calendar: `<button class="btn btn-ghost btn-sm"><i class="ti ti-brand-google"></i> Sync Google</button><button class="btn btn-primary"><i class="ti ti-plus"></i> Manual Book</button>`,
     prompt: `<button class="btn btn-ghost btn-sm"><i class="ti ti-copy"></i> Duplicate</button><button class="btn btn-primary"><i class="ti ti-device-floppy"></i> Save Script</button>`,
-    crm: `<button class="btn btn-ghost btn-sm"><i class="ti ti-upload"></i> Import CSV</button><button class="btn btn-primary"><i class="ti ti-plus"></i> Add Lead</button>`,
+    crm: `<label class="btn btn-ghost btn-sm" style="cursor:pointer"><i class="ti ti-upload"></i> Import Excel<input type="file" accept=".xlsx,.xls" style="display:none" onchange="uploadLeads(this)"></label><button class="btn btn-primary"><i class="ti ti-plus"></i> Add Lead</button>`,
     analytics: `<select class="form-select" style="width:130px;padding:7px 10px"><option>Last 7 days</option><option>Last 30 days</option><option>This month</option></select>`,
     integrations: `<button class="btn btn-ghost btn-sm"><i class="ti ti-refresh"></i> Refresh</button>`,
     teams: `<span id="twilio-status"></span>`,
@@ -492,6 +492,31 @@ async function loadTwilioStatus() {
       if (el) el.innerHTML = `<span class="badge" style="background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)">Not connected</span>`;
     }
   } catch {}
+}
+
+// ─── Upload Excel leads ───────────────────────────────────────────────────────
+async function uploadLeads(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  showToast(`📂 Uploading ${file.name}…`, 'info');
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const res = await fetch(`${API_BASE}/api/leads/upload`, {
+      method: 'POST',
+      body: formData,
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Upload failed');
+
+    showToast(`✅ Imported ${data.imported} leads${data.skipped ? ` (${data.skipped} skipped — no phone)` : ''}`, 'success');
+    input.value = ''; // reset file input
+  } catch (err) {
+    showToast(`❌ Upload failed: ${err.message}`, 'error');
+  }
 }
 
 async function triggerTestCall() {
