@@ -288,11 +288,11 @@ function renderRecentActivity(calls) {
 async function makeCall({ toNumber, agentId = 'james', leadData = {} }) {
   try {
     showToast(`📞 Initiating call to ${toNumber}...`, 'info');
-    const result = await api('/api/teams/call', {
+    const result = await api('/api/twilio/call', {
       method: 'POST',
       body: JSON.stringify({ toNumber, agentId, leadData }),
     });
-    showToast(`✅ Call initiated — ${result.teamsCallId}`, 'success');
+    showToast(`✅ Call initiated — ${result.twilioCallSid}`, 'success');
     return result;
   } catch (err) {
     showToast(`❌ Call failed: ${err.message}`, 'error');
