@@ -438,10 +438,10 @@
     <!-- ══════════════════════════ CALLS ══════════════════════════ -->
     <section class="page-section" id="page-calls">
       <div class="grid-4 mb-4">
-        <div class="metric-card blue"><div class="metric-icon blue"><i class="ti ti-phone-outgoing"></i></div><div class="metric-label">Outbound Today</div><div class="metric-value">219</div><div class="metric-trend neutral">Via 2 channels</div></div>
-        <div class="metric-card green"><div class="metric-icon green"><i class="ti ti-phone-incoming"></i></div><div class="metric-label">Inbound Today</div><div class="metric-value">28</div><div class="metric-trend up"><i class="ti ti-trending-up" style="font-size:13px"></i> +6 vs avg</div></div>
-        <div class="metric-card amber"><div class="metric-icon amber"><i class="ti ti-clock"></i></div><div class="metric-label">Avg Duration</div><div class="metric-value">4:32</div><div class="metric-trend neutral">mins per call</div></div>
-        <div class="metric-card red"><div class="metric-icon red"><i class="ti ti-phone-off"></i></div><div class="metric-label">No Answer</div><div class="metric-value">79</div><div class="metric-trend neutral">SMS sent to all</div></div>
+        <div class="metric-card blue"><div class="metric-icon blue"><i class="ti ti-phone-outgoing"></i></div><div class="metric-label">Outbound Today</div><div class="metric-value" id="calls-outbound-today">—</div><div class="metric-trend neutral">Via Twilio</div></div>
+        <div class="metric-card green"><div class="metric-icon green"><i class="ti ti-phone-incoming"></i></div><div class="metric-label">Total Today</div><div class="metric-value" id="calls-total-today">—</div><div class="metric-trend neutral">All calls</div></div>
+        <div class="metric-card amber"><div class="metric-icon amber"><i class="ti ti-clock"></i></div><div class="metric-label">Avg Duration</div><div class="metric-value" id="calls-avg-duration">—</div><div class="metric-trend neutral">mins per call</div></div>
+        <div class="metric-card purple"><div class="metric-icon purple"><i class="ti ti-calendar-check"></i></div><div class="metric-label">Booked Today</div><div class="metric-value" id="calls-booked-today">—</div><div class="metric-trend neutral">meetings</div></div>
       </div>
       <div class="card">
         <div class="card-header">
@@ -458,12 +458,8 @@
         </div>
         <table class="data-table">
           <thead><tr><th>Contact</th><th>Number</th><th>Channel</th><th>Direction</th><th>Duration</th><th>Outcome</th><th>AI Score</th><th>Actions</th></tr></thead>
-          <tbody>
-            <tr><td class="bold">Richard Barnes</td><td class="font-mono">+44 7700 900142</td><td><span class="badge mobile">Mobile</span></td><td><i class="ti ti-phone-outgoing" style="color:var(--accent)"></i> Out</td><td class="font-mono">04:23</td><td><span class="badge active">Booked</span></td><td style="color:var(--green);font-weight:600">4.9</td><td><button class="btn btn-ghost btn-sm"><i class="ti ti-player-play"></i></button></td></tr>
-            <tr><td class="bold">Sarah Ellis</td><td class="font-mono">+44 20 7946 0193</td><td><span class="badge mobile">Twilio</span></td><td><i class="ti ti-phone-outgoing" style="color:var(--accent)"></i> Out</td><td class="font-mono">01:47</td><td><span class="badge live">Live</span></td><td style="color:var(--text3);font-weight:600">—</td><td><button class="btn btn-ghost btn-sm"><i class="ti ti-eye"></i></button></td></tr>
-            <tr><td class="bold">Marcus Patel</td><td class="font-mono">+44 7911 123456</td><td><span class="badge mobile">Mobile</span></td><td><i class="ti ti-phone-outgoing" style="color:var(--accent)"></i> Out</td><td class="font-mono">11:02</td><td><span class="badge booked">Qualified</span></td><td style="color:var(--green);font-weight:600">4.7</td><td><button class="btn btn-ghost btn-sm"><i class="ti ti-player-play"></i></button></td></tr>
-            <tr><td class="bold">Whitmore Legal</td><td class="font-mono">+44 1632 960100</td><td><span class="badge mobile">Twilio</span></td><td><i class="ti ti-phone-incoming" style="color:var(--green)"></i> In</td><td class="font-mono">08:14</td><td><span class="badge pending">Escalated</span></td><td style="color:var(--amber);font-weight:600">3.4</td><td><button class="btn btn-ghost btn-sm"><i class="ti ti-player-play"></i></button></td></tr>
-            <tr><td class="bold">Nexford Group</td><td class="font-mono">+44 1632 960321</td><td><span class="badge mobile">Mobile</span></td><td><i class="ti ti-phone-outgoing" style="color:var(--accent)"></i> Out</td><td class="font-mono">00:00</td><td><span class="badge" style="background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)">No answer</span></td><td style="color:var(--text3)">—</td><td><button class="btn btn-ghost btn-sm"><i class="ti ti-refresh"></i></button></td></tr>
+          <tbody id="call-log-tbody">
+            <tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text3)">Loading calls…</td></tr>
           </tbody>
         </table>
       </div>

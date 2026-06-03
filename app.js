@@ -300,6 +300,73 @@ async function makeCall({ toNumber, agentId = 'james', leadData = {} }) {
   }
 }
 
+// ─── Render call log page ─────────────────────────────────────────────────────
+async function loadCallLog() {
+  const tbody = document.getElementById('call-log-tbody');
+  if (!tbody) return;
+
+  try {
+    const data = await api('/api/calls');
+    const calls = data.calls || [];
+
+    // Update metric cards
+    const today = new Date().toDateString();
+    const todayCalls = calls.filter(c => new Date(c.loggedAt || c.endedAt).toDateString() === today);
+    const outbound = todayCalls.filter(c => c.direction === 'outbound').length;
+    const booked = todayCalls.filter(c => c.summary?.outcome === 'meeting_booked' || c.outcome === 'booked').length;
+    const durations = todayCalls.filter(c => c.duration > 0).map(c => c.duration);
+    const avgDur = durations.length ? Math.round(durations.reduce((a,b) => a+b,0) / durations.length) : 0;
+    const avgDurStr = avgDur ? `${Math.floor(avgDur/60)}:${String(avgDur%60).padStart(2,'0')}` : '—';
+
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    set('calls-outbound-today', outbound);
+    set('calls-total-today', todayCalls.length);
+    set('calls-avg-duration', avgDurStr);
+    set('calls-booked-today', booked);
+
+    if (!calls.length) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text3)">No calls yet — make your first call from the Twilio Calling page</td></tr>`;
+      return;
+    }
+
+    const outcomeMap = {
+      meeting_booked: { cls: 'badge active',  label: 'Booked' },
+      booked:         { cls: 'badge active',  label: 'Booked' },
+      qualified:      { cls: 'badge booked',  label: 'Qualified' },
+      transferred:    { cls: 'badge pending', label: 'Transferred' },
+      no_answer:      { cls: 'badge',         label: 'No answer', style: 'background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)' },
+      'no-answer':    { cls: 'badge',         label: 'No answer', style: 'background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)' },
+      completed:      { cls: 'badge pending', label: 'Completed' },
+    };
+
+    tbody.innerHTML = calls.map(c => {
+      const name     = c.leadData?.name || c.toNumber || 'Unknown';
+      const number   = c.toNumber || c.fromNumber || '—';
+      const dur      = c.duration ? `${Math.floor(c.duration/60)}:${String(c.duration%60).padStart(2,'0')}` : '—';
+      const outcome  = c.summary?.outcome || c.outcome || 'completed';
+      const o        = outcomeMap[outcome] || { cls: 'badge pending', label: outcome };
+      const score    = c.summary?.avgCallScore || c.score;
+      const scoreColor = score >= 4 ? 'var(--green)' : score >= 3 ? 'var(--amber)' : 'var(--red)';
+      const dirIcon  = c.direction === 'inbound'
+        ? `<i class="ti ti-phone-incoming" style="color:var(--green)"></i> In`
+        : `<i class="ti ti-phone-outgoing" style="color:var(--accent)"></i> Out`;
+
+      return `<tr>
+        <td class="bold">${name}</td>
+        <td class="font-mono">${number}</td>
+        <td><span class="badge mobile">${c.channel || 'Twilio'}</span></td>
+        <td>${dirIcon}</td>
+        <td class="font-mono">${dur}</td>
+        <td><span class="${o.cls}" ${o.style ? `style="${o.style}"` : ''}>${o.label}</span></td>
+        <td style="color:${scoreColor};font-weight:600">${score || '—'}</td>
+        <td><button class="btn btn-ghost btn-sm"><i class="ti ti-eye"></i></button></td>
+      </tr>`;
+    }).join('');
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text3)">Could not load calls</td></tr>`;
+  }
+}
+
 // ─── Load calendar events (used by Calendar page) ────────────────────────────
 async function loadCalendarEvents() {
   try {
@@ -322,6 +389,10 @@ function navigate(page) {
   document.getElementById('page-title').textContent = pageTitles[page] || page;
   document.getElementById('page-sub').textContent = pageSubs[page] || '';
   renderPageActions(page);
+
+  // Load page-specific data
+  if (page === 'calls') loadCallLog();
+  if (page === 'teams') loadTwilioStatus();
 }
 
 const pageTitles = {
