@@ -542,15 +542,49 @@ async function loadCampaigns() {
   }
 }
 
-// Live preview of calling hours
-function updateHoursPreview() {
-  const from     = document.getElementById('camp-hours-from')?.value || '08:00';
-  const to       = document.getElementById('camp-hours-to')?.value   || '18:00';
-  const timezone = document.getElementById('camp-timezone')?.value   || 'Europe/London';
-  const preview  = document.getElementById('camp-hours-preview');
+// Toggle a day on/off in the schedule
+function toggleDay(checkbox) {
+  const day = checkbox.dataset.day;
+  const row = checkbox.closest('.sched-row');
+  const selects = row.querySelectorAll('select');
+  selects.forEach(s => s.disabled = !checkbox.checked);
+  row.style.opacity = checkbox.checked ? '1' : '0.5';
+  updateSchedulePreview();
+}
+
+// Live preview of calling schedule
+function updateSchedulePreview() {
+  const preview = document.getElementById('camp-hours-preview');
   if (!preview) return;
-  const fmt = t => { const [h, m] = t.split(':'); const hr = +h; return `${hr > 12 ? hr-12 : hr || 12}:${m} ${hr >= 12 ? 'PM' : 'AM'}`; };
-  preview.textContent = `📞 Calls run ${fmt(from)} – ${fmt(to)} (${timezone})`;
+  const days = ['mon','tue','wed','thu','fri','sat','sun'];
+  const labels = { mon:'Mon', tue:'Tue', wed:'Wed', thu:'Thu', fri:'Fri', sat:'Sat', sun:'Sun' };
+  const fmt = t => { const [h, m] = t.split(':'); const hr = +h; return `${hr > 12 ? hr-12 : hr||12}:${m} ${hr >= 12 ? 'PM' : 'AM'}`; };
+
+  const activeDays = days.filter(d => document.querySelector(`.sched-toggle[data-day="${d}"]`)?.checked);
+  if (!activeDays.length) { preview.textContent = '⚠️ No calling days selected'; return; }
+
+  // Group consecutive days with same hours
+  const parts = activeDays.map(d => {
+    const from = document.querySelector(`.sched-from[data-day="${d}"]`)?.value || '08:00';
+    const to   = document.querySelector(`.sched-to[data-day="${d}"]`)?.value   || '18:00';
+    return `${labels[d]} ${fmt(from)}–${fmt(to)}`;
+  });
+  preview.textContent = `📞 ${parts.join(' · ')}`;
+}
+
+// Build schedule object from modal
+function getSchedule() {
+  const days = ['mon','tue','wed','thu','fri','sat','sun'];
+  const schedule = {};
+  days.forEach(d => {
+    const enabled = document.querySelector(`.sched-toggle[data-day="${d}"]`)?.checked || false;
+    schedule[d] = {
+      enabled,
+      from: document.querySelector(`.sched-from[data-day="${d}"]`)?.value || '08:00',
+      to:   document.querySelector(`.sched-to[data-day="${d}"]`)?.value   || '18:00',
+    };
+  });
+  return schedule;
 }
 
 async function createCampaign() {
@@ -558,18 +592,16 @@ async function createCampaign() {
   const agentId    = document.getElementById('camp-agent')?.value;
   const dailyLimit = document.getElementById('camp-daily-limit')?.value;
   const startDate  = document.getElementById('camp-start-date')?.value;
-  const timezone   = document.getElementById('camp-timezone')?.value   || 'Europe/London';
-  const hoursFrom  = document.getElementById('camp-hours-from')?.value || '08:00';
-  const hoursTo    = document.getElementById('camp-hours-to')?.value   || '18:00';
-  const fileInput  = document.getElementById('camp-leads-file');
+  const timezone  = document.getElementById('camp-timezone')?.value || 'Europe/London';
+  const schedule  = getSchedule();
+  const fileInput = document.getElementById('camp-leads-file');
 
   if (!name) { showToast('Campaign name is required', 'error'); return; }
 
   try {
-    // Create the campaign
     const campaign = await api('/api/campaigns', {
       method: 'POST',
-      body: JSON.stringify({ name, agentId, dailyLimit, startDate, timezone, hoursFrom, hoursTo }),
+      body: JSON.stringify({ name, agentId, dailyLimit, startDate, timezone, schedule }),
     });
 
     // Upload leads file if provided
