@@ -563,11 +563,10 @@ function updateSchedulePreview() {
   const activeDays = days.filter(d => document.querySelector(`.sched-toggle[data-day="${d}"]`)?.checked);
   if (!activeDays.length) { preview.textContent = '⚠️ No calling days selected'; return; }
 
-  // Group consecutive days with same hours
   const parts = activeDays.map(d => {
     const from = document.querySelector(`.sched-from[data-day="${d}"]`)?.value || '08:00';
     const to   = document.querySelector(`.sched-to[data-day="${d}"]`)?.value   || '18:00';
-    return `${labels[d]} ${fmt(from)}–${fmt(to)}`;
+    return `${labels[d]} ${from}–${to}`;
   });
   preview.textContent = `📞 ${parts.join(' · ')}`;
 }
