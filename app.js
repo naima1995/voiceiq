@@ -406,6 +406,7 @@ function navigate(page) {
   // Load page-specific data
   if (page === 'calls')     loadCallLog();
   if (page === 'teams')     loadTwilioStatus();
+  if (page === 'agents')    loadTwilioStatus();
   if (page === 'campaigns') loadCampaigns();
 }
 
