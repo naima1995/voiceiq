@@ -261,25 +261,38 @@ function renderRecentActivity(calls) {
   if (!tbody) return;
 
   const recent = calls.filter(c => c.status !== 'active' && c.status !== 'live').slice(0, 5);
-  if (!recent.length) return; // Keep static placeholder rows until real calls exist
+
+  if (!recent.length) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text3)">No recent activity</td></tr>`;
+    return;
+  }
 
   const outcomeMap = {
-    booked:    { cls: 'badge active',  label: 'Meeting booked' },
-    qualified: { cls: 'badge booked',  label: 'Qualified' },
-    escalated: { cls: 'badge pending', label: 'Escalated' },
-    'no-answer': { cls: 'badge', label: 'No answer', style: 'background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)' },
+    meeting_booked: { cls: 'badge active',  label: 'Meeting booked' },
+    booked:         { cls: 'badge active',  label: 'Meeting booked' },
+    qualified:      { cls: 'badge booked',  label: 'Qualified' },
+    transferred:    { cls: 'badge pending', label: 'Escalated' },
+    escalated:      { cls: 'badge pending', label: 'Escalated' },
+    no_answer:      { cls: 'badge', label: 'No answer', style: 'background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)' },
+    'no-answer':    { cls: 'badge', label: 'No answer', style: 'background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)' },
+    completed:      { cls: 'badge pending', label: 'Completed' },
   };
+
   tbody.innerHTML = recent.map(c => {
-    const name = c.leadData?.name || c.toNumber || 'Unknown';
-    const o    = outcomeMap[c.outcome] || { cls: 'badge pending', label: c.outcome || 'Completed' };
-    const scoreColor = c.score >= 4 ? 'var(--green)' : c.score >= 3 ? 'var(--amber)' : 'var(--text3)';
+    const name      = c.leadData?.name || c.toNumber || 'Unknown';
+    const outcome   = c.summary?.outcome || c.outcome || 'completed';
+    const o         = outcomeMap[outcome] || { cls: 'badge pending', label: outcome };
+    const score     = c.summary?.avgCallScore || c.score;
+    const scoreColor = score >= 4 ? 'var(--green)' : score >= 3 ? 'var(--amber)' : 'var(--text3)';
+    const summaryText = c.summary?.summary || c.summary || '—';
+    const timeAgo   = c.endedAt ? Math.round((Date.now() - new Date(c.endedAt)) / 60000) + ' min' : '—';
     return `<tr>
       <td><span class="${o.cls}" ${o.style ? `style="${o.style}"` : ''}>${o.label}</span></td>
       <td>${c.agentId || '—'}</td>
       <td class="bold">${name}</td>
-      <td>${c.summary || '—'}</td>
-      <td style="color:${scoreColor};font-weight:600">${c.score || '—'}</td>
-      <td class="text-dim">${c.duration ? Math.floor(c.duration / 60) + ' min' : '—'}</td>
+      <td>${summaryText}</td>
+      <td style="color:${scoreColor};font-weight:600">${score || '—'}</td>
+      <td class="text-dim">${timeAgo}</td>
     </tr>`;
   }).join('');
 }
