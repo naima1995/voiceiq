@@ -863,65 +863,77 @@ Do you have just two or three minutes to hear a little more?</textarea>
       <div class="form-group">
         <label class="form-label"><i class="ti ti-clock" style="font-size:13px;margin-right:4px"></i>Calling schedule <span style="color:var(--text3);font-size:11px">— times in selected timezone</span></label>
         <div id="camp-schedule" style="border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-top:6px">
+
+          <!-- Apply to all row -->
+          <div style="display:grid;grid-template-columns:90px 36px 1fr 18px 1fr 110px;align-items:center;gap:8px;padding:8px 12px;background:rgba(99,102,241,.08);border-bottom:1px solid var(--border)">
+            <span style="font-size:11px;font-weight:600;color:var(--accent)">Apply all</span>
+            <span></span>
+            <select id="apply-all-from" class="form-select sched-options" onchange="updateSchedulePreview()" style="padding:5px 8px;font-size:12px"></select>
+            <span style="text-align:center;color:var(--text3);font-size:11px">→</span>
+            <select id="apply-all-to" class="form-select sched-options" onchange="updateSchedulePreview()" style="padding:5px 8px;font-size:12px"></select>
+            <button type="button" class="btn btn-primary btn-sm" onclick="applyToAllDays()" style="font-size:11px;padding:5px 10px;white-space:nowrap">Apply to all ✓</button>
+          </div>
+
           <!-- Header -->
           <div style="display:grid;grid-template-columns:90px 36px 1fr 18px 1fr;align-items:center;gap:8px;padding:7px 12px;background:var(--bg-card2);border-bottom:1px solid var(--border);font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">
-            <span>Day</span><span></span><span>From</span><span></span><span>To</span>
+            <span>Day</span><span>On</span><span>From</span><span></span><span>To</span>
           </div>
+
           <!-- Mon -->
           <div class="sched-row" style="display:grid;grid-template-columns:90px 36px 1fr 18px 1fr;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--border)">
             <span style="font-size:12px;font-weight:500;color:var(--text1)">Monday</span>
             <label style="display:flex;align-items:center;cursor:pointer"><input type="checkbox" class="sched-toggle" data-day="mon" checked onchange="toggleDay(this)" style="accent-color:var(--accent);width:14px;height:14px"></label>
-            <input type="time" class="form-input sched-from" data-day="mon" value="08:00" onchange="updateSchedulePreview()" style="padding:5px 8px;font-size:12px;color-scheme:dark">
+            <select class="form-select sched-from sched-options" data-day="mon" onchange="updateSchedulePreview()" style="padding:5px 8px;font-size:12px"></select>
             <span style="text-align:center;color:var(--text3);font-size:11px">→</span>
-            <input type="time" class="form-input sched-to" data-day="mon" value="18:00" onchange="updateSchedulePreview()" style="padding:5px 8px;font-size:12px;color-scheme:dark">
+            <select class="form-select sched-to sched-options" data-day="mon" onchange="updateSchedulePreview()" style="padding:5px 8px;font-size:12px"></select>
           </div>
           <!-- Tue -->
           <div class="sched-row" style="display:grid;grid-template-columns:90px 36px 1fr 18px 1fr;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--border)">
             <span style="font-size:12px;font-weight:500;color:var(--text1)">Tuesday</span>
             <label style="display:flex;align-items:center;cursor:pointer"><input type="checkbox" class="sched-toggle" data-day="tue" checked onchange="toggleDay(this)" style="accent-color:var(--accent);width:14px;height:14px"></label>
-            <input type="time" class="form-input sched-from" data-day="tue" value="08:00" onchange="updateSchedulePreview()" style="padding:5px 8px;font-size:12px;color-scheme:dark">
+            <select class="form-select sched-from sched-options" data-day="tue" onchange="updateSchedulePreview()" style="padding:5px 8px;font-size:12px"></select>
             <span style="text-align:center;color:var(--text3);font-size:11px">→</span>
-            <input type="time" class="form-input sched-to" data-day="tue" value="18:00" onchange="updateSchedulePreview()" style="padding:5px 8px;font-size:12px;color-scheme:dark">
+            <select class="form-select sched-to sched-options" data-day="tue" onchange="updateSchedulePreview()" style="padding:5px 8px;font-size:12px"></select>
           </div>
           <!-- Wed -->
           <div class="sched-row" style="display:grid;grid-template-columns:90px 36px 1fr 18px 1fr;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--border)">
             <span style="font-size:12px;font-weight:500;color:var(--text1)">Wednesday</span>
             <label style="display:flex;align-items:center;cursor:pointer"><input type="checkbox" class="sched-toggle" data-day="wed" checked onchange="toggleDay(this)" style="accent-color:var(--accent);width:14px;height:14px"></label>
-            <input type="time" class="form-input sched-from" data-day="wed" value="08:00" onchange="updateSchedulePreview()" style="padding:5px 8px;font-size:12px;color-scheme:dark">
+            <select class="form-select sched-from sched-options" data-day="wed" onchange="updateSchedulePreview()" style="padding:5px 8px;font-size:12px"></select>
             <span style="text-align:center;color:var(--text3);font-size:11px">→</span>
-            <input type="time" class="form-input sched-to" data-day="wed" value="18:00" onchange="updateSchedulePreview()" style="padding:5px 8px;font-size:12px;color-scheme:dark">
+            <select class="form-select sched-to sched-options" data-day="wed" onchange="updateSchedulePreview()" style="padding:5px 8px;font-size:12px"></select>
           </div>
           <!-- Thu -->
           <div class="sched-row" style="display:grid;grid-template-columns:90px 36px 1fr 18px 1fr;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--border)">
             <span style="font-size:12px;font-weight:500;color:var(--text1)">Thursday</span>
             <label style="display:flex;align-items:center;cursor:pointer"><input type="checkbox" class="sched-toggle" data-day="thu" checked onchange="toggleDay(this)" style="accent-color:var(--accent);width:14px;height:14px"></label>
-            <input type="time" class="form-input sched-from" data-day="thu" value="08:00" onchange="updateSchedulePreview()" style="padding:5px 8px;font-size:12px;color-scheme:dark">
+            <select class="form-select sched-from sched-options" data-day="thu" onchange="updateSchedulePreview()" style="padding:5px 8px;font-size:12px"></select>
             <span style="text-align:center;color:var(--text3);font-size:11px">→</span>
-            <input type="time" class="form-input sched-to" data-day="thu" value="18:00" onchange="updateSchedulePreview()" style="padding:5px 8px;font-size:12px;color-scheme:dark">
+            <select class="form-select sched-to sched-options" data-day="thu" onchange="updateSchedulePreview()" style="padding:5px 8px;font-size:12px"></select>
           </div>
           <!-- Fri -->
           <div class="sched-row" style="display:grid;grid-template-columns:90px 36px 1fr 18px 1fr;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--border)">
             <span style="font-size:12px;font-weight:500;color:var(--text1)">Friday</span>
             <label style="display:flex;align-items:center;cursor:pointer"><input type="checkbox" class="sched-toggle" data-day="fri" checked onchange="toggleDay(this)" style="accent-color:var(--accent);width:14px;height:14px"></label>
-            <input type="time" class="form-input sched-from" data-day="fri" value="08:00" onchange="updateSchedulePreview()" style="padding:5px 8px;font-size:12px;color-scheme:dark">
+            <select class="form-select sched-from sched-options" data-day="fri" onchange="updateSchedulePreview()" style="padding:5px 8px;font-size:12px"></select>
             <span style="text-align:center;color:var(--text3);font-size:11px">→</span>
-            <input type="time" class="form-input sched-to" data-day="fri" value="18:00" onchange="updateSchedulePreview()" style="padding:5px 8px;font-size:12px;color-scheme:dark">
+            <select class="form-select sched-to sched-options" data-day="fri" onchange="updateSchedulePreview()" style="padding:5px 8px;font-size:12px"></select>
           </div>
           <!-- Sat -->
           <div class="sched-row" style="display:grid;grid-template-columns:90px 36px 1fr 18px 1fr;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--border);opacity:.5">
             <span style="font-size:12px;font-weight:500;color:var(--text1)">Saturday</span>
             <label style="display:flex;align-items:center;cursor:pointer"><input type="checkbox" class="sched-toggle" data-day="sat" onchange="toggleDay(this)" style="accent-color:var(--accent);width:14px;height:14px"></label>
-            <input type="time" class="form-input sched-from" data-day="sat" value="09:00" disabled onchange="updateSchedulePreview()" style="padding:5px 8px;font-size:12px;color-scheme:dark">
+            <select class="form-select sched-from sched-options" data-day="sat" disabled onchange="updateSchedulePreview()" style="padding:5px 8px;font-size:12px"></select>
             <span style="text-align:center;color:var(--text3);font-size:11px">→</span>
-            <input type="time" class="form-input sched-to" data-day="sat" value="13:00" disabled onchange="updateSchedulePreview()" style="padding:5px 8px;font-size:12px;color-scheme:dark">
+            <select class="form-select sched-to sched-options" data-day="sat" disabled onchange="updateSchedulePreview()" style="padding:5px 8px;font-size:12px"></select>
           </div>
           <!-- Sun -->
           <div class="sched-row" style="display:grid;grid-template-columns:90px 36px 1fr 18px 1fr;align-items:center;gap:8px;padding:8px 12px;opacity:.5">
             <span style="font-size:12px;font-weight:500;color:var(--text1)">Sunday</span>
             <label style="display:flex;align-items:center;cursor:pointer"><input type="checkbox" class="sched-toggle" data-day="sun" onchange="toggleDay(this)" style="accent-color:var(--accent);width:14px;height:14px"></label>
-            <input type="time" class="form-input sched-from" data-day="sun" value="10:00" disabled onchange="updateSchedulePreview()" style="padding:5px 8px;font-size:12px;color-scheme:dark">
+            <select class="form-select sched-from sched-options" data-day="sun" disabled onchange="updateSchedulePreview()" style="padding:5px 8px;font-size:12px"></select>
             <span style="text-align:center;color:var(--text3);font-size:11px">→</span>
-            <input type="time" class="form-input sched-to" data-day="sun" value="14:00" disabled onchange="updateSchedulePreview()" style="padding:5px 8px;font-size:12px;color-scheme:dark">
+            <select class="form-select sched-to sched-options" data-day="sun" disabled onchange="updateSchedulePreview()" style="padding:5px 8px;font-size:12px"></select>
           </div>
         </div>
         <div id="camp-hours-preview" style="font-size:11px;color:var(--accent);margin-top:8px">📞 Mon–Fri 8:00 AM – 6:00 PM · Sat–Sun off</div>

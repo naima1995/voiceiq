@@ -457,6 +457,7 @@ function renderPageActions(page) {
 // MODAL
 function openModal(id) {
   document.getElementById('modal-' + id).classList.add('open');
+  if (id === 'new-campaign') initScheduleSelects();
 }
 function closeModal(id) {
   document.getElementById('modal-' + id).classList.remove('open');
@@ -542,45 +543,88 @@ async function loadCampaigns() {
   }
 }
 
-// Toggle a day on/off in the schedule
+// ─── Schedule helpers ────────────────────────────────────────────────────────
+// Generate AM/PM options (30-min increments) and populate all .sched-options selects
+function initScheduleSelects() {
+  const options = [];
+  for (let h = 0; h < 24; h++) {
+    for (let m of [0, 30]) {
+      const val    = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+      const period = h < 12 ? 'AM' : 'PM';
+      const hour12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+      const label  = `${hour12}:${String(m).padStart(2,'0')} ${period}`;
+      options.push({ val, label });
+    }
+  }
+
+  const defaults = {
+    from: { mon:'08:00', tue:'08:00', wed:'08:00', thu:'08:00', fri:'08:00', sat:'09:00', sun:'10:00', 'apply-all':'08:00' },
+    to:   { mon:'18:00', tue:'18:00', wed:'18:00', thu:'18:00', fri:'18:00', sat:'13:00', sun:'14:00', 'apply-all':'18:00' },
+  };
+
+  document.querySelectorAll('.sched-options').forEach(sel => {
+    const day  = sel.dataset.day || (sel.id === 'apply-all-from' ? 'apply-all' : 'apply-all');
+    const type = sel.classList.contains('sched-from') || sel.id === 'apply-all-from' ? 'from' : 'to';
+    const def  = defaults[type][day] || (type === 'from' ? '08:00' : '18:00');
+    sel.innerHTML = options.map(o => `<option value="${o.val}"${o.val === def ? ' selected' : ''}>${o.label}</option>`).join('');
+  });
+
+  updateSchedulePreview();
+}
+
+// Toggle a day on/off
 function toggleDay(checkbox) {
-  const day = checkbox.dataset.day;
   const row = checkbox.closest('.sched-row');
-  const selects = row.querySelectorAll('select');
-  selects.forEach(s => s.disabled = !checkbox.checked);
+  row.querySelectorAll('select').forEach(s => s.disabled = !checkbox.checked);
   row.style.opacity = checkbox.checked ? '1' : '0.5';
   updateSchedulePreview();
 }
 
-// Live preview of calling schedule
+// Apply "Apply all" from/to to all currently enabled days
+function applyToAllDays() {
+  const from = document.getElementById('apply-all-from')?.value;
+  const to   = document.getElementById('apply-all-to')?.value;
+  const days = ['mon','tue','wed','thu','fri','sat','sun'];
+  days.forEach(d => {
+    const enabled = document.querySelector(`.sched-toggle[data-day="${d}"]`)?.checked;
+    if (!enabled) return;
+    const fromSel = document.querySelector(`.sched-from[data-day="${d}"]`);
+    const toSel   = document.querySelector(`.sched-to[data-day="${d}"]`);
+    if (fromSel) fromSel.value = from;
+    if (toSel)   toSel.value   = to;
+  });
+  updateSchedulePreview();
+  showToast('⏰ Times applied to all enabled days', 'success');
+}
+
+// Live preview
 function updateSchedulePreview() {
   const preview = document.getElementById('camp-hours-preview');
   if (!preview) return;
-  const days = ['mon','tue','wed','thu','fri','sat','sun'];
+  const days   = ['mon','tue','wed','thu','fri','sat','sun'];
   const labels = { mon:'Mon', tue:'Tue', wed:'Wed', thu:'Thu', fri:'Fri', sat:'Sat', sun:'Sun' };
-  const fmt = t => { const [h, m] = t.split(':'); const hr = +h; return `${hr > 12 ? hr-12 : hr||12}:${m} ${hr >= 12 ? 'PM' : 'AM'}`; };
+  const fmt    = v => { if (!v) return ''; const [h,m] = v.split(':'); const hr=+h; return `${hr===0?12:hr>12?hr-12:hr}:${m} ${hr<12?'AM':'PM'}`; };
 
-  const activeDays = days.filter(d => document.querySelector(`.sched-toggle[data-day="${d}"]`)?.checked);
-  if (!activeDays.length) { preview.textContent = '⚠️ No calling days selected'; return; }
+  const active = days.filter(d => document.querySelector(`.sched-toggle[data-day="${d}"]`)?.checked);
+  if (!active.length) { preview.textContent = '⚠️ No calling days selected'; return; }
 
-  const parts = activeDays.map(d => {
+  const parts = active.map(d => {
     const from = document.querySelector(`.sched-from[data-day="${d}"]`)?.value || '08:00';
     const to   = document.querySelector(`.sched-to[data-day="${d}"]`)?.value   || '18:00';
-    return `${labels[d]} ${from}–${to}`;
+    return `${labels[d]} ${fmt(from)}–${fmt(to)}`;
   });
   preview.textContent = `📞 ${parts.join(' · ')}`;
 }
 
-// Build schedule object from modal
+// Build schedule object for API
 function getSchedule() {
   const days = ['mon','tue','wed','thu','fri','sat','sun'];
   const schedule = {};
   days.forEach(d => {
-    const enabled = document.querySelector(`.sched-toggle[data-day="${d}"]`)?.checked || false;
     schedule[d] = {
-      enabled,
-      from: document.querySelector(`.sched-from[data-day="${d}"]`)?.value || '08:00',
-      to:   document.querySelector(`.sched-to[data-day="${d}"]`)?.value   || '18:00',
+      enabled: document.querySelector(`.sched-toggle[data-day="${d}"]`)?.checked || false,
+      from:    document.querySelector(`.sched-from[data-day="${d}"]`)?.value || '08:00',
+      to:      document.querySelector(`.sched-to[data-day="${d}"]`)?.value   || '18:00',
     };
   });
   return schedule;
