@@ -400,13 +400,21 @@ async function loadTwilioStatus() {
   try {
     const status = await api('/api/twilio/status');
     const el = document.getElementById('twilio-status');
-    if (!el) return;
+    const numEl = document.getElementById('twilio-calling-number');
     if (status.connected) {
-      el.innerHTML = `<span class="badge active">Connected</span> <span style="font-size:12px;color:var(--text3)">${status.defaultNumber || ''}</span>`;
+      if (el) el.innerHTML = `<span class="badge active">Connected</span>`;
+      if (numEl) numEl.textContent = status.defaultNumber || '—';
     } else {
-      el.innerHTML = `<span class="badge" style="background:var(--red-dim);color:var(--red)">Not connected</span>`;
+      if (el) el.innerHTML = `<span class="badge" style="background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)">Not connected</span>`;
     }
   } catch {}
+}
+
+async function triggerTestCall() {
+  const toNumber = document.getElementById('test-call-number')?.value?.trim();
+  const agentId  = document.getElementById('test-call-agent')?.value || 'james';
+  if (!toNumber) { showToast('Enter a number to call', 'error'); return; }
+  await makeCall({ toNumber, agentId });
 }
 
 // CALL TIMER

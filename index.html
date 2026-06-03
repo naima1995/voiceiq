@@ -105,7 +105,7 @@
     </div>
     <div class="nav-section-label">System</div>
     <div class="nav-item" data-page="teams" onclick="navigate('teams')">
-      <i class="ti ti-brand-teams"></i><span class="nav-label">Microsoft Teams</span><span class="nav-badge blue">New</span>
+      <i class="ti ti-phone-call"></i><span class="nav-label">Twilio Calling</span>
     </div>
     <div class="nav-item" data-page="integrations" onclick="navigate('integrations')">
       <i class="ti ti-plug"></i><span class="nav-label">Integrations</span>
@@ -354,16 +354,16 @@
                 <button class="btn btn-ghost btn-sm"><i class="ti ti-edit"></i> Change</button>
               </div>
             </div>
-            <div style="background:var(--bg-card2);border:1px solid rgba(85,88,175,.3);border-radius:var(--radius);padding:16px">
+            <div style="background:var(--bg-card2);border:1px solid rgba(244,63,94,.3);border-radius:var(--radius);padding:16px">
               <div class="flex items-center gap-2 mb-4" style="margin-bottom:12px">
-                <div style="width:36px;height:36px;background:var(--teams-dim);border-radius:9px;display:flex;align-items:center;justify-content:center"><i class="ti ti-brand-teams" style="color:#8B8FD4;font-size:18px"></i></div>
-                <div><div style="font-size:13px;font-weight:600;color:var(--text1)">Microsoft Teams</div><div style="font-size:10px;color:var(--text3)">Phone System integration</div></div>
-                <span class="badge teams" style="margin-left:auto">Connected</span>
+                <div style="width:36px;height:36px;background:var(--red-dim);border-radius:9px;display:flex;align-items:center;justify-content:center"><i class="ti ti-phone-call" style="color:var(--red);font-size:18px"></i></div>
+                <div><div style="font-size:13px;font-weight:600;color:var(--text1)">Twilio</div><div style="font-size:10px;color:var(--text3)">Outbound calling integration</div></div>
+                <span class="badge active" style="margin-left:auto">Connected</span>
               </div>
-              <div style="font-size:22px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--text1);margin-bottom:10px">+44 20 7946 0300</div>
-              <div style="font-size:11px;color:var(--text3);margin-bottom:14px">Teams Phone System · 3 lines assigned · Inbound + Outbound</div>
+              <div style="font-size:22px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--text1);margin-bottom:10px" id="twilio-calling-number">—</div>
+              <div style="font-size:11px;color:var(--text3);margin-bottom:14px">Twilio · Outbound AI calling enabled</div>
               <div class="flex gap-2">
-                <button class="btn btn-teams btn-sm" onclick="navigate('teams')"><i class="ti ti-brand-teams"></i> Manage Teams</button>
+                <button class="btn btn-ghost btn-sm" onclick="navigate('teams')"><i class="ti ti-settings"></i> Manage Twilio</button>
               </div>
             </div>
           </div>
@@ -460,9 +460,9 @@
           <thead><tr><th>Contact</th><th>Number</th><th>Channel</th><th>Direction</th><th>Duration</th><th>Outcome</th><th>AI Score</th><th>Actions</th></tr></thead>
           <tbody>
             <tr><td class="bold">Richard Barnes</td><td class="font-mono">+44 7700 900142</td><td><span class="badge mobile">Mobile</span></td><td><i class="ti ti-phone-outgoing" style="color:var(--accent)"></i> Out</td><td class="font-mono">04:23</td><td><span class="badge active">Booked</span></td><td style="color:var(--green);font-weight:600">4.9</td><td><button class="btn btn-ghost btn-sm"><i class="ti ti-player-play"></i></button></td></tr>
-            <tr><td class="bold">Sarah Ellis</td><td class="font-mono">+44 20 7946 0193</td><td><span class="badge teams">Teams</span></td><td><i class="ti ti-phone-outgoing" style="color:var(--accent)"></i> Out</td><td class="font-mono">01:47</td><td><span class="badge live">Live</span></td><td style="color:var(--text3);font-weight:600">—</td><td><button class="btn btn-ghost btn-sm"><i class="ti ti-eye"></i></button></td></tr>
+            <tr><td class="bold">Sarah Ellis</td><td class="font-mono">+44 20 7946 0193</td><td><span class="badge mobile">Twilio</span></td><td><i class="ti ti-phone-outgoing" style="color:var(--accent)"></i> Out</td><td class="font-mono">01:47</td><td><span class="badge live">Live</span></td><td style="color:var(--text3);font-weight:600">—</td><td><button class="btn btn-ghost btn-sm"><i class="ti ti-eye"></i></button></td></tr>
             <tr><td class="bold">Marcus Patel</td><td class="font-mono">+44 7911 123456</td><td><span class="badge mobile">Mobile</span></td><td><i class="ti ti-phone-outgoing" style="color:var(--accent)"></i> Out</td><td class="font-mono">11:02</td><td><span class="badge booked">Qualified</span></td><td style="color:var(--green);font-weight:600">4.7</td><td><button class="btn btn-ghost btn-sm"><i class="ti ti-player-play"></i></button></td></tr>
-            <tr><td class="bold">Whitmore Legal</td><td class="font-mono">+44 1632 960100</td><td><span class="badge teams">Teams</span></td><td><i class="ti ti-phone-incoming" style="color:var(--green)"></i> In</td><td class="font-mono">08:14</td><td><span class="badge pending">Escalated</span></td><td style="color:var(--amber);font-weight:600">3.4</td><td><button class="btn btn-ghost btn-sm"><i class="ti ti-player-play"></i></button></td></tr>
+            <tr><td class="bold">Whitmore Legal</td><td class="font-mono">+44 1632 960100</td><td><span class="badge mobile">Twilio</span></td><td><i class="ti ti-phone-incoming" style="color:var(--green)"></i> In</td><td class="font-mono">08:14</td><td><span class="badge pending">Escalated</span></td><td style="color:var(--amber);font-weight:600">3.4</td><td><button class="btn btn-ghost btn-sm"><i class="ti ti-player-play"></i></button></td></tr>
             <tr><td class="bold">Nexford Group</td><td class="font-mono">+44 1632 960321</td><td><span class="badge mobile">Mobile</span></td><td><i class="ti ti-phone-outgoing" style="color:var(--accent)"></i> Out</td><td class="font-mono">00:00</td><td><span class="badge" style="background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)">No answer</span></td><td style="color:var(--text3)">—</td><td><button class="btn btn-ghost btn-sm"><i class="ti ti-refresh"></i></button></td></tr>
           </tbody>
         </table>
@@ -481,7 +481,6 @@
             </div>
             <div class="flex gap-2">
               <span class="badge active" style="font-size:10px">Google Cal synced</span>
-              <span class="badge teams" style="font-size:10px">Teams synced</span>
             </div>
           </div>
           <div class="card-body">
@@ -692,170 +691,52 @@ Do you have just two or three minutes to hear a little more?</textarea>
       </div>
     </section>
 
-    <!-- ══════════════════════════ MICROSOFT TEAMS ══════════════════════════ -->
+    <!-- ══════════════════════════ TWILIO CALLING ══════════════════════════ -->
     <section class="page-section" id="page-teams">
-      <div id="teams-success" style="display:none">
-        <div style="text-align:center;padding:40px 20px">
-          <div style="width:64px;height:64px;background:var(--green-dim);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;border:2px solid rgba(16,185,129,.3)">
-            <i class="ti ti-check" style="font-size:28px;color:var(--green)"></i>
-          </div>
-          <div style="font-size:20px;font-weight:700;margin-bottom:8px">Microsoft Teams Connected!</div>
-          <div style="font-size:13px;color:var(--text2);max-width:420px;margin:0 auto 24px">Your Teams account is now linked to VoiceIQ. Inbound and outbound AI calling is active through your Teams Phone System numbers.</div>
-          <div class="flex gap-2" style="justify-content:center">
-            <button class="btn btn-primary" onclick="navigate('agents')"><i class="ti ti-robot"></i> Configure Agents</button>
-            <button class="btn btn-ghost" onclick="navigate('calls')"><i class="ti ti-phone"></i> View Calls</button>
-          </div>
-        </div>
-      </div>
-      <div id="teams-form">
-        <!-- Step Indicator -->
-        <div style="display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:28px">
-          <div class="step-indicator">
-            <div class="step-ind-item"><div class="step-ind-num current">1</div></div>
-            <div class="step-ind-line"></div>
-            <div class="step-ind-item"><div class="step-ind-num">2</div></div>
-            <div class="step-ind-line"></div>
-            <div class="step-ind-item"><div class="step-ind-num">3</div></div>
-            <div class="step-ind-line"></div>
-            <div class="step-ind-item"><div class="step-ind-num">4</div></div>
-          </div>
-        </div>
-        <div style="display:flex;justify-content:center;gap:0;margin-bottom:20px;font-size:11px;color:var(--text3);text-align:center">
-          <div style="width:100px">Sign in</div>
-          <div style="width:50px"></div>
-          <div style="width:100px">Select number</div>
-          <div style="width:50px"></div>
-          <div style="width:100px">Routing rules</div>
-          <div style="width:50px"></div>
-          <div style="width:100px">Confirm</div>
-        </div>
-
-        <!-- Step 1: Sign in -->
-        <div class="teams-step">
-          <div class="teams-connect-box" style="max-width:580px;margin:0 auto">
-            <div class="flex items-center gap-3 mb-4" style="margin-bottom:20px">
-              <div style="width:48px;height:48px;background:var(--teams-dim);border-radius:14px;display:flex;align-items:center;justify-content:center"><i class="ti ti-brand-teams" style="font-size:26px;color:#8B8FD4"></i></div>
-              <div><div style="font-size:18px;font-weight:700;color:var(--text1)">Connect Microsoft Teams</div><div style="font-size:12px;color:var(--text2)">Use your existing Teams Phone System for AI calls</div></div>
+      <div class="grid-2" style="max-width:900px">
+        <!-- Status Card -->
+        <div class="card">
+          <div class="card-header">
+            <div class="flex items-center gap-2">
+              <div style="width:38px;height:38px;background:var(--red-dim);border-radius:11px;display:flex;align-items:center;justify-content:center"><i class="ti ti-phone-call" style="color:var(--red);font-size:20px"></i></div>
+              <div><div class="card-title">Twilio</div><div class="card-sub">Outbound AI calling</div></div>
             </div>
-            <div class="teams-features">
-              <div class="teams-feat"><i class="ti ti-phone-outgoing"></i> Outbound AI calling</div>
-              <div class="teams-feat"><i class="ti ti-phone-incoming"></i> Inbound AI answering</div>
-              <div class="teams-feat"><i class="ti ti-user-check"></i> Transfer to human in Teams</div>
-              <div class="teams-feat"><i class="ti ti-calendar"></i> Teams meeting booking</div>
-              <div class="teams-feat"><i class="ti ti-eye"></i> Live call monitoring</div>
-              <div class="teams-feat"><i class="ti ti-microphone"></i> Call recording</div>
-            </div>
-            <div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:20px">
-              <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em">Requirements</div>
-              <div style="display:flex;flex-direction:column;gap:6px">
-                <div class="flex items-center gap-2" style="font-size:12px;color:var(--text2)"><i class="ti ti-circle-check" style="color:var(--green);font-size:14px"></i> Microsoft 365 Business or Enterprise account</div>
-                <div class="flex items-center gap-2" style="font-size:12px;color:var(--text2)"><i class="ti ti-circle-check" style="color:var(--green);font-size:14px"></i> Teams Phone System licence (or Teams Phone add-on)</div>
-                <div class="flex items-center gap-2" style="font-size:12px;color:var(--text2)"><i class="ti ti-circle-check" style="color:var(--green);font-size:14px"></i> At least one UK number assigned in Teams Admin</div>
-                <div class="flex items-center gap-2" style="font-size:12px;color:var(--text2)"><i class="ti ti-circle-check" style="color:var(--green);font-size:14px"></i> Global Admin or Teams Admin permissions</div>
-              </div>
-            </div>
-            <button class="btn btn-teams w-full" style="padding:12px;font-size:13px;justify-content:center" onclick="teamsSignIn()">
-              <i class="ti ti-brand-teams"></i> Sign in with Microsoft 365
-            </button>
-            <div style="font-size:10px;color:var(--text3);text-align:center;margin-top:10px">VoiceIQ uses Microsoft Graph API with read-only calling permissions. Your data stays secure.</div>
+            <span id="twilio-status"><span class="badge pending">Checking…</span></span>
           </div>
-        </div>
-
-        <!-- Step 2: Select Number -->
-        <div class="teams-step" style="display:none">
-          <div style="max-width:580px;margin:0 auto">
-            <div class="card mb-4" style="margin-bottom:14px">
-              <div class="card-header"><div class="card-title">Teams numbers found on your account</div><div class="card-sub" style="color:var(--green)">✓ Signed in as james.mitchell@company.co.uk</div></div>
-              <div style="padding:6px 0">
-                <label style="display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .1s" onmouseenter="this.style.background='var(--bg-hover)'" onmouseleave="this.style.background='transparent'">
-                  <input type="radio" name="teams-num" checked style="accent-color:var(--accent)">
-                  <div style="flex:1">
-                    <div style="font-size:13px;font-weight:600;font-family:'JetBrains Mono',monospace;color:var(--text1)">+44 20 7946 0300</div>
-                    <div style="font-size:11px;color:var(--text3)">Main office line · Direct Routing · Outbound enabled</div>
-                  </div>
-                  <span class="badge active">Available</span>
-                </label>
-                <label style="display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer;border-bottom:1px solid var(--border)" onmouseenter="this.style.background='var(--bg-hover)'" onmouseleave="this.style.background='transparent'">
-                  <input type="radio" name="teams-num" style="accent-color:var(--accent)">
-                  <div style="flex:1">
-                    <div style="font-size:13px;font-weight:600;font-family:'JetBrains Mono',monospace;color:var(--text1)">+44 20 7946 0301</div>
-                    <div style="font-size:11px;color:var(--text3)">Sales DDI · Calling Plan · Outbound enabled</div>
-                  </div>
-                  <span class="badge active">Available</span>
-                </label>
-                <label style="display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer" onmouseenter="this.style.background='var(--bg-hover)'" onmouseleave="this.style.background='transparent'">
-                  <input type="radio" name="teams-num" style="accent-color:var(--accent)">
-                  <div style="flex:1">
-                    <div style="font-size:13px;font-weight:600;font-family:'JetBrains Mono',monospace;color:var(--text1)">+44 20 7946 0302</div>
-                    <div style="font-size:11px;color:var(--text3)">Support line · Shared line · Inbound only</div>
-                  </div>
-                  <span class="badge pending">Inbound only</span>
-                </label>
-              </div>
+          <div class="card-body" style="display:flex;flex-direction:column;gap:12px">
+            <div class="flex justify-between" style="padding:8px 0;border-bottom:1px solid var(--border)">
+              <span style="font-size:12px;color:var(--text3)">Outbound number</span>
+              <span style="font-size:12px;font-weight:600;font-family:'JetBrains Mono',monospace;color:var(--text1)" id="twilio-calling-number">—</span>
+            </div>
+            <div class="flex justify-between" style="padding:8px 0;border-bottom:1px solid var(--border)">
+              <span style="font-size:12px;color:var(--text3)">Webhook — Answer</span>
+              <span style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace">/api/webhooks/twilio/answer</span>
+            </div>
+            <div class="flex justify-between" style="padding:8px 0">
+              <span style="font-size:12px;color:var(--text3)">Webhook — Status</span>
+              <span style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace">/api/webhooks/twilio/status</span>
             </div>
           </div>
         </div>
-
-        <!-- Step 3: Routing Rules -->
-        <div class="teams-step" style="display:none">
-          <div style="max-width:580px;margin:0 auto">
-            <div class="card mb-4" style="margin-bottom:14px">
-              <div class="card-header"><div class="card-title">Inbound call routing</div><div class="card-sub">How should calls be handled?</div></div>
-              <div class="card-body">
-                <div class="form-group">
-                  <label class="form-label">When a call comes in to +44 20 7946 0300</label>
-                  <select class="form-select"><option>AI Agent answers immediately</option><option>Ring once then AI answers</option><option>Human answers, AI if no response in 10s</option></select>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">AI Agent to handle inbound</label>
-                  <select class="form-select"><option>Sophia (Southern British · Female)</option><option>James (Neutral UK · Male)</option><option>Charlotte (Friendly · Female)</option></select>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Transfer to human trigger</label>
-                  <select class="form-select"><option>Caller requests human / says "speak to someone"</option><option>After 2 unresolved objections</option><option>Specific keywords detected</option><option>Never — AI handles all calls</option></select>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Transfer destination in Teams</label>
-                  <select class="form-select"><option>Sales Team channel</option><option>james.mitchell@company.co.uk</option><option>Hunt group — All sales reps</option></select>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Working hours (UK time)</label>
-                  <div class="flex gap-2">
-                    <input type="time" class="form-input" value="08:30" style="flex:1">
-                    <span style="line-height:36px;color:var(--text3)">to</span>
-                    <input type="time" class="form-input" value="18:00" style="flex:1">
-                  </div>
-                </div>
-                <div class="toggle-wrap"><div class="toggle on" onclick="toggleSwitch(this)"></div><span style="font-size:12px;color:var(--text2)">Send SMS if call unanswered</span></div>
-              </div>
+        <!-- Quick Actions -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">Quick Test</div></div>
+          <div class="card-body" style="display:flex;flex-direction:column;gap:12px">
+            <div class="form-group">
+              <label class="form-label">Test call to number</label>
+              <input class="form-input" id="test-call-number" placeholder="+447700000000">
             </div>
-          </div>
-        </div>
-
-        <!-- Step 4: Confirm -->
-        <div class="teams-step" style="display:none">
-          <div style="max-width:580px;margin:0 auto">
-            <div class="card">
-              <div class="card-header"><div class="card-title">Review & confirm</div></div>
-              <div class="card-body">
-                <div style="display:flex;flex-direction:column;gap:12px">
-                  <div class="flex justify-between" style="padding:10px 0;border-bottom:1px solid var(--border)"><span style="font-size:12px;color:var(--text3)">Microsoft account</span><span style="font-size:12px;font-weight:500;color:var(--text1)">james.mitchell@company.co.uk</span></div>
-                  <div class="flex justify-between" style="padding:10px 0;border-bottom:1px solid var(--border)"><span style="font-size:12px;color:var(--text3)">Teams number</span><span style="font-size:12px;font-weight:600;font-family:'JetBrains Mono',monospace;color:var(--text1)">+44 20 7946 0300</span></div>
-                  <div class="flex justify-between" style="padding:10px 0;border-bottom:1px solid var(--border)"><span style="font-size:12px;color:var(--text3)">AI Agent</span><span style="font-size:12px;font-weight:500;color:var(--text1)">Sophia — Southern British Female</span></div>
-                  <div class="flex justify-between" style="padding:10px 0;border-bottom:1px solid var(--border)"><span style="font-size:12px;color:var(--text3)">Call direction</span><span style="font-size:12px;font-weight:500;color:var(--green)">Inbound + Outbound</span></div>
-                  <div class="flex justify-between" style="padding:10px 0;border-bottom:1px solid var(--border)"><span style="font-size:12px;color:var(--text3)">Human transfer</span><span style="font-size:12px;font-weight:500;color:var(--text1)">Sales Team channel</span></div>
-                  <div class="flex justify-between" style="padding:10px 0"><span style="font-size:12px;color:var(--text3)">Working hours</span><span style="font-size:12px;font-weight:500;color:var(--text1)">08:30 – 18:00 UK time</span></div>
-                </div>
-              </div>
+            <div class="form-group">
+              <label class="form-label">AI Agent</label>
+              <select class="form-select" id="test-call-agent">
+                <option value="james">James — Neutral UK Male</option>
+                <option value="rachel">Rachel — Southern British Female</option>
+                <option value="shelley">Shelley — Warm British Professional</option>
+                <option value="alexis">Alexis — Clear Confident British</option>
+              </select>
             </div>
+            <button class="btn btn-primary" onclick="triggerTestCall()"><i class="ti ti-phone-outgoing"></i> Make Test Call</button>
           </div>
-        </div>
-
-        <!-- Nav Buttons -->
-        <div class="flex justify-between" style="max-width:580px;margin:20px auto 0">
-          <button id="teams-prev-btn" class="btn btn-ghost" onclick="teamsPrev()" style="display:none"><i class="ti ti-arrow-left"></i> Back</button>
-          <div style="flex:1"></div>
-          <button id="teams-next-btn" class="btn btn-primary" onclick="teamsNext()">Continue <i class="ti ti-arrow-right"></i></button>
         </div>
       </div>
     </section>
@@ -864,8 +745,8 @@ Do you have just two or three minutes to hear a little more?</textarea>
     <section class="page-section" id="page-integrations">
       <div class="int-grid">
         <div class="int-card connected">
-          <div class="int-logo" style="background:var(--teams-dim)"><i class="ti ti-brand-teams" style="color:#8B8FD4"></i></div>
-          <div><div class="int-name">Microsoft Teams</div><div class="int-desc">AI calling via Teams Phone System. Inbound, outbound, and live transfer.</div></div>
+          <div class="int-logo" style="background:var(--red-dim)"><i class="ti ti-phone-call" style="color:var(--red)"></i></div>
+          <div><div class="int-name">Twilio</div><div class="int-desc">AI outbound calling via Twilio. ElevenLabs voice + Gemini AI conversation.</div></div>
           <div class="int-status-row"><span class="badge active">Connected</span><button class="btn btn-ghost btn-sm" onclick="navigate('teams')">Manage</button></div>
         </div>
         <div class="int-card connected">
@@ -978,7 +859,7 @@ Do you have just two or three minutes to hear a little more?</textarea>
     <div class="modal-body">
       <div class="form-group"><label class="form-label">Campaign name</label><input class="form-input" placeholder="e.g. Q4 Outbound Sales"></div>
       <div class="form-group"><label class="form-label">AI Agent</label><select class="form-select"><option>Sophia — Southern British Female</option><option>James — Neutral UK Male</option><option>Charlotte — Friendly Female</option></select></div>
-      <div class="form-group"><label class="form-label">Calling number</label><select class="form-select"><option>+44 7700 900142 (Mobile / SIP)</option><option>+44 20 7946 0300 (Teams)</option><option>+44 20 7946 0301 (Teams DDI)</option></select></div>
+      <div class="form-group"><label class="form-label">Calling number</label><select class="form-select"><option>Twilio — default outbound number</option></select></div>
       <div class="form-group"><label class="form-label">Script / Prompt</label><select class="form-select"><option>Q3 Outbound Sales Script</option><option>Product Demo Script</option><option>Renewal Follow-up</option></select></div>
       <div class="grid-2">
         <div class="form-group"><label class="form-label">Start date</label><input type="date" class="form-input"></div>
@@ -1006,7 +887,7 @@ Do you have just two or three minutes to hear a little more?</textarea>
       <div class="form-group"><label class="form-label">Gender</label><select class="form-select"><option>Female</option><option>Male</option></select></div>
       <div class="form-group"><label class="form-label">Speaking speed</label><select class="form-select"><option>Natural (recommended)</option><option>Slightly slower</option><option>Slightly faster</option></select></div>
       <div class="form-group"><label class="form-label">Default script</label><select class="form-select"><option>Q3 Outbound Sales</option><option>Inbound Greeting</option><option>Appointment Booking</option></select></div>
-      <div class="form-group"><label class="form-label">Assign number</label><select class="form-select"><option>+44 7700 900142 (Mobile)</option><option>+44 20 7946 0300 (Teams)</option></select></div>
+      <div class="form-group"><label class="form-label">Assign number</label><select class="form-select"><option>Twilio — default outbound number</option></select></div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('new-agent')">Cancel</button>
