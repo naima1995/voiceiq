@@ -404,8 +404,9 @@ function navigate(page) {
   renderPageActions(page);
 
   // Load page-specific data
-  if (page === 'calls') loadCallLog();
-  if (page === 'teams') loadTwilioStatus();
+  if (page === 'calls')     loadCallLog();
+  if (page === 'teams')     loadTwilioStatus();
+  if (page === 'campaigns') loadCampaigns();
 }
 
 const pageTitles = {
@@ -492,6 +493,103 @@ async function loadTwilioStatus() {
       if (el) el.innerHTML = `<span class="badge" style="background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)">Not connected</span>`;
     }
   } catch {}
+}
+
+// ─── Campaigns ───────────────────────────────────────────────────────────────
+async function loadCampaigns() {
+  const tbody = document.getElementById('campaigns-tbody');
+  if (!tbody) return;
+
+  try {
+    const data = await api('/api/campaigns');
+    const campaigns = data.campaigns || [];
+
+    // Update metric cards
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    set('camp-active-count', data.meta?.activeCount ?? 0);
+    set('camp-total-leads',  (data.meta?.totalLeads ?? 0).toLocaleString());
+    set('camp-total-booked', data.meta?.totalBooked ?? 0);
+    set('camp-total-count',  campaigns.length);
+
+    if (!campaigns.length) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text3)">No campaigns yet — click <strong>+ New Campaign</strong> to get started</td></tr>`;
+      return;
+    }
+
+    const colors = ['var(--accent)', 'var(--purple)', 'var(--green)', 'var(--amber)'];
+    tbody.innerHTML = campaigns.map((c, i) => {
+      const color    = colors[i % colors.length];
+      const pct      = c.leadCount > 0 ? Math.round((c.reached / c.leadCount) * 100) : 0;
+      const convRate = c.reached  > 0 ? ((c.booked / c.reached) * 100).toFixed(1) + '%' : '—';
+      const statusCls = c.status === 'active' ? 'badge active' : c.status === 'paused' ? 'badge paused' : 'badge pending';
+      const statusLabel = c.status.charAt(0).toUpperCase() + c.status.slice(1);
+      return `<tr>
+        <td class="bold">${c.name}</td>
+        <td>${c.agentId || '—'}</td>
+        <td>${c.leadCount || 0}</td>
+        <td><div style="display:flex;align-items:center;gap:8px">
+          <div class="prog-bar" style="flex:1;width:80px"><div class="prog-fill" style="width:${pct}%;background:${color}"></div></div>
+          <span style="font-size:11px;color:${color}">${c.status === 'draft' ? 'Draft' : pct + '%'}</span>
+        </div></td>
+        <td style="color:var(--green);font-weight:600">${c.booked || '—'}</td>
+        <td>${convRate}</td>
+        <td><span class="${statusCls}">${statusLabel}</span></td>
+        <td><button class="btn btn-ghost btn-sm" onclick="deleteCampaign('${c.id}')"><i class="ti ti-trash"></i></button></td>
+      </tr>`;
+    }).join('');
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text3)">Could not load campaigns</td></tr>`;
+  }
+}
+
+async function createCampaign() {
+  const name       = document.getElementById('camp-name')?.value?.trim();
+  const agentId    = document.getElementById('camp-agent')?.value;
+  const dailyLimit = document.getElementById('camp-daily-limit')?.value;
+  const startDate  = document.getElementById('camp-start-date')?.value;
+  const fileInput  = document.getElementById('camp-leads-file');
+
+  if (!name) { showToast('Campaign name is required', 'error'); return; }
+
+  try {
+    // Create the campaign
+    const campaign = await api('/api/campaigns', {
+      method: 'POST',
+      body: JSON.stringify({ name, agentId, dailyLimit, startDate }),
+    });
+
+    // Upload leads file if provided
+    if (fileInput?.files?.[0]) {
+      const formData = new FormData();
+      formData.append('file', fileInput.files[0]);
+      formData.append('campaignId', campaign.id);
+
+      const res  = await fetch(`${API_BASE}/api/leads/upload`, { method: 'POST', body: formData });
+      const data = await res.json();
+
+      if (data.imported) {
+        await api(`/api/campaigns/${campaign.id}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ leadCount: data.imported, status: 'active' }),
+        });
+        showToast(`✅ Campaign created — ${data.imported} leads imported`, 'success');
+      }
+    } else {
+      showToast(`✅ Campaign "${name}" created as draft`, 'success');
+    }
+
+    closeModal('new-campaign');
+    loadCampaigns();
+  } catch (err) {
+    showToast(`❌ Failed: ${err.message}`, 'error');
+  }
+}
+
+async function deleteCampaign(id) {
+  if (!confirm('Delete this campaign?')) return;
+  await api(`/api/campaigns/${id}`, { method: 'DELETE' });
+  showToast('Campaign deleted', 'success');
+  loadCampaigns();
 }
 
 // ─── Upload Excel leads ───────────────────────────────────────────────────────

@@ -371,10 +371,10 @@
     <!-- ══════════════════════════ CAMPAIGNS ══════════════════════════ -->
     <section class="page-section" id="page-campaigns">
       <div class="grid-4 mb-4">
-        <div class="metric-card blue"><div class="metric-icon blue"><i class="ti ti-speakerphone"></i></div><div class="metric-label">Active Campaigns</div><div class="metric-value">3</div><div class="metric-trend neutral">2 outbound · 1 inbound</div></div>
-        <div class="metric-card green"><div class="metric-icon green"><i class="ti ti-users"></i></div><div class="metric-label">Total Leads</div><div class="metric-value">1,450</div><div class="metric-trend up"><i class="ti ti-trending-up" style="font-size:13px"></i> 957 reached</div></div>
-        <div class="metric-card purple"><div class="metric-icon purple"><i class="ti ti-calendar-check"></i></div><div class="metric-label">Appointments</div><div class="metric-value">93</div><div class="metric-trend up"><i class="ti ti-trending-up" style="font-size:13px"></i> this month</div></div>
-        <div class="metric-card amber"><div class="metric-icon amber"><i class="ti ti-coin"></i></div><div class="metric-label">Est. Pipeline</div><div class="metric-value">£84k</div><div class="metric-trend up"><i class="ti ti-trending-up" style="font-size:13px"></i> from AI calls</div></div>
+        <div class="metric-card blue"><div class="metric-icon blue"><i class="ti ti-speakerphone"></i></div><div class="metric-label">Active Campaigns</div><div class="metric-value" id="camp-active-count">—</div><div class="metric-trend neutral">running now</div></div>
+        <div class="metric-card green"><div class="metric-icon green"><i class="ti ti-users"></i></div><div class="metric-label">Total Leads</div><div class="metric-value" id="camp-total-leads">—</div><div class="metric-trend neutral">across all campaigns</div></div>
+        <div class="metric-card purple"><div class="metric-icon purple"><i class="ti ti-calendar-check"></i></div><div class="metric-label">Appointments</div><div class="metric-value" id="camp-total-booked">—</div><div class="metric-trend neutral">booked</div></div>
+        <div class="metric-card amber"><div class="metric-icon amber"><i class="ti ti-list"></i></div><div class="metric-label">Total Campaigns</div><div class="metric-value" id="camp-total-count">—</div><div class="metric-trend neutral">all time</div></div>
       </div>
       <div class="card">
         <div class="card-header"><div class="card-title">All Campaigns</div>
@@ -386,47 +386,8 @@
         </div>
         <table class="data-table">
           <thead><tr><th>Campaign</th><th>Agent</th><th>Leads</th><th>Progress</th><th>Booked</th><th>Conv. Rate</th><th>Status</th><th></th></tr></thead>
-          <tbody>
-            <tr>
-              <td class="bold">Q3 Outbound Sales</td>
-              <td>Sophia</td>
-              <td>650</td>
-              <td><div style="display:flex;align-items:center;gap:8px"><div class="prog-bar" style="flex:1;width:80px"><div class="prog-fill" style="width:74%;background:var(--accent)"></div></div><span style="font-size:11px;color:var(--accent)">74%</span></div></td>
-              <td style="color:var(--green);font-weight:600">31</td>
-              <td>13.2%</td>
-              <td><span class="badge active">Active</span></td>
-              <td><button class="btn btn-ghost btn-sm"><i class="ti ti-dots"></i></button></td>
-            </tr>
-            <tr>
-              <td class="bold">Product Demo Outreach</td>
-              <td>James</td>
-              <td>500</td>
-              <td><div style="display:flex;align-items:center;gap:8px"><div class="prog-bar" style="flex:1;width:80px"><div class="prog-fill" style="width:41%;background:var(--purple)"></div></div><span style="font-size:11px;color:var(--purple)">41%</span></div></td>
-              <td style="color:var(--green);font-weight:600">18</td>
-              <td>8.8%</td>
-              <td><span class="badge active">Active</span></td>
-              <td><button class="btn btn-ghost btn-sm"><i class="ti ti-dots"></i></button></td>
-            </tr>
-            <tr>
-              <td class="bold">Renewal Follow-ups</td>
-              <td>Charlotte</td>
-              <td>300</td>
-              <td><div style="display:flex;align-items:center;gap:8px"><div class="prog-bar" style="flex:1;width:80px"><div class="prog-fill" style="width:90%;background:var(--green)"></div></div><span style="font-size:11px;color:var(--green)">90%</span></div></td>
-              <td style="color:var(--green);font-weight:600">44</td>
-              <td>16.3%</td>
-              <td><span class="badge active">Active</span></td>
-              <td><button class="btn btn-ghost btn-sm"><i class="ti ti-dots"></i></button></td>
-            </tr>
-            <tr>
-              <td class="bold">Winter Promotion</td>
-              <td>—</td>
-              <td>800</td>
-              <td><div style="display:flex;align-items:center;gap:8px"><div class="prog-bar" style="flex:1;width:80px"><div class="prog-fill" style="width:0%;background:var(--text3)"></div></div><span style="font-size:11px;color:var(--text3)">Draft</span></div></td>
-              <td style="color:var(--text3)">—</td>
-              <td>—</td>
-              <td><span class="badge paused">Draft</span></td>
-              <td><button class="btn btn-ghost btn-sm"><i class="ti ti-dots"></i></button></td>
-            </tr>
+          <tbody id="campaigns-tbody">
+            <tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text3)">No campaigns yet — create your first campaign</td></tr>
           </tbody>
         </table>
       </div>
@@ -850,19 +811,24 @@ Do you have just two or three minutes to hear a little more?</textarea>
       <button class="btn btn-ghost btn-sm" onclick="closeModal('new-campaign')"><i class="ti ti-x"></i></button>
     </div>
     <div class="modal-body">
-      <div class="form-group"><label class="form-label">Campaign name</label><input class="form-input" placeholder="e.g. Q4 Outbound Sales"></div>
-      <div class="form-group"><label class="form-label">AI Agent</label><select class="form-select"><option>Sophia — Southern British Female</option><option>James — Neutral UK Male</option><option>Charlotte — Friendly Female</option></select></div>
-      <div class="form-group"><label class="form-label">Calling number</label><select class="form-select"><option>Twilio — default outbound number</option></select></div>
-      <div class="form-group"><label class="form-label">Script / Prompt</label><select class="form-select"><option>Q3 Outbound Sales Script</option><option>Product Demo Script</option><option>Renewal Follow-up</option></select></div>
-      <div class="grid-2">
-        <div class="form-group"><label class="form-label">Start date</label><input type="date" class="form-input"></div>
-        <div class="form-group"><label class="form-label">Daily call limit</label><input type="number" class="form-input" placeholder="200"></div>
+      <div class="form-group"><label class="form-label">Campaign name</label><input id="camp-name" class="form-input" placeholder="e.g. Q4 Outbound Sales"></div>
+      <div class="form-group"><label class="form-label">AI Agent</label>
+        <select id="camp-agent" class="form-select">
+          <option value="james">James — Neutral UK Male</option>
+          <option value="rachel">Rachel — Southern British Female</option>
+          <option value="shelley">Shelley — Warm British Professional</option>
+          <option value="alexis">Alexis — Clear Confident British</option>
+        </select>
       </div>
-      <div class="form-group"><label class="form-label">Upload leads (Excel)</label><input type="file" class="form-input" accept=".xlsx,.xls"></div>
+      <div class="grid-2">
+        <div class="form-group"><label class="form-label">Start date</label><input id="camp-start-date" type="date" class="form-input"></div>
+        <div class="form-group"><label class="form-label">Daily call limit</label><input id="camp-daily-limit" type="number" class="form-input" placeholder="200"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Upload leads (Excel) <span style="color:var(--text3);font-size:11px">optional — can upload later</span></label><input id="camp-leads-file" type="file" class="form-input" accept=".xlsx,.xls"></div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('new-campaign')">Cancel</button>
-      <button class="btn btn-primary" onclick="closeModal('new-campaign')"><i class="ti ti-player-play"></i> Launch Campaign</button>
+      <button class="btn btn-primary" onclick="createCampaign()"><i class="ti ti-player-play"></i> Launch Campaign</button>
     </div>
   </div>
 </div>
