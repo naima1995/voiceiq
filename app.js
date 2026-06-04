@@ -982,6 +982,117 @@ function rotateStatus() {
   if (el) { smIdx = (smIdx+1) % statusMessages.length; el.textContent = statusMessages[smIdx]; }
 }
 
+// ─── AI Prompt Assistant ──────────────────────────────────────────────────────
+let assistantSessionId = 'ps_' + Date.now();
+
+function getScriptContext() {
+  const greeting  = document.getElementById('prompt-ta')?.value || '';
+  const objTitles = objections.map(o => o.title).filter(Boolean).join(', ');
+  return greeting ? `Opening greeting:\n${greeting.slice(0, 300)}\n\nObjection handlers: ${objTitles || 'none yet'}` : '';
+}
+
+function addAssistantMessage(text, role) {
+  const container = document.getElementById('assistant-messages');
+  if (!container) return;
+
+  const div = document.createElement('div');
+  div.className = `assist-msg assist-msg-${role}`;
+
+  // Parse code blocks in bot responses
+  let html = text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/```([\s\S]*?)```/g, '<pre>$1</pre>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\n/g, '<br>');
+
+  const inner = document.createElement('div');
+  inner.innerHTML = html;
+
+  // Add "Apply to script" button for bot messages with code blocks
+  if (role === 'bot' && text.includes('```')) {
+    const applyBtn = document.createElement('button');
+    applyBtn.className = 'btn btn-ghost btn-sm assist-apply-btn';
+    applyBtn.innerHTML = '<i class="ti ti-clipboard-copy"></i> Apply to opening greeting';
+    applyBtn.onclick = () => {
+      const code = text.match(/```([\s\S]*?)```/)?.[1]?.trim();
+      if (code) {
+        const ta = document.getElementById('prompt-ta');
+        if (ta) { ta.value = code; showToast('✅ Applied to opening greeting', 'success'); }
+      }
+    };
+    inner.appendChild(applyBtn);
+  }
+
+  div.appendChild(inner);
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function showTypingIndicator() {
+  const container = document.getElementById('assistant-messages');
+  if (!container) return;
+  const div = document.createElement('div');
+  div.className = 'assist-msg assist-msg-bot';
+  div.id = 'typing-indicator';
+  div.innerHTML = '<div class="assist-typing"><span></span><span></span><span></span></div>';
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function hideTypingIndicator() {
+  document.getElementById('typing-indicator')?.remove();
+}
+
+async function sendAssistantMessage() {
+  const input = document.getElementById('assistant-input');
+  const btn   = document.getElementById('assist-send-btn');
+  const msg   = input?.value?.trim();
+  if (!msg) return;
+
+  input.value = '';
+  input.style.height = 'auto';
+  addAssistantMessage(msg, 'user');
+  showTypingIndicator();
+  btn.disabled = true;
+
+  try {
+    const res  = await api('/api/prompt/assist', {
+      method: 'POST',
+      body: JSON.stringify({
+        message:   msg,
+        sessionId: assistantSessionId,
+        context:   getScriptContext(),
+      }),
+    });
+    hideTypingIndicator();
+    addAssistantMessage(res.reply, 'bot');
+  } catch (err) {
+    hideTypingIndicator();
+    addAssistantMessage('Sorry, I ran into an error. Please try again.', 'bot');
+  } finally {
+    btn.disabled = false;
+    input.focus();
+  }
+}
+
+function askAssistant(prompt) {
+  const input = document.getElementById('assistant-input');
+  if (input) { input.value = prompt; sendAssistantMessage(); }
+}
+
+function askAssistantWithContext(prompt) {
+  const input = document.getElementById('assistant-input');
+  if (input) { input.value = prompt; sendAssistantMessage(); }
+}
+
+function clearAssistantChat() {
+  const container = document.getElementById('assistant-messages');
+  if (!container) return;
+  assistantSessionId = 'ps_' + Date.now();
+  container.innerHTML = `<div class="assist-msg assist-msg-bot"><div style="font-size:12px;line-height:1.6;color:var(--text2)">Chat cleared. How can I help you build your script?</div></div>`;
+  api(`/api/prompt/assist/${assistantSessionId}`, { method: 'DELETE' }).catch(() => {});
+}
+
 // ─── Objection Handling Builder ───────────────────────────────────────────────
 const defaultObjections = [
   {

@@ -461,7 +461,65 @@
 
     <!-- ══════════════════════════ PROMPT BUILDER ══════════════════════════ -->
     <section class="page-section" id="page-prompt">
-      <div class="prompt-builder">
+      <div style="display:grid;grid-template-columns:1fr 360px;gap:16px;align-items:start">
+
+      <!-- AI Assistant Panel -->
+      <div id="ai-assistant-panel" style="order:2;background:var(--bg-card);border:1px solid var(--border2);border-radius:var(--radius-lg);display:flex;flex-direction:column;height:calc(100vh - 140px);min-height:500px">
+        <!-- Header -->
+        <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
+          <div style="width:32px;height:32px;background:linear-gradient(135deg,var(--accent),var(--purple));border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <i class="ti ti-sparkles" style="color:#fff;font-size:16px"></i>
+          </div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600;color:var(--text1)">AI Assistant</div>
+            <div style="font-size:11px;color:var(--text3)">Prompt & objection expert</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="clearAssistantChat()" title="Clear chat" style="padding:4px 6px"><i class="ti ti-refresh" style="font-size:13px"></i></button>
+        </div>
+
+        <!-- Quick prompts -->
+        <div style="padding:10px 12px;border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:6px">
+          <button class="btn btn-ghost btn-sm" onclick="askAssistant('Write an opening greeting for a UK financial services call')" style="font-size:10px;padding:4px 8px">✍️ Opening greeting</button>
+          <button class="btn btn-ghost btn-sm" onclick="askAssistant('Write a not interested objection handler')" style="font-size:10px;padding:4px 8px">🛡️ Not interested</button>
+          <button class="btn btn-ghost btn-sm" onclick="askAssistant('Write a voicemail script')" style="font-size:10px;padding:4px 8px">📱 Voicemail</button>
+          <button class="btn btn-ghost btn-sm" onclick="askAssistant('Write a booking transition script')" style="font-size:10px;padding:4px 8px">📅 Booking</button>
+          <button class="btn btn-ghost btn-sm" onclick="askAssistantWithContext('Review my current opening greeting and suggest improvements')" style="font-size:10px;padding:4px 8px">🔍 Review script</button>
+          <button class="btn btn-ghost btn-sm" onclick="askAssistant('List the most common objections in UK financial services calls and how to handle each')" style="font-size:10px;padding:4px 8px">💡 Common objections</button>
+        </div>
+
+        <!-- Messages -->
+        <div id="assistant-messages" style="flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px">
+          <div class="assist-msg assist-msg-bot">
+            <div style="font-size:12px;line-height:1.6;color:var(--text2)">
+              👋 Hi! I'm your AI prompt assistant. I can help you write opening greetings, objection handlers, booking transitions, and more — tailored for UK outbound calling.<br><br>
+              Try one of the quick prompts above, or just ask me anything.
+            </div>
+          </div>
+        </div>
+
+        <!-- Input -->
+        <div style="padding:10px 12px;border-top:1px solid var(--border)">
+          <div style="display:flex;gap:8px;align-items:flex-end">
+            <textarea
+              id="assistant-input"
+              placeholder="Ask me anything about prompts, objections, scripts…"
+              rows="2"
+              style="flex:1;resize:none;background:var(--bg-card2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--text1);outline:none;font-family:inherit;line-height:1.5"
+              onfocus="this.style.borderColor='var(--accent)'"
+              onblur="this.style.borderColor='var(--border)'"
+              onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAssistantMessage()}"
+            ></textarea>
+            <button class="btn btn-primary" onclick="sendAssistantMessage()" style="padding:8px 12px;flex-shrink:0" id="assist-send-btn">
+              <i class="ti ti-send"></i>
+            </button>
+          </div>
+          <div style="font-size:10px;color:var(--text3);margin-top:5px">Enter to send · Shift+Enter for new line</div>
+        </div>
+      </div>
+
+      <!-- Prompt Builder (left column) -->
+      <div style="order:1">
+      <div class="prompt-builder" style="display:block">
         <div>
           <div class="card mb-4" style="margin-bottom:14px">
             <div class="card-header">
@@ -549,7 +607,9 @@ Do you have just two or three minutes to hear a little more?</textarea>
             </div>
           </div>
         </div>
-      </div>
+      </div><!-- /prompt-builder -->
+      </div><!-- /left col -->
+      </div><!-- /grid -->
     </section>
 
     <!-- ══════════════════════════ CRM ══════════════════════════ -->
