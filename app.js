@@ -482,6 +482,7 @@ function renderRecentActivity(calls) {
 
 // ─── Make outbound call (Twilio) ─────────────────────────────────────────────
 async function makeCall({ toNumber, agentId = 'james', leadData = {} }) {
+  toNumber = normalisePhone(toNumber);
   try {
     showToast(`📞 Initiating call to ${toNumber}...`, 'info');
     const result = await api('/api/twilio/call', {
@@ -890,10 +891,24 @@ async function uploadLeads(input) {
   }
 }
 
+// Normalise UK numbers missing +44 country code
+function normalisePhone(raw) {
+  if (!raw) return raw;
+  let n = raw.replace(/[\s\-().]/g, '');
+  if (n.startsWith('+44')) return n;
+  if (n.startsWith('44'))  return `+${n}`;
+  if (n.startsWith('07'))  return `+44${n.slice(1)}`;
+  if (n.startsWith('7') && n.length >= 10) return `+44${n}`;
+  return n;
+}
+
 async function triggerTestCall() {
-  const toNumber = document.getElementById('test-call-number')?.value?.trim();
-  const agentId  = document.getElementById('test-call-agent')?.value || 'james';
-  if (!toNumber) { showToast('Enter a number to call', 'error'); return; }
+  const raw     = document.getElementById('test-call-number')?.value?.trim();
+  const agentId = document.getElementById('test-call-agent')?.value || 'james';
+  if (!raw) { showToast('Enter a number to call', 'error'); return; }
+  const toNumber = normalisePhone(raw);
+  // Show normalised number in the input so user can see what was dialled
+  document.getElementById('test-call-number').value = toNumber;
   await makeCall({ toNumber, agentId });
 }
 
