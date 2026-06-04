@@ -487,10 +487,17 @@ I'm reaching out because {{call_reason}}. Based on what I know about {{prospect_
 
 Do you have just two or three minutes to hear a little more?</textarea>
               </div>
+              <!-- ── Objection Handling ─────────────────────────────────── -->
               <div class="form-group">
-                <label class="form-label">Objection Handling — "Not interested"</label>
-                <textarea class="form-textarea" rows="3">I completely understand, {{first_name}} — I wouldn't want to take up your time if it's not relevant. Can I just ask, is that because the timing isn't right, or is it more about {{objection_reason}}? I ask only because many of our clients felt the same before they saw the actual numbers…</textarea>
+                <div class="flex justify-between items-center" style="margin-bottom:10px">
+                  <label class="form-label" style="margin:0">Objection Handling</label>
+                  <button class="btn btn-ghost btn-sm" onclick="addObjection()" style="font-size:11px">
+                    <i class="ti ti-plus"></i> Add objection
+                  </button>
+                </div>
+                <div id="objections-list" style="display:flex;flex-direction:column;gap:10px"></div>
               </div>
+
               <div class="form-group">
                 <label class="form-label">Booking Transition</label>
                 <textarea class="form-textarea" rows="3">That's great to hear! What tends to work best for people is a quick 20-minute call — no slides, no pitch, just an honest conversation. I can see {{available_slot_1}} or {{available_slot_2}} are free in the diary. Which works better for you?</textarea>

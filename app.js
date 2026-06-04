@@ -592,6 +592,7 @@ function navigate(page) {
   if (page === 'teams')     loadTwilioStatus();
   if (page === 'agents')    loadTwilioStatus();
   if (page === 'campaigns') loadCampaigns();
+  if (page === 'prompt')    renderObjections();
 }
 
 const pageTitles = {
@@ -979,6 +980,111 @@ let smIdx = 0;
 function rotateStatus() {
   const el = document.getElementById('agent-live-sub');
   if (el) { smIdx = (smIdx+1) % statusMessages.length; el.textContent = statusMessages[smIdx]; }
+}
+
+// ─── Objection Handling Builder ───────────────────────────────────────────────
+const defaultObjections = [
+  {
+    id: 'obj_1',
+    title: 'Not interested',
+    prompt: `I completely understand, {{first_name}} — I wouldn't want to take up your time if it's not relevant. Can I just ask, is that because the timing isn't right, or is it more about {{objection_reason}}? I ask only because many of our clients felt the same before they saw the actual numbers…`,
+  },
+  {
+    id: 'obj_2',
+    title: 'Voicemail',
+    prompt: `Hi {{first_name}}, this is {{agent_name}} calling from {{company_name}}. I was reaching out about {{call_reason}}. I'll try you again shortly, but feel free to call us back at your convenience. Have a great day!`,
+  },
+  {
+    id: 'obj_3',
+    title: 'Call back later',
+    prompt: `Of course, I completely respect that — when would be a better time for me to call back? I want to make sure I catch you when it's convenient. Would later today work, or would tomorrow morning be better?`,
+  },
+];
+
+let objections = JSON.parse(localStorage.getItem('voiceiq_objections') || 'null') || defaultObjections;
+
+function saveObjections() {
+  localStorage.setItem('voiceiq_objections', JSON.stringify(objections));
+}
+
+function renderObjections() {
+  const list = document.getElementById('objections-list');
+  if (!list) return;
+
+  if (!objections.length) {
+    list.innerHTML = `<div style="padding:16px;text-align:center;color:var(--text3);font-size:12px;border:1px dashed var(--border);border-radius:var(--radius)">No objection handlers yet — click <strong>+ Add objection</strong> to create one</div>`;
+    return;
+  }
+
+  list.innerHTML = objections.map((obj, i) => `
+    <div style="border:1px solid var(--border);border-radius:var(--radius);overflow:hidden" id="obj-block-${obj.id}">
+      <!-- Header -->
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg-card2);border-bottom:1px solid var(--border)">
+        <i class="ti ti-shield-exclamation" style="color:var(--amber);font-size:14px"></i>
+        <input
+          class="form-input"
+          value="${escHtml(obj.title)}"
+          placeholder="Objection title (e.g. Not interested)"
+          oninput="updateObjectionTitle('${obj.id}', this.value)"
+          style="flex:1;padding:4px 8px;font-size:12px;font-weight:600;background:transparent;border-color:transparent"
+          onfocus="this.style.borderColor='var(--accent)'"
+          onblur="this.style.borderColor='transparent'"
+        >
+        <button class="btn btn-ghost btn-sm" onclick="duplicateObjection('${obj.id}')" title="Duplicate" style="padding:4px 6px"><i class="ti ti-copy" style="font-size:13px"></i></button>
+        <button class="btn btn-danger btn-sm" onclick="removeObjection('${obj.id}')" title="Delete" style="padding:4px 6px"><i class="ti ti-trash" style="font-size:13px"></i></button>
+      </div>
+      <!-- Prompt textarea -->
+      <textarea
+        class="form-textarea"
+        rows="3"
+        placeholder="How should the AI respond to this objection…"
+        oninput="updateObjectionPrompt('${obj.id}', this.value)"
+        style="border:none;border-radius:0;resize:vertical;font-size:12px"
+      >${escHtml(obj.prompt)}</textarea>
+    </div>
+  `).join('');
+}
+
+function escHtml(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function addObjection() {
+  const id = 'obj_' + Date.now();
+  objections.push({ id, title: '', prompt: '' });
+  saveObjections();
+  renderObjections();
+  // Focus the new title input
+  setTimeout(() => {
+    const el = document.querySelector(`#obj-block-${id} input`);
+    if (el) el.focus();
+  }, 50);
+}
+
+function removeObjection(id) {
+  objections = objections.filter(o => o.id !== id);
+  saveObjections();
+  renderObjections();
+}
+
+function duplicateObjection(id) {
+  const original = objections.find(o => o.id === id);
+  if (!original) return;
+  const copy = { ...original, id: 'obj_' + Date.now(), title: original.title + ' (copy)' };
+  const idx  = objections.findIndex(o => o.id === id);
+  objections.splice(idx + 1, 0, copy);
+  saveObjections();
+  renderObjections();
+}
+
+function updateObjectionTitle(id, value) {
+  const obj = objections.find(o => o.id === id);
+  if (obj) { obj.title = value; saveObjections(); }
+}
+
+function updateObjectionPrompt(id, value) {
+  const obj = objections.find(o => o.id === id);
+  if (obj) { obj.prompt = value; saveObjections(); }
 }
 
 // PROMPT VARIABLES
