@@ -884,7 +884,21 @@ async function uploadLeads(input) {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Upload failed');
 
-    showToast(`✅ Imported ${data.imported} leads${data.skipped ? ` (${data.skipped} skipped — no phone)` : ''}`, 'success');
+    let msg = `✅ Imported ${data.imported} of ${data.total} leads`;
+    if (data.skipped > 0) {
+      msg += ` · ${data.skipped} skipped (invalid/non-mobile numbers)`;
+    }
+    showToast(msg, data.imported > 0 ? 'success' : 'error');
+
+    // Log skipped details to console so they can be reviewed
+    if (data.skippedDetails?.length) {
+      console.group(`⚠️ ${data.skipped} leads skipped during import:`);
+      data.skippedDetails.forEach(s =>
+        console.warn(`Row ${s.row}${s.name ? ' — ' + s.name : ''}${s.phone ? ' (' + s.phone + ')' : ''}: ${s.reason}`)
+      );
+      console.groupEnd();
+    }
+
     input.value = ''; // reset file input
   } catch (err) {
     showToast(`❌ Upload failed: ${err.message}`, 'error');
@@ -906,8 +920,15 @@ async function triggerTestCall() {
   const raw     = document.getElementById('test-call-number')?.value?.trim();
   const agentId = document.getElementById('test-call-agent')?.value || 'james';
   if (!raw) { showToast('Enter a number to call', 'error'); return; }
+
   const toNumber = normalisePhone(raw);
-  // Show normalised number in the input so user can see what was dialled
+
+  // Validate before sending
+  if (!toNumber.startsWith('+447') || toNumber.length !== 13) {
+    showToast(`❌ Invalid number — must be a UK mobile starting with 7 (e.g. 07911123456)`, 'error');
+    return;
+  }
+
   document.getElementById('test-call-number').value = toNumber;
   await makeCall({ toNumber, agentId });
 }
