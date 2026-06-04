@@ -28,6 +28,9 @@ async function api(path, options = {}) {
 function showLogin() {
   document.getElementById('login-page').style.display = 'flex';
   document.getElementById('app-wrapper').style.display = 'none';
+  // Init Google button after GSI script loads
+  if (window.google?.accounts) initGoogleSignIn();
+  else window.addEventListener('load', initGoogleSignIn, { once: true });
 }
 
 function showApp() {
@@ -101,6 +104,57 @@ async function doLogout() {
   document.getElementById('user-menu').style.display = 'none';
   document.getElementById('login-email').value    = '';
   document.getElementById('login-password').value = '';
+}
+
+// ─── Google Sign-In ───────────────────────────────────────────────────────────
+function initGoogleSignIn() {
+  if (!window.google?.accounts) return;
+
+  // Fetch the Google Client ID from backend health endpoint is not ideal;
+  // we embed it via a meta tag approach — read from a global set by the page
+  const clientId = window.GOOGLE_CLIENT_ID;
+  if (!clientId) return;
+
+  google.accounts.id.initialize({
+    client_id: clientId,
+    callback: handleGoogleCredential,
+    auto_select: false,
+  });
+
+  google.accounts.id.renderButton(
+    document.getElementById('google-signin-btn'),
+    {
+      theme: 'filled_black',
+      size: 'large',
+      width: 340,
+      text: 'signin_with',
+      shape: 'rectangular',
+      logo_alignment: 'left',
+    }
+  );
+}
+
+async function handleGoogleCredential(response) {
+  const errEl = document.getElementById('login-error');
+  errEl.style.display = 'none';
+
+  try {
+    const res  = await fetch(`${API_BASE}/api/auth/google`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ credential: response.credential }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Google login failed');
+
+    setToken(data.token);
+    setUserUI(data.user);
+    showApp();
+    initApp();
+  } catch (err) {
+    errEl.textContent   = err.message;
+    errEl.style.display = 'block';
+  }
 }
 
 async function checkAuth() {
@@ -921,9 +975,12 @@ function initApp() {
   loadDashboard();
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-  checkAuth().then(() => {
-    const token = getToken();
-    if (token) initApp();
-  });
+window.addEventListener('DOMContentLoaded', async () => {
+  // Fetch Google Client ID from backend and store globally
+  try {
+    const cfg = await fetch(`${API_BASE}/api/auth/config`).then(r => r.json());
+    if (cfg.googleClientId) window.GOOGLE_CLIENT_ID = cfg.googleClientId;
+  } catch {}
+
+  await checkAuth();
 });

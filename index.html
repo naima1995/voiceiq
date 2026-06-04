@@ -7,6 +7,7 @@
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<script src="https://accounts.google.com/gsi/client" async></script>
 </head>
 <body>
 
@@ -39,6 +40,15 @@
       <button id="login-btn" class="btn btn-primary w-full" onclick="doLogin()" style="justify-content:center;padding:11px">
         <i class="ti ti-login"></i> Sign in
       </button>
+
+      <div style="display:flex;align-items:center;gap:10px;margin:16px 0">
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+        <span style="font-size:11px;color:var(--text3)">or</span>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+      </div>
+
+      <!-- Google Sign-In button rendered here -->
+      <div id="google-signin-btn" style="display:flex;justify-content:center"></div>
     </div>
     <div style="text-align:center;margin-top:16px;font-size:11px;color:var(--text3)">Protected by VoiceIQ · Unauthorised access is prohibited</div>
   </div>
