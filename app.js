@@ -5,16 +5,121 @@ const API_BASE = window.location.hostname === 'localhost'
   ? 'http://localhost:3001'
   : 'https://voiceiq-backend-production-2b83.up.railway.app';
 
+function getToken() { return localStorage.getItem('voiceiq_token'); }
+function setToken(t) { localStorage.setItem('voiceiq_token', t); }
+function clearToken() { localStorage.removeItem('voiceiq_token'); }
+
 async function api(path, options = {}) {
+  const token = getToken();
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(options.headers || {}),
     },
   });
+  if (res.status === 401) { clearToken(); showLogin(); return; }
   if (!res.ok) throw new Error(`API error ${res.status}: ${path}`);
   return res.json();
+}
+
+// ─── Auth ────────────────────────────────────────────────────────────────────
+function showLogin() {
+  document.getElementById('login-page').style.display = 'flex';
+  document.getElementById('app-wrapper').style.display = 'none';
+}
+
+function showApp() {
+  document.getElementById('login-page').style.display = 'none';
+  document.getElementById('app-wrapper').style.display = 'block';
+}
+
+function togglePasswordVisibility() {
+  const input = document.getElementById('login-password');
+  const icon  = document.getElementById('pw-eye-icon');
+  if (input.type === 'password') { input.type = 'text'; icon.className = 'ti ti-eye-off'; }
+  else { input.type = 'password'; icon.className = 'ti ti-eye'; }
+}
+
+function toggleUserMenu() {
+  const m = document.getElementById('user-menu');
+  m.style.display = m.style.display === 'none' ? 'block' : 'none';
+}
+
+document.addEventListener('click', e => {
+  const chip = document.querySelector('.user-chip');
+  const menu = document.getElementById('user-menu');
+  if (menu && chip && !chip.contains(e.target)) menu.style.display = 'none';
+});
+
+function setUserUI(user) {
+  const initials = user.name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+  const el = id => document.getElementById(id);
+  if (el('user-avatar'))    el('user-avatar').textContent    = initials;
+  if (el('user-name'))      el('user-name').textContent      = user.name;
+  if (el('user-menu-name')) el('user-menu-name').textContent = user.name;
+  if (el('user-menu-email'))el('user-menu-email').textContent= user.email;
+}
+
+async function doLogin() {
+  const email    = document.getElementById('login-email')?.value?.trim();
+  const password = document.getElementById('login-password')?.value;
+  const errEl    = document.getElementById('login-error');
+  const btn      = document.getElementById('login-btn');
+
+  errEl.style.display = 'none';
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-loader-2"></i> Signing in…';
+
+  try {
+    const res  = await fetch(`${API_BASE}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.error || 'Login failed');
+
+    setToken(data.token);
+    setUserUI(data.user);
+    showApp();
+    initApp();
+  } catch (err) {
+    errEl.textContent    = err.message;
+    errEl.style.display  = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-login"></i> Sign in';
+  }
+}
+
+async function doLogout() {
+  clearToken();
+  showLogin();
+  document.getElementById('user-menu').style.display = 'none';
+  document.getElementById('login-email').value    = '';
+  document.getElementById('login-password').value = '';
+}
+
+async function checkAuth() {
+  const token = getToken();
+  if (!token) { showLogin(); return; }
+
+  try {
+    const res  = await fetch(`${API_BASE}/api/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error('Invalid token');
+    const data = await res.json();
+    setUserUI(data.user);
+    showApp();
+    initApp();
+  } catch {
+    clearToken();
+    showLogin();
+  }
 }
 
 // ─── WebSocket for live call updates ─────────────────────────────────────────
@@ -800,20 +905,25 @@ function doSearch(q) {
 }
 
 // INIT
-window.addEventListener('DOMContentLoaded', () => {
+function initApp() {
   navigate('dashboard');
   initLiveTimers();
   setTimeout(animateSentiment, 500);
   setInterval(rotateStatus, 4000);
   buildBarChart('call-chart', [
-    {l:'Mon',v:182},{l:'Tue',v:214},{l:'Wed',v:198},{l:'Thu',v:231},{l:'Fri',v:247,today:true},{l:'Sat',v:44},{l:'Sun',v:12}
+    {l:'Mon',v:0},{l:'Tue',v:0},{l:'Wed',v:0},{l:'Thu',v:0},{l:'Fri',v:0,today:true},{l:'Sat',v:0},{l:'Sun',v:0}
   ], 'var(--accent)');
   buildBarChart('conv-chart', [
-    {l:'Mon',v:11},{l:'Tue',v:13},{l:'Wed',v:10},{l:'Thu',v:14},{l:'Fri',v:13,today:true},{l:'Sat',v:4},{l:'Sun',v:1}
+    {l:'Mon',v:0},{l:'Tue',v:0},{l:'Wed',v:0},{l:'Thu',v:0},{l:'Fri',v:0,today:true},{l:'Sat',v:0},{l:'Sun',v:0}
   ], 'var(--green)');
   loadTwilioStatus();
-
-  // Connect to backend
   connectWebSocket();
   loadDashboard();
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  checkAuth().then(() => {
+    const token = getToken();
+    if (token) initApp();
+  });
 });
