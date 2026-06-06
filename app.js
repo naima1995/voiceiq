@@ -1317,13 +1317,14 @@ function selectKBType(type) {
   document.getElementById('kb-upload-progress').style.display = 'none';
 
   // Show correct input panel
-  document.getElementById('kb-input-file').style.display = type === 'file' ? '' : 'none';
-  document.getElementById('kb-input-url').style.display  = type === 'url'  ? '' : 'none';
-  document.getElementById('kb-input-text').style.display = type === 'text' ? '' : 'none';
+  document.getElementById('kb-input-file').style.display  = type === 'file'  ? '' : 'none';
+  document.getElementById('kb-input-url').style.display   = type === 'url'   ? '' : 'none';
+  document.getElementById('kb-input-text').style.display  = type === 'text'  ? '' : 'none';
+  document.getElementById('kb-input-media').style.display = type === 'media' ? '' : 'none';
 
   // Update title and button label
-  const titles  = { file: 'Upload Files', url: 'Pull from Webpage', text: 'Write Content' };
-  const btnIcons = { file: 'ti-upload', url: 'ti-world', text: 'ti-device-floppy' };
+  const titles  = { file: 'Upload Files', url: 'Pull from Webpage', text: 'Write Content', media: 'Video or Audio' };
+  const btnIcons = { file: 'ti-upload', url: 'ti-world', text: 'ti-device-floppy', media: 'ti-upload' };
   document.getElementById('kb-modal-title').textContent = titles[type] || 'Add Knowledge Base';
   document.getElementById('kb-submit-btn').innerHTML = `<i class="ti ${btnIcons[type]}"></i> Save`;
 
@@ -1384,6 +1385,21 @@ async function submitAddKB() {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ type: 'text', name, description, agentId: agentId || undefined, textContent }),
+      });
+
+    } else if (_kbType === 'media') {
+      const mediaInput = document.getElementById('kb-media');
+      if (!mediaInput.files[0]) { showToast('Please select a media file', 'error'); return; }
+      const formData = new FormData();
+      formData.append('type', 'media');
+      formData.append('name', name);
+      formData.append('description', description);
+      if (agentId) formData.append('agentId', agentId);
+      formData.append('file', mediaInput.files[0]);
+      res = await fetch(`${API_BASE}/api/knowledge`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData,
       });
     }
 

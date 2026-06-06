@@ -794,11 +794,10 @@ Do you have just two or three minutes to hear a little more?</textarea>
                 <div class="kb-type-name">Write Content</div>
                 <div class="kb-type-desc">Write your own knowledge base content</div>
               </div>
-              <div class="kb-type-tile" style="opacity:0.5;cursor:not-allowed" title="Coming soon">
+              <div class="kb-type-tile" onclick="selectKBType('media')">
                 <div class="kb-type-icon" style="background:#dcfce7"><i class="ti ti-video" style="color:#22c55e"></i></div>
                 <div class="kb-type-name">Video or Audio</div>
-                <div class="kb-type-desc">Extract transcripts for agent knowledge</div>
-                <div style="font-size:0.7rem;color:var(--text-muted);margin-top:4px">Coming soon</div>
+                <div class="kb-type-desc">Upload a file to extract transcripts for agent knowledge</div>
               </div>
             </div>
           </div>
@@ -834,6 +833,12 @@ Do you have just two or three minutes to hear a little more?</textarea>
             <div class="form-group" id="kb-input-url" style="display:none">
               <label class="form-label">Webpage URL <span style="color:var(--red)">*</span></label>
               <input class="form-input" id="kb-url" placeholder="https://yourwebsite.com/product-info">
+            </div>
+            <!-- Media input -->
+            <div class="form-group" id="kb-input-media" style="display:none">
+              <label class="form-label">Upload Video or Audio <span style="color:var(--red)">*</span></label>
+              <input type="file" class="form-input" id="kb-media" accept=".mp3,.mp4,.wav,.m4a,.ogg,.webm" style="padding:8px">
+              <div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px">Supported: MP3, MP4, WAV, M4A, OGG, WEBM — max 20MB</div>
             </div>
             <!-- Text input -->
             <div class="form-group" id="kb-input-text" style="display:none">
