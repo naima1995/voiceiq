@@ -765,42 +765,90 @@ Do you have just two or three minutes to hear a little more?</textarea>
 
     <!-- Add Knowledge Base Modal -->
     <div class="modal-overlay" id="add-kb-modal" style="display:none">
-      <div class="modal" style="max-width:500px">
+      <div class="modal" style="max-width:560px">
         <div class="modal-header">
-          <div class="modal-title">Add Knowledge Base</div>
+          <div class="modal-title" id="kb-modal-title">Add Knowledge Base</div>
           <button class="modal-close" onclick="closeAddKBModal()">×</button>
         </div>
         <div class="modal-body" style="display:flex;flex-direction:column;gap:14px">
-          <div class="form-group">
-            <label class="form-label">Name <span style="color:var(--red)">*</span></label>
-            <input class="form-input" id="kb-name" placeholder="e.g. Product FAQ, Call Script, Compliance Rules">
+
+          <!-- Step 1: Type picker -->
+          <div id="kb-step-type">
+            <div style="text-align:center;margin-bottom:16px">
+              <div style="font-size:1rem;font-weight:600;margin-bottom:4px">Start building your knowledge base</div>
+              <div style="font-size:0.85rem;color:var(--text-muted)">Choose how you'd like to add content. You can add multiple types.</div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div class="kb-type-tile" onclick="selectKBType('file')">
+                <div class="kb-type-icon" style="background:#dbeafe"><i class="ti ti-cloud-upload" style="color:#3b82f6"></i></div>
+                <div class="kb-type-name">Upload Files</div>
+                <div class="kb-type-desc">Upload documents, PDFs, or other files</div>
+              </div>
+              <div class="kb-type-tile" onclick="selectKBType('url')">
+                <div class="kb-type-icon" style="background:#dcfce7"><i class="ti ti-world" style="color:#22c55e"></i></div>
+                <div class="kb-type-name">Pull from Webpage</div>
+                <div class="kb-type-desc">Import content from a webpage URL</div>
+              </div>
+              <div class="kb-type-tile" onclick="selectKBType('text')">
+                <div class="kb-type-icon" style="background:#ede9fe"><i class="ti ti-pencil" style="color:#8b5cf6"></i></div>
+                <div class="kb-type-name">Write Content</div>
+                <div class="kb-type-desc">Write your own knowledge base content</div>
+              </div>
+              <div class="kb-type-tile" style="opacity:0.5;cursor:not-allowed" title="Coming soon">
+                <div class="kb-type-icon" style="background:#dcfce7"><i class="ti ti-video" style="color:#22c55e"></i></div>
+                <div class="kb-type-name">Video or Audio</div>
+                <div class="kb-type-desc">Extract transcripts for agent knowledge</div>
+                <div style="font-size:0.7rem;color:var(--text-muted);margin-top:4px">Coming soon</div>
+              </div>
+            </div>
           </div>
-          <div class="form-group">
-            <label class="form-label">Description</label>
-            <input class="form-input" id="kb-description" placeholder="Brief description of this knowledge base">
+
+          <!-- Step 2: Details form -->
+          <div id="kb-step-form" style="display:none;flex-direction:column;gap:14px">
+            <button class="btn btn-ghost btn-sm" onclick="backToKBTypeStep()" style="align-self:flex-start;margin-bottom:4px">← Back</button>
+            <div class="form-group">
+              <label class="form-label">Name <span style="color:var(--red)">*</span></label>
+              <input class="form-input" id="kb-name" placeholder="e.g. Product FAQ, Call Script, Compliance Rules">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Description</label>
+              <input class="form-input" id="kb-description" placeholder="Brief description of this knowledge base">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Assign to Agent</label>
+              <select class="form-input" id="kb-agent">
+                <option value="">All agents (shared)</option>
+                <option value="james">James</option>
+                <option value="rachel">Rachel</option>
+                <option value="shelley">Shelley</option>
+                <option value="alexis">Alexis</option>
+              </select>
+            </div>
+            <!-- File input -->
+            <div class="form-group" id="kb-input-file">
+              <label class="form-label">Upload File <span style="color:var(--red)">*</span></label>
+              <input type="file" class="form-input" id="kb-file" accept=".pdf,.docx,.txt,.xlsx,.xls,.csv" style="padding:8px">
+              <div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px">Supported: PDF, DOCX, TXT, XLSX, CSV — max 20MB</div>
+            </div>
+            <!-- URL input -->
+            <div class="form-group" id="kb-input-url" style="display:none">
+              <label class="form-label">Webpage URL <span style="color:var(--red)">*</span></label>
+              <input class="form-input" id="kb-url" placeholder="https://yourwebsite.com/product-info">
+            </div>
+            <!-- Text input -->
+            <div class="form-group" id="kb-input-text" style="display:none">
+              <label class="form-label">Content <span style="color:var(--red)">*</span></label>
+              <textarea class="form-input" id="kb-text" rows="8" placeholder="Write or paste your knowledge base content here..."></textarea>
+            </div>
+            <div id="kb-upload-progress" style="display:none">
+              <div style="font-size:0.85rem;color:var(--accent)"><i class="ti ti-loader"></i> Processing...</div>
+            </div>
           </div>
-          <div class="form-group">
-            <label class="form-label">Assign to Agent</label>
-            <select class="form-input" id="kb-agent">
-              <option value="">All agents (shared)</option>
-              <option value="james">James</option>
-              <option value="rachel">Rachel</option>
-              <option value="shelley">Shelley</option>
-              <option value="alexis">Alexis</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Upload File <span style="color:var(--red)">*</span></label>
-            <input type="file" class="form-input" id="kb-file" accept=".pdf,.docx,.txt,.xlsx,.xls,.csv" style="padding:8px">
-            <div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px">Supported: PDF, DOCX, TXT, XLSX, CSV — max 20MB</div>
-          </div>
-          <div id="kb-upload-progress" style="display:none">
-            <div style="font-size:0.85rem;color:var(--accent)"><i class="ti ti-loader"></i> Uploading and parsing file...</div>
-          </div>
+
         </div>
-        <div class="modal-footer">
+        <div class="modal-footer" id="kb-modal-footer" style="display:none">
           <button class="btn btn-ghost" onclick="closeAddKBModal()">Cancel</button>
-          <button class="btn btn-primary" onclick="submitAddKB()"><i class="ti ti-upload"></i> Upload & Save</button>
+          <button class="btn btn-primary" onclick="submitAddKB()" id="kb-submit-btn"><i class="ti ti-upload"></i> Save</button>
         </div>
       </div>
     </div>

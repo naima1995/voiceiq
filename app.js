@@ -1290,12 +1290,14 @@ async function loadKnowledgeBases() {
   }
 }
 
+let _kbType = 'file';
+
 function openAddKBModal() {
-  document.getElementById('kb-name').value = '';
-  document.getElementById('kb-description').value = '';
-  document.getElementById('kb-agent').value = '';
-  document.getElementById('kb-file').value = '';
-  document.getElementById('kb-upload-progress').style.display = 'none';
+  _kbType = 'file';
+  document.getElementById('kb-step-type').style.display = '';
+  document.getElementById('kb-step-form').style.display = 'none';
+  document.getElementById('kb-modal-footer').style.display = 'none';
+  document.getElementById('kb-modal-title').textContent = 'Add Knowledge Base';
   document.getElementById('add-kb-modal').style.display = 'flex';
 }
 
@@ -1303,34 +1305,92 @@ function closeAddKBModal() {
   document.getElementById('add-kb-modal').style.display = 'none';
 }
 
+function selectKBType(type) {
+  _kbType = type;
+  // Reset form fields
+  document.getElementById('kb-name').value = '';
+  document.getElementById('kb-description').value = '';
+  document.getElementById('kb-agent').value = '';
+  document.getElementById('kb-file').value = '';
+  document.getElementById('kb-url') && (document.getElementById('kb-url').value = '');
+  document.getElementById('kb-text') && (document.getElementById('kb-text').value = '');
+  document.getElementById('kb-upload-progress').style.display = 'none';
+
+  // Show correct input panel
+  document.getElementById('kb-input-file').style.display = type === 'file' ? '' : 'none';
+  document.getElementById('kb-input-url').style.display  = type === 'url'  ? '' : 'none';
+  document.getElementById('kb-input-text').style.display = type === 'text' ? '' : 'none';
+
+  // Update title and button label
+  const titles  = { file: 'Upload Files', url: 'Pull from Webpage', text: 'Write Content' };
+  const btnIcons = { file: 'ti-upload', url: 'ti-world', text: 'ti-device-floppy' };
+  document.getElementById('kb-modal-title').textContent = titles[type] || 'Add Knowledge Base';
+  document.getElementById('kb-submit-btn').innerHTML = `<i class="ti ${btnIcons[type]}"></i> Save`;
+
+  // Switch to form step
+  document.getElementById('kb-step-type').style.display = 'none';
+  document.getElementById('kb-step-form').style.display = 'flex';
+  document.getElementById('kb-modal-footer').style.display = '';
+}
+
+function backToKBTypeStep() {
+  document.getElementById('kb-step-type').style.display = '';
+  document.getElementById('kb-step-form').style.display = 'none';
+  document.getElementById('kb-modal-footer').style.display = 'none';
+  document.getElementById('kb-modal-title').textContent = 'Add Knowledge Base';
+}
+
 async function submitAddKB() {
   const name        = document.getElementById('kb-name').value.trim();
   const description = document.getElementById('kb-description').value.trim();
   const agentId     = document.getElementById('kb-agent').value;
-  const fileInput   = document.getElementById('kb-file');
 
-  if (!name)                { showToast('Name is required', 'error'); return; }
-  if (!fileInput.files[0])  { showToast('Please select a file', 'error'); return; }
-
-  const formData = new FormData();
-  formData.append('name', name);
-  formData.append('description', description);
-  if (agentId) formData.append('agentId', agentId);
-  formData.append('file', fileInput.files[0]);
+  if (!name) { showToast('Name is required', 'error'); return; }
 
   document.getElementById('kb-upload-progress').style.display = 'block';
 
   try {
     const token = getToken();
-    const res = await fetch(`${API_BASE}/api/knowledge`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${token}` },
-      body: formData,
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Upload failed');
+    let res;
 
-    showToast(`Knowledge base "${name}" uploaded successfully`);
+    if (_kbType === 'file') {
+      const fileInput = document.getElementById('kb-file');
+      if (!fileInput.files[0]) { showToast('Please select a file', 'error'); return; }
+      const formData = new FormData();
+      formData.append('type', 'file');
+      formData.append('name', name);
+      formData.append('description', description);
+      if (agentId) formData.append('agentId', agentId);
+      formData.append('file', fileInput.files[0]);
+      res = await fetch(`${API_BASE}/api/knowledge`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData,
+      });
+
+    } else if (_kbType === 'url') {
+      const url = document.getElementById('kb-url').value.trim();
+      if (!url) { showToast('Please enter a URL', 'error'); return; }
+      res = await fetch(`${API_BASE}/api/knowledge`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'url', name, description, agentId: agentId || undefined, url }),
+      });
+
+    } else if (_kbType === 'text') {
+      const textContent = document.getElementById('kb-text').value.trim();
+      if (!textContent) { showToast('Please enter some content', 'error'); return; }
+      res = await fetch(`${API_BASE}/api/knowledge`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'text', name, description, agentId: agentId || undefined, textContent }),
+      });
+    }
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Save failed');
+
+    showToast(`"${name}" saved to knowledge base`);
     closeAddKBModal();
     loadKnowledgeBases();
   } catch (err) {
