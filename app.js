@@ -594,6 +594,7 @@ function navigate(page) {
   if (page === 'campaigns')    loadCampaigns();
   if (page === 'prompt')       renderObjections();
   if (page === 'integrations') loadCalendarStatus();
+  if (page === 'knowledge')    loadKnowledgeBases();
 }
 
 const pageTitles = {
@@ -606,6 +607,7 @@ const pageTitles = {
   crm: 'CRM & Leads',
   analytics: 'Analytics',
   integrations: 'Integrations',
+  knowledge: 'Knowledge Base',
   settings: 'Settings',
   teams: 'Twilio Calling'
 };
@@ -619,6 +621,7 @@ const pageSubs = {
   crm: 'Leads, contacts and follow-ups',
   analytics: 'Performance metrics and insights',
   integrations: 'Connected services and APIs',
+  knowledge: 'Upload documents and scripts for agents to reference during calls',
   settings: 'Account, billing and preferences',
   teams: 'Twilio outbound calling integration'
 };
@@ -1251,6 +1254,116 @@ function initApp() {
   loadTwilioStatus();
   connectWebSocket();
   loadDashboard();
+}
+
+// ─── Knowledge Base ───────────────────────────────────────────────────────
+
+async function loadKnowledgeBases() {
+  const tbody = document.getElementById('kb-tbody');
+  if (!tbody) return;
+  try {
+    const data = await api('/api/knowledge');
+    if (!data.knowledgeBases?.length) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:2rem;">No knowledge bases yet. Add one to get started.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = data.knowledgeBases.map(kb => `
+      <tr>
+        <td style="color:var(--text-muted)">${kb.id}</td>
+        <td>
+          <div style="font-weight:500">${escHtml(kb.name)}</div>
+          ${kb.description ? `<div style="font-size:0.75rem;color:var(--text-muted)">${escHtml(kb.description)}</div>` : ''}
+        </td>
+        <td><span class="badge" style="font-size:0.7rem">${kb.fileType}</span> <span style="font-size:0.8rem;color:var(--text-muted)">${escHtml(kb.fileName)}</span></td>
+        <td>${kb.agentId ? `<span class="badge active" style="text-transform:capitalize">${kb.agentId}</span>` : '<span class="badge" style="color:var(--text-muted)">All agents</span>'}</td>
+        <td style="color:var(--text-muted);font-size:0.85rem">${new Date(kb.createdAt).toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'})}</td>
+        <td>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-ghost btn-sm" title="View" onclick="viewKB(${kb.id})"><i class="ti ti-eye"></i></button>
+            <button class="btn btn-ghost btn-sm" title="Delete" onclick="deleteKB(${kb.id}, '${escHtml(kb.name)}')" style="color:var(--red)"><i class="ti ti-trash"></i></button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--red);padding:2rem;">Failed to load knowledge bases</td></tr>`;
+  }
+}
+
+function openAddKBModal() {
+  document.getElementById('kb-name').value = '';
+  document.getElementById('kb-description').value = '';
+  document.getElementById('kb-agent').value = '';
+  document.getElementById('kb-file').value = '';
+  document.getElementById('kb-upload-progress').style.display = 'none';
+  document.getElementById('add-kb-modal').style.display = 'flex';
+}
+
+function closeAddKBModal() {
+  document.getElementById('add-kb-modal').style.display = 'none';
+}
+
+async function submitAddKB() {
+  const name        = document.getElementById('kb-name').value.trim();
+  const description = document.getElementById('kb-description').value.trim();
+  const agentId     = document.getElementById('kb-agent').value;
+  const fileInput   = document.getElementById('kb-file');
+
+  if (!name)                { showToast('Name is required', 'error'); return; }
+  if (!fileInput.files[0])  { showToast('Please select a file', 'error'); return; }
+
+  const formData = new FormData();
+  formData.append('name', name);
+  formData.append('description', description);
+  if (agentId) formData.append('agentId', agentId);
+  formData.append('file', fileInput.files[0]);
+
+  document.getElementById('kb-upload-progress').style.display = 'block';
+
+  try {
+    const token = getToken();
+    const res = await fetch(`${API_BASE}/api/knowledge`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+      body: formData,
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Upload failed');
+
+    showToast(`Knowledge base "${name}" uploaded successfully`);
+    closeAddKBModal();
+    loadKnowledgeBases();
+  } catch (err) {
+    showToast(err.message, 'error');
+  } finally {
+    document.getElementById('kb-upload-progress').style.display = 'none';
+  }
+}
+
+async function viewKB(id) {
+  try {
+    const kb = await api(`/api/knowledge/${id}`);
+    document.getElementById('view-kb-title').textContent = kb.name;
+    document.getElementById('view-kb-file').textContent   = `${kb.fileName} (${kb.fileType})`;
+    document.getElementById('view-kb-agent').textContent  = kb.agentId ? kb.agentId.charAt(0).toUpperCase() + kb.agentId.slice(1) : 'All agents';
+    document.getElementById('view-kb-chars').textContent  = `${kb.charCount?.toLocaleString() || '?'} characters`;
+    document.getElementById('view-kb-description').textContent = kb.description || '';
+    document.getElementById('view-kb-content').value = kb.content || '';
+    document.getElementById('view-kb-modal').style.display = 'flex';
+  } catch (err) {
+    showToast('Failed to load knowledge base', 'error');
+  }
+}
+
+async function deleteKB(id, name) {
+  if (!confirm(`Delete knowledge base "${name}"? This cannot be undone.`)) return;
+  try {
+    await api(`/api/knowledge/${id}`, { method: 'DELETE' });
+    showToast(`"${name}" deleted`);
+    loadKnowledgeBases();
+  } catch {
+    showToast('Delete failed', 'error');
+  }
 }
 
 // ─── Google Calendar Integration ─────────────────────────────────────────

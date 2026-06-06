@@ -157,6 +157,9 @@
     <div class="nav-item" data-page="crm" onclick="navigate('crm')">
       <i class="ti ti-users"></i><span class="nav-label">CRM / Leads</span>
     </div>
+    <div class="nav-item" data-page="knowledge" onclick="navigate('knowledge')">
+      <i class="ti ti-books"></i><span class="nav-label">Knowledge Base</span>
+    </div>
     <div class="nav-item" data-page="analytics" onclick="navigate('analytics')">
       <i class="ti ti-chart-bar"></i><span class="nav-label">Analytics</span>
     </div>
@@ -733,6 +736,94 @@ Do you have just two or three minutes to hear a little more?</textarea>
     </section>
 
     <!-- ══════════════════════════ INTEGRATIONS ══════════════════════════ -->
+    <!-- ══════════════════════════ KNOWLEDGE BASE ══════════════════════════ -->
+    <section class="page-section" id="page-knowledge">
+      <div class="card">
+        <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
+          <div class="card-title">Knowledge Base</div>
+          <button class="btn btn-primary btn-sm" onclick="openAddKBModal()"><i class="ti ti-plus"></i> Add Knowledge Base</button>
+        </div>
+        <div class="card-body" style="padding:0">
+          <table class="data-table" id="kb-table">
+            <thead>
+              <tr>
+                <th style="width:80px">ID</th>
+                <th>Name</th>
+                <th>File</th>
+                <th>Assigned To</th>
+                <th>Created</th>
+                <th style="width:120px">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="kb-tbody">
+              <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:2rem;">No knowledge bases yet. Add one to get started.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Add Knowledge Base Modal -->
+    <div class="modal-overlay" id="add-kb-modal" style="display:none">
+      <div class="modal" style="max-width:500px">
+        <div class="modal-header">
+          <div class="modal-title">Add Knowledge Base</div>
+          <button class="modal-close" onclick="closeAddKBModal()">×</button>
+        </div>
+        <div class="modal-body" style="display:flex;flex-direction:column;gap:14px">
+          <div class="form-group">
+            <label class="form-label">Name <span style="color:var(--red)">*</span></label>
+            <input class="form-input" id="kb-name" placeholder="e.g. Product FAQ, Call Script, Compliance Rules">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <input class="form-input" id="kb-description" placeholder="Brief description of this knowledge base">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Assign to Agent</label>
+            <select class="form-input" id="kb-agent">
+              <option value="">All agents (shared)</option>
+              <option value="james">James</option>
+              <option value="rachel">Rachel</option>
+              <option value="shelley">Shelley</option>
+              <option value="alexis">Alexis</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Upload File <span style="color:var(--red)">*</span></label>
+            <input type="file" class="form-input" id="kb-file" accept=".pdf,.docx,.txt,.xlsx,.xls,.csv" style="padding:8px">
+            <div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px">Supported: PDF, DOCX, TXT, XLSX, CSV — max 20MB</div>
+          </div>
+          <div id="kb-upload-progress" style="display:none">
+            <div style="font-size:0.85rem;color:var(--accent)"><i class="ti ti-loader"></i> Uploading and parsing file...</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeAddKBModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="submitAddKB()"><i class="ti ti-upload"></i> Upload & Save</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- View Knowledge Base Modal -->
+    <div class="modal-overlay" id="view-kb-modal" style="display:none">
+      <div class="modal" style="max-width:680px">
+        <div class="modal-header">
+          <div class="modal-title" id="view-kb-title">Knowledge Base</div>
+          <button class="modal-close" onclick="document.getElementById('view-kb-modal').style.display='none'">×</button>
+        </div>
+        <div class="modal-body">
+          <div style="display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap">
+            <div><span style="color:var(--text-muted);font-size:0.8rem">File</span><div id="view-kb-file" style="font-size:0.875rem"></div></div>
+            <div><span style="color:var(--text-muted);font-size:0.8rem">Assigned To</span><div id="view-kb-agent" style="font-size:0.875rem"></div></div>
+            <div><span style="color:var(--text-muted);font-size:0.8rem">Size</span><div id="view-kb-chars" style="font-size:0.875rem"></div></div>
+          </div>
+          <div id="view-kb-description" style="color:var(--text-muted);font-size:0.85rem;margin-bottom:12px"></div>
+          <textarea id="view-kb-content" class="form-input" readonly style="height:320px;font-size:0.8rem;font-family:monospace;resize:vertical"></textarea>
+        </div>
+      </div>
+    </div>
+
     <section class="page-section" id="page-integrations">
       <div class="int-grid">
         <div class="int-card connected">
