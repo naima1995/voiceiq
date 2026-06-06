@@ -740,10 +740,18 @@ Do you have just two or three minutes to hear a little more?</textarea>
           <div><div class="int-name">Twilio</div><div class="int-desc">AI outbound calling via Twilio. ElevenLabs voice + Gemini AI conversation.</div></div>
           <div class="int-status-row"><span class="badge active">Connected</span><button class="btn btn-ghost btn-sm" onclick="navigate('teams')">Manage</button></div>
         </div>
-        <div class="int-card connected">
+        <div class="int-card" id="gcal-card">
           <div class="int-logo" style="background:var(--green-dim)"><i class="ti ti-brand-google" style="color:var(--green)"></i></div>
-          <div><div class="int-name">Google Calendar</div><div class="int-desc">Auto-book meetings, send invites, avoid double-bookings.</div></div>
-          <div class="int-status-row"><span class="badge active">Connected</span><button class="btn btn-ghost btn-sm">Manage</button></div>
+          <div>
+            <div class="int-name">Google Calendar</div>
+            <div class="int-desc">Creates a task in your Google Calendar when a prospect agrees to a call or meeting.</div>
+            <div id="gcal-email" style="font-size:0.75rem;color:var(--accent);margin-top:4px;display:none;"></div>
+          </div>
+          <div class="int-status-row">
+            <span class="badge" id="gcal-badge">Checking...</span>
+            <button class="btn btn-primary btn-sm" id="gcal-connect-btn" onclick="connectGoogleCalendar()" style="display:none;">Connect</button>
+            <button class="btn btn-ghost btn-sm" id="gcal-disconnect-btn" onclick="disconnectGoogleCalendar()" style="display:none;">Disconnect</button>
+          </div>
         </div>
         <div class="int-card connected">
           <div class="int-logo" style="background:var(--amber-dim)"><i class="ti ti-microphone" style="color:var(--amber)"></i></div>

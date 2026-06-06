@@ -588,11 +588,12 @@ function navigate(page) {
   renderPageActions(page);
 
   // Load page-specific data
-  if (page === 'calls')     loadCallLog();
-  if (page === 'teams')     loadTwilioStatus();
-  if (page === 'agents')    loadTwilioStatus();
-  if (page === 'campaigns') loadCampaigns();
-  if (page === 'prompt')    renderObjections();
+  if (page === 'calls')        loadCallLog();
+  if (page === 'teams')        loadTwilioStatus();
+  if (page === 'agents')       loadTwilioStatus();
+  if (page === 'campaigns')    loadCampaigns();
+  if (page === 'prompt')       renderObjections();
+  if (page === 'integrations') loadCalendarStatus();
 }
 
 const pageTitles = {
@@ -1250,6 +1251,71 @@ function initApp() {
   loadTwilioStatus();
   connectWebSocket();
   loadDashboard();
+}
+
+// ─── Google Calendar Integration ─────────────────────────────────────────
+
+async function loadCalendarStatus() {
+  const badge       = document.getElementById('gcal-badge');
+  const emailEl     = document.getElementById('gcal-email');
+  const card        = document.getElementById('gcal-card');
+  const connectBtn  = document.getElementById('gcal-connect-btn');
+  const disconnectBtn = document.getElementById('gcal-disconnect-btn');
+  if (!badge) return;
+
+  try {
+    const data = await api('/api/calendar/status');
+    if (data.connected) {
+      badge.textContent = 'Connected';
+      badge.className = 'badge active';
+      card.classList.add('connected');
+      connectBtn.style.display = 'none';
+      disconnectBtn.style.display = '';
+      if (data.email) {
+        emailEl.textContent = data.email;
+        emailEl.style.display = '';
+      }
+    } else {
+      badge.textContent = 'Not connected';
+      badge.className = 'badge paused';
+      card.classList.remove('connected');
+      connectBtn.style.display = '';
+      disconnectBtn.style.display = 'none';
+      emailEl.style.display = 'none';
+    }
+  } catch {
+    badge.textContent = 'Error';
+    badge.className = 'badge paused';
+  }
+}
+
+async function connectGoogleCalendar() {
+  try {
+    const data = await api('/api/calendar/oauth/url');
+    // Open OAuth consent in a popup
+    const popup = window.open(data.url, 'gcal-oauth', 'width=520,height=640,left=200,top=100');
+
+    // Poll until popup closes then refresh status
+    const timer = setInterval(() => {
+      if (!popup || popup.closed) {
+        clearInterval(timer);
+        setTimeout(loadCalendarStatus, 1000); // slight delay for backend to save token
+      }
+    }, 500);
+  } catch (err) {
+    showToast('Failed to get OAuth URL — check backend logs', 'error');
+  }
+}
+
+async function disconnectGoogleCalendar() {
+  if (!confirm('Disconnect Google Calendar? New bookings will not create tasks until you reconnect.')) return;
+  try {
+    await api('/api/calendar/disconnect', { method: 'DELETE' });
+    showToast('Google Calendar disconnected');
+    loadCalendarStatus();
+  } catch {
+    showToast('Disconnect failed', 'error');
+  }
 }
 
 window.addEventListener('DOMContentLoaded', async () => {
