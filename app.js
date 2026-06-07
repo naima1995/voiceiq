@@ -1258,10 +1258,73 @@ function initApp() {
 
 // ─── Agent Tasks ─────────────────────────────────────────────────────────
 
-const agentTasks = JSON.parse(localStorage.getItem('viq_agent_tasks') || '[]');
+const DEFAULT_TASKS = [
+  {
+    name: 'Meeting / Call Agreed',
+    type: 'capture_attribute',
+    agentId: null,
+    instructions: 'During the call, listen carefully for any signal that the client agrees to a meeting, callback, or follow-up call. If the client says yes, set meeting_agreed to true. This is the primary trigger for creating a calendar reminder.',
+    attributes: ['meeting_agreed', 'callback_agreed'],
+    createdAt: new Date(0).toISOString(),
+    builtin: true,
+  },
+  {
+    name: 'Preferred Date & Time',
+    type: 'capture_attribute',
+    agentId: null,
+    instructions: 'Always ask the client for their preferred date AND time for the callback or meeting. Never assume — confirm both explicitly before closing the booking. Use these to schedule the calendar reminder at the correct time.',
+    attributes: ['preferred_date', 'preferred_time'],
+    createdAt: new Date(0).toISOString(),
+    builtin: true,
+  },
+  {
+    name: 'Meeting Type',
+    type: 'capture_attribute',
+    agentId: null,
+    instructions: 'Identify and confirm the type of meeting the client prefers — phone call, video call, or in-person. Default to phone call if not specified.',
+    attributes: ['meeting_type'],
+    createdAt: new Date(0).toISOString(),
+    builtin: true,
+  },
+  {
+    name: 'Client Interest Level',
+    type: 'qualify_lead',
+    agentId: null,
+    instructions: 'Throughout the call, assess and record the client\'s interest level. Hot = very interested, wants to proceed. Warm = open to it, needs more info. Cold = not interested but not a refusal. Not interested = clear refusal.',
+    attributes: ['interest_level'],
+    createdAt: new Date(0).toISOString(),
+    builtin: true,
+  },
+  {
+    name: 'Confirm Client Details',
+    type: 'capture_attribute',
+    agentId: null,
+    instructions: 'Before ending a successful booking call, confirm the client\'s full name and phone number are correct. If they differ from our records, note the corrected values.',
+    attributes: ['confirmed_name', 'confirmed_number'],
+    createdAt: new Date(0).toISOString(),
+    builtin: true,
+  },
+];
+
+// Merge defaults with any user-saved tasks (defaults always first, non-duplicated)
+const _savedTasks = JSON.parse(localStorage.getItem('viq_agent_tasks') || '[]');
+const agentTasks  = [
+  ...DEFAULT_TASKS,
+  ..._savedTasks.filter(t => !t.builtin),
+];
 
 function saveAgentTasks() {
-  localStorage.setItem('viq_agent_tasks', JSON.stringify(agentTasks));
+  localStorage.setItem('viq_agent_tasks', JSON.stringify(agentTasks.filter(t => !t.builtin)));
+  syncTasksToBackend();
+}
+
+async function syncTasksToBackend() {
+  try {
+    await api('/api/agents/tasks/sync', {
+      method: 'POST',
+      body: JSON.stringify({ tasks: agentTasks }),
+    });
+  } catch { /* non-critical */ }
 }
 
 function switchAgentTab(tab) {
@@ -1269,7 +1332,7 @@ function switchAgentTab(tab) {
     document.getElementById(`agent-tab-${t}`).classList.toggle('active', t === tab);
     document.getElementById(`agent-panel-${t}`).style.display = t === tab ? '' : 'none';
   });
-  if (tab === 'tasks') renderAgentTasks();
+  if (tab === 'tasks') { renderAgentTasks(); syncTasksToBackend(); }
 }
 
 const taskTypeLabels = {
@@ -1308,9 +1371,10 @@ function renderAgentTasks() {
           ${t.instructions ? `<div style="font-size:0.78rem;color:var(--text-muted);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:500px">${escHtml(t.instructions)}</div>` : ''}
           ${t.attributes?.length ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">${t.attributes.map(a => `<span class="badge" style="font-size:0.7rem">${escHtml(a)}</span>`).join('')}</div>` : ''}
         </div>
-        <div style="display:flex;gap:8px;flex-shrink:0">
+        <div style="display:flex;gap:8px;flex-shrink:0;align-items:center">
+          ${t.builtin ? `<span class="badge" style="font-size:0.68rem;background:var(--accent-dim);color:var(--accent)">Built-in</span>` : ''}
           <button class="btn btn-ghost btn-sm" onclick="editAgentTask(${i})" title="Edit"><i class="ti ti-pencil"></i></button>
-          <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteAgentTask(${i})" title="Delete"><i class="ti ti-trash"></i></button>
+          ${!t.builtin ? `<button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteAgentTask(${i})" title="Delete"><i class="ti ti-trash"></i></button>` : ''}
         </div>
       </div>
     </div>
