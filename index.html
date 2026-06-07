@@ -1173,22 +1173,82 @@ Would it be worth having them give you a quick call — even just 15 minutes —
 
 <!-- New Agent Modal -->
 <div class="modal-overlay" id="modal-new-agent">
-  <div class="modal">
+  <div class="modal" style="max-width:640px">
     <div class="modal-header">
       <div class="modal-title">Create AI Voice Agent</div>
       <button class="btn btn-ghost btn-sm" onclick="closeModal('new-agent')"><i class="ti ti-x"></i></button>
     </div>
-    <div class="modal-body">
-      <div class="form-group"><label class="form-label">Agent name</label><input class="form-input" placeholder="e.g. Emily"></div>
-      <div class="form-group"><label class="form-label">Voice accent</label><select class="form-select"><option>Southern British (Professional)</option><option>Neutral UK Business</option><option>Friendly Conversational UK</option><option>Northern English</option><option>Scottish</option></select></div>
-      <div class="form-group"><label class="form-label">Gender</label><select class="form-select"><option>Female</option><option>Male</option></select></div>
-      <div class="form-group"><label class="form-label">Speaking speed</label><select class="form-select"><option>Natural (recommended)</option><option>Slightly slower</option><option>Slightly faster</option></select></div>
-      <div class="form-group"><label class="form-label">Default script</label><select class="form-select"><option>Q3 Outbound Sales</option><option>Inbound Greeting</option><option>Appointment Booking</option></select></div>
-      <div class="form-group"><label class="form-label">Assign number</label><select class="form-select"><option>Twilio — default outbound number</option></select></div>
+    <div class="modal-body" style="max-height:72vh;overflow-y:auto;padding-right:6px">
+
+      <!-- Basic info -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group"><label class="form-label">Agent name</label><input class="form-input" id="agent-name" placeholder="e.g. Emily"></div>
+        <div class="form-group"><label class="form-label">Gender</label><select class="form-select" id="agent-gender"><option value="Female">Female</option><option value="Male">Male</option></select></div>
+      </div>
+      <div class="form-group"><label class="form-label">Voice accent</label>
+        <select class="form-select" id="agent-accent">
+          <option value="Southern British">Southern British (Professional)</option>
+          <option value="Neutral UK Business">Neutral UK Business</option>
+          <option value="Friendly Conversational UK">Friendly Conversational UK</option>
+          <option value="Northern English">Northern English</option>
+          <option value="Scottish">Scottish</option>
+        </select>
+      </div>
+
+      <!-- Divider -->
+      <div style="border-top:1px solid var(--border);margin:18px 0 16px;"></div>
+      <div style="font-size:13px;font-weight:600;color:var(--text1);margin-bottom:14px;display:flex;align-items:center;gap:6px"><i class="ti ti-adjustments-horizontal" style="color:var(--accent)"></i> Advanced Settings</div>
+
+      <!-- Sliders row 1 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:16px">
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <label class="form-label" style="margin:0">Creativity Level <span style="color:var(--text3);font-size:11px;cursor:help" title="How varied and inventive the agent's responses are. Higher = more creative but less predictable.">ⓘ</span></label>
+            <span style="font-size:12px;font-weight:600;color:var(--accent)" id="agent-creativity-val">75%</span>
+          </div>
+          <input type="range" class="agent-slider" id="agent-creativity" min="0" max="100" value="75" oninput="document.getElementById('agent-creativity-val').textContent=this.value+'%'">
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <label class="form-label" style="margin:0">Patience Level <span style="color:var(--text3);font-size:11px;cursor:help" title="How long and thorough the agent's responses are. Higher = more patient, longer explanations.">ⓘ</span></label>
+            <span style="font-size:12px;font-weight:600;color:var(--accent)" id="agent-patience-val">70%</span>
+          </div>
+          <input type="range" class="agent-slider" id="agent-patience" min="0" max="100" value="70" oninput="document.getElementById('agent-patience-val').textContent=this.value+'%'">
+        </div>
+      </div>
+
+      <!-- Sliders row 2 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <label class="form-label" style="margin:0">Voice Stability <span style="color:var(--text3);font-size:11px;cursor:help" title="How consistent and steady the voice sounds. Lower = more natural variation, higher = more stable.">ⓘ</span></label>
+            <span style="font-size:12px;font-weight:600;color:var(--accent)" id="agent-stability-val">60%</span>
+          </div>
+          <input type="range" class="agent-slider" id="agent-stability" min="0" max="100" value="60" oninput="document.getElementById('agent-stability-val').textContent=this.value+'%'">
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <label class="form-label" style="margin:0">Voice Speed <span style="color:var(--text3);font-size:11px;cursor:help" title="Controls how expressive and energetic the voice sounds. Higher = more lively.">ⓘ</span></label>
+            <span style="font-size:12px;font-weight:600;color:var(--accent)" id="agent-voicespeed-val">80%</span>
+          </div>
+          <input type="range" class="agent-slider" id="agent-voicespeed" min="0" max="100" value="80" oninput="document.getElementById('agent-voicespeed-val').textContent=this.value+'%'">
+        </div>
+      </div>
+
+      <!-- Conversation style toggle -->
+      <div class="form-group">
+        <label class="form-label">AI Conversation Style</label>
+        <div style="display:flex;background:var(--bg-card2);border-radius:8px;padding:3px;gap:3px;border:1px solid var(--border)">
+          <button type="button" id="style-casual" onclick="setConvoStyle('casual')" style="flex:1;padding:8px 12px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-weight:500;background:transparent;color:var(--text2);transition:all .15s">Casual</button>
+          <button type="button" id="style-formal" onclick="setConvoStyle('formal')" style="flex:1;padding:8px 12px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-weight:500;background:linear-gradient(135deg,#4F6EF7,#7C3AED);color:#fff;transition:all .15s">Formal</button>
+        </div>
+        <input type="hidden" id="agent-convo-style" value="formal">
+      </div>
+
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('new-agent')">Cancel</button>
-      <button class="btn btn-primary" onclick="closeModal('new-agent')"><i class="ti ti-check"></i> Create Agent</button>
+      <button class="btn btn-primary" onclick="createAgent()"><i class="ti ti-check"></i> Create Agent</button>
     </div>
   </div>
 </div>

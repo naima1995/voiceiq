@@ -593,3 +593,38 @@ body {
 }
 .kb-type-name { font-weight: 600; font-size: 0.9rem; }
 .kb-type-desc { font-size: 0.75rem; color: var(--text-muted); }
+
+/* ── Agent settings sliders ────────────────────────────────────────────── */
+.agent-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 4px;
+  background: linear-gradient(to right, var(--accent) 0%, var(--accent) var(--val, 75%), var(--bg-hover) var(--val, 75%), var(--bg-hover) 100%);
+  outline: none;
+  cursor: pointer;
+}
+.agent-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--accent);
+  box-shadow: 0 1px 4px rgba(79,110,247,0.30);
+  cursor: pointer;
+  transition: box-shadow .15s;
+}
+.agent-slider::-webkit-slider-thumb:hover {
+  box-shadow: 0 0 0 6px rgba(79,110,247,0.12);
+}
+.agent-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--accent);
+  cursor: pointer;
+}

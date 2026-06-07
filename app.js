@@ -487,8 +487,17 @@ function renderAgentsPage(agents) {
             <span style="font-size:10px;color:var(--red)">● Negative ${negPct}%</span>
           </div>
         </div>
+        <!-- settings mini-bar -->
+        ${a.settings ? `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;background:var(--bg-card2);border-radius:8px;padding:8px 10px">
+          ${[['Creativity',a.settings.creativity],['Patience',a.settings.patience],['Stability',a.settings.stability],['Voice Speed',a.settings.voiceSpeed]].map(([label,val])=>`
+          <div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:10px;color:var(--text3)">${label}</span><span style="font-size:10px;font-weight:600;color:var(--accent)">${val}%</span></div>
+            <div style="height:4px;background:var(--bg-hover);border-radius:2px"><div style="height:4px;width:${val}%;background:var(--accent);border-radius:2px"></div></div>
+          </div>`).join('')}
+        </div>` : ''}
         <div class="flex gap-2" style="margin-top:14px">
-          <button class="btn btn-ghost btn-sm w-full"><i class="ti ti-settings"></i> Configure</button>
+          <button class="btn btn-ghost btn-sm w-full" onclick="openEditAgent('${a.id}')"><i class="ti ti-settings"></i> Configure</button>
           <button class="btn btn-danger btn-sm"><i class="ti ti-player-pause"></i> Pause</button>
         </div>
       </div>`;
@@ -970,6 +979,96 @@ async function createCampaign(autoStart = false) {
     loadCampaigns();
   } catch (err) {
     showToast(`❌ Failed: ${err.message}`, 'error');
+  }
+}
+
+// ─── Agent creation & settings ───────────────────────────────────────────────
+
+function setConvoStyle(style) {
+  document.getElementById('agent-convo-style').value = style;
+  const casual = document.getElementById('style-casual');
+  const formal = document.getElementById('style-formal');
+  if (style === 'casual') {
+    casual.style.cssText = 'flex:1;padding:8px 12px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-weight:500;background:linear-gradient(135deg,#4F6EF7,#7C3AED);color:#fff;transition:all .15s';
+    formal.style.cssText = 'flex:1;padding:8px 12px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-weight:500;background:transparent;color:var(--text2);transition:all .15s';
+  } else {
+    formal.style.cssText = 'flex:1;padding:8px 12px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-weight:500;background:linear-gradient(135deg,#4F6EF7,#7C3AED);color:#fff;transition:all .15s';
+    casual.style.cssText = 'flex:1;padding:8px 12px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-weight:500;background:transparent;color:var(--text2);transition:all .15s';
+  }
+}
+
+async function createAgent() {
+  const name   = document.getElementById('agent-name')?.value?.trim();
+  const accent = document.getElementById('agent-accent')?.value;
+  const gender = document.getElementById('agent-gender')?.value;
+  const creativity  = parseInt(document.getElementById('agent-creativity')?.value  || 75);
+  const patience    = parseInt(document.getElementById('agent-patience')?.value    || 70);
+  const stability   = parseInt(document.getElementById('agent-stability')?.value   || 60);
+  const voiceSpeed  = parseInt(document.getElementById('agent-voicespeed')?.value  || 80);
+  const convoStyle  = document.getElementById('agent-convo-style')?.value || 'formal';
+
+  if (!name) { showToast('Agent name is required', 'error'); return; }
+
+  try {
+    await api('/api/agents', {
+      method: 'POST',
+      body: JSON.stringify({
+        name, accent, gender,
+        settings: { creativity, patience, stability, voiceSpeed, conversationStyle: convoStyle },
+      }),
+    });
+    showToast(`✅ Agent "${name}" created`, 'success');
+    closeModal('new-agent');
+    // Refresh agents page
+    const data = await api('/api/agents');
+    if (data?.agents) renderAgentsPage(data.agents);
+  } catch (err) {
+    showToast(`❌ ${err.message}`, 'error');
+  }
+}
+
+// Open configure modal pre-filled with agent's current settings
+function openEditAgent(agentId) {
+  // Re-use new-agent modal, pre-fill values
+  const modal = document.getElementById('modal-new-agent');
+  // Store agent id for save
+  modal.dataset.editId = agentId;
+  // Try to read from last-loaded agents list
+  const card = document.querySelector(`[onclick="openEditAgent('${agentId}')"]`)?.closest('.card');
+  // Just open the modal — user can adjust then save
+  document.getElementById('modal-new-agent').querySelector('.modal-title').textContent = 'Configure Agent';
+  document.querySelector('#modal-new-agent .btn-primary').textContent = 'Save Settings';
+  document.querySelector('#modal-new-agent .btn-primary').setAttribute('onclick', `saveAgentSettings('${agentId}')`);
+  openModal('new-agent');
+}
+
+async function saveAgentSettings(agentId) {
+  const creativity  = parseInt(document.getElementById('agent-creativity')?.value  || 75);
+  const patience    = parseInt(document.getElementById('agent-patience')?.value    || 70);
+  const stability   = parseInt(document.getElementById('agent-stability')?.value   || 60);
+  const voiceSpeed  = parseInt(document.getElementById('agent-voicespeed')?.value  || 80);
+  const convoStyle  = document.getElementById('agent-convo-style')?.value || 'formal';
+  const accent      = document.getElementById('agent-accent')?.value;
+  const gender      = document.getElementById('agent-gender')?.value;
+
+  try {
+    await api(`/api/agents/${agentId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({
+        accent, gender,
+        settings: { creativity, patience, stability, voiceSpeed, conversationStyle: convoStyle },
+      }),
+    });
+    showToast('✅ Agent settings saved', 'success');
+    closeModal('new-agent');
+    // Reset modal title for next creation
+    document.getElementById('modal-new-agent').querySelector('.modal-title').textContent = 'Create AI Voice Agent';
+    document.querySelector('#modal-new-agent .btn-primary').setAttribute('onclick', 'createAgent()');
+    document.querySelector('#modal-new-agent .btn-primary').innerHTML = '<i class="ti ti-check"></i> Create Agent';
+    const data = await api('/api/agents');
+    if (data?.agents) renderAgentsPage(data.agents);
+  } catch (err) {
+    showToast(`❌ ${err.message}`, 'error');
   }
 }
 
