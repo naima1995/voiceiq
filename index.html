@@ -685,27 +685,23 @@ Would it be worth having them give you a quick call — even just 15 minutes —
     <!-- ══════════════════════════ CRM ══════════════════════════ -->
     <section class="page-section" id="page-crm">
       <div class="grid-4 mb-4">
-        <div class="metric-card blue"><div class="metric-icon blue"><i class="ti ti-users"></i></div><div class="metric-label">Total Leads</div><div class="metric-value">2,847</div><div class="metric-trend up"><i class="ti ti-trending-up" style="font-size:13px"></i> +142 this week</div></div>
-        <div class="metric-card green"><div class="metric-icon green"><i class="ti ti-circle-check"></i></div><div class="metric-label">Qualified</div><div class="metric-value">634</div><div class="metric-trend neutral">22% of total</div></div>
-        <div class="metric-card amber"><div class="metric-icon amber"><i class="ti ti-clock"></i></div><div class="metric-label">Follow-ups Due</div><div class="metric-value">47</div><div class="metric-trend down">Today's queue</div></div>
-        <div class="metric-card red"><div class="metric-icon red"><i class="ti ti-x"></i></div><div class="metric-label">Not Reached</div><div class="metric-value">312</div><div class="metric-trend neutral">SMS sent to all</div></div>
+        <div class="metric-card blue"><div class="metric-icon blue"><i class="ti ti-users"></i></div><div class="metric-label">Total Leads</div><div class="metric-value" id="crm-total">—</div><div class="metric-trend neutral" id="crm-total-trend">imported leads</div></div>
+        <div class="metric-card green"><div class="metric-icon green"><i class="ti ti-circle-check"></i></div><div class="metric-label">Qualified</div><div class="metric-value" id="crm-qualified">—</div><div class="metric-trend neutral" id="crm-qualified-pct">of total</div></div>
+        <div class="metric-card amber"><div class="metric-icon amber"><i class="ti ti-calendar-check"></i></div><div class="metric-label">Meetings Booked</div><div class="metric-value" id="crm-booked">—</div><div class="metric-trend neutral" id="crm-booked-pct">booking rate</div></div>
+        <div class="metric-card red"><div class="metric-icon red"><i class="ti ti-phone-off"></i></div><div class="metric-label">No Answer</div><div class="metric-value" id="crm-noanswer">—</div><div class="metric-trend neutral" id="crm-noanswer-pct">of calls</div></div>
       </div>
       <div class="card">
         <div class="card-header">
           <div class="card-title">Lead Pipeline</div>
           <div class="flex gap-2">
-            <input type="text" class="form-input" placeholder="Search leads…" style="width:200px;padding:6px 10px">
+            <input type="text" id="crm-search" class="form-input" placeholder="Search leads…" style="width:200px;padding:6px 10px" oninput="filterCRMLeads(this.value)">
             <button class="btn btn-ghost btn-sm"><i class="ti ti-filter"></i></button>
           </div>
         </div>
         <table class="data-table">
           <thead><tr><th>Name</th><th>Company</th><th>Number</th><th>Stage</th><th>Score</th><th>Last Contact</th><th>Agent</th><th></th></tr></thead>
-          <tbody>
-            <tr><td class="bold">Richard Barnes</td><td>Barclays PLC</td><td class="font-mono">+44 7700 900142</td><td><span class="badge booked">Meeting Set</span></td><td><span style="font-weight:700;color:var(--green)">92</span></td><td>Today</td><td>Sophia</td><td><button class="btn btn-ghost btn-sm"><i class="ti ti-edit"></i></button></td></tr>
-            <tr><td class="bold">Marcus Patel</td><td>TechBridge Ltd</td><td class="font-mono">+44 7911 123456</td><td><span class="badge active">Qualified</span></td><td><span style="font-weight:700;color:var(--green)">85</span></td><td>Today</td><td>Charlotte</td><td><button class="btn btn-ghost btn-sm"><i class="ti ti-edit"></i></button></td></tr>
-            <tr><td class="bold">Claire Watson</td><td>Watson Media</td><td class="font-mono">+44 1632 960321</td><td><span class="badge pending">Follow-up</span></td><td><span style="font-weight:700;color:var(--amber)">61</span></td><td>Today</td><td>James</td><td><button class="btn btn-ghost btn-sm"><i class="ti ti-edit"></i></button></td></tr>
-            <tr><td class="bold">Whitmore Legal</td><td>Whitmore & Co</td><td class="font-mono">+44 1632 960100</td><td><span class="badge pending">Human Review</span></td><td><span style="font-weight:700;color:var(--amber)">54</span></td><td>Today</td><td>Charlotte</td><td><button class="btn btn-ghost btn-sm"><i class="ti ti-edit"></i></button></td></tr>
-            <tr><td class="bold">Nexford Group</td><td>Nexford Industries</td><td class="font-mono">+44 1632 960321</td><td><span class="badge" style="background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)">No Answer</span></td><td><span style="font-weight:700;color:var(--red)">31</span></td><td>Today</td><td>Sophia</td><td><button class="btn btn-ghost btn-sm"><i class="ti ti-edit"></i></button></td></tr>
+          <tbody id="crm-tbody">
+            <tr><td colspan="8" style="text-align:center;color:var(--text3);padding:2rem">No leads imported yet — upload an Excel file via a Campaign to get started.</td></tr>
           </tbody>
         </table>
       </div>

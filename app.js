@@ -687,6 +687,7 @@ function navigate(page) {
   if (page === 'prompt')       renderObjections();
   if (page === 'integrations') loadCalendarStatus();
   if (page === 'knowledge')    loadKnowledgeBases();
+  if (page === 'crm')          loadCRMLeads();
 }
 
 const pageTitles = {
@@ -961,6 +962,109 @@ async function deleteCampaign(id) {
   await api(`/api/campaigns/${id}`, { method: 'DELETE' });
   showToast('Campaign deleted', 'success');
   loadCampaigns();
+}
+
+// ─── CRM / Leads ─────────────────────────────────────────────────────────────
+let _allCRMLeads = [];
+
+async function loadCRMLeads() {
+  const tbody = document.getElementById('crm-tbody');
+  if (!tbody) return;
+  try {
+    const data = await api('/api/leads');
+    _allCRMLeads = data.leads || [];
+    renderCRMLeads(_allCRMLeads);
+    updateCRMMetrics(_allCRMLeads);
+  } catch {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:2rem">No leads imported yet — upload an Excel file via a Campaign to get started.</td></tr>`;
+  }
+}
+
+function updateCRMMetrics(leads) {
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  const total    = leads.length;
+  const booked   = leads.filter(l => l.outcome === 'meeting_booked').length;
+  const noAnswer = leads.filter(l => l.outcome === 'no_answer').length;
+  const called   = leads.filter(l => l.outcome).length;
+
+  set('crm-total',        total || '—');
+  set('crm-total-trend',  total ? 'imported leads' : 'no leads yet');
+  set('crm-qualified',    called || '—');
+  set('crm-qualified-pct', called && total ? `${Math.round(called/total*100)}% called` : 'none called yet');
+  set('crm-booked',       booked || '—');
+  set('crm-booked-pct',   called && booked ? `${Math.round(booked/called*100)}% booking rate` : 'no bookings yet');
+  set('crm-noanswer',     noAnswer || '—');
+  set('crm-noanswer-pct', called ? `${Math.round(noAnswer/called*100)}% of calls` : '');
+}
+
+function renderCRMLeads(leads) {
+  const tbody = document.getElementById('crm-tbody');
+  if (!tbody) return;
+  if (!leads.length) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:2rem">No leads imported yet — upload an Excel file via a Campaign to get started.</td></tr>`;
+    return;
+  }
+
+  const outcomeBadge = (outcome) => {
+    const map = {
+      meeting_booked: `<span class="badge booked">Meeting Set</span>`,
+      interested:     `<span class="badge active">Interested</span>`,
+      follow_up_needed: `<span class="badge pending">Follow-up</span>`,
+      not_interested: `<span class="badge paused">Not Interested</span>`,
+      no_answer:      `<span class="badge" style="background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)">No Answer</span>`,
+      escalated:      `<span class="badge pending">Human Review</span>`,
+      do_not_call:    `<span class="badge" style="background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)">Do Not Call</span>`,
+    };
+    return map[outcome] || `<span class="badge paused">Pending</span>`;
+  };
+
+  const scoreColor = (s) => !s ? 'var(--text3)' : s >= 70 ? 'var(--green)' : s >= 40 ? 'var(--amber)' : 'var(--red)';
+
+  tbody.innerHTML = leads.map(l => {
+    const name     = l.name || `${l.firstName || ''} ${l.lastName || ''}`.trim() || '—';
+    const company  = l.company || '—';
+    const phone    = l.phone   || '—';
+    const agent    = l.agentId || '—';
+    const score    = l.callScore ?? '';
+    const contact  = l.calledAt ? new Date(l.calledAt).toLocaleDateString('en-GB', {day:'numeric',month:'short'}) : (l.importedAt ? 'Imported' : '—');
+    return `
+      <tr>
+        <td class="bold">${escHtml(name)}</td>
+        <td>${escHtml(company)}</td>
+        <td class="font-mono" style="font-size:11px">${escHtml(phone)}</td>
+        <td>${outcomeLabel(l.outcome)}</td>
+        <td><span style="font-weight:700;color:${scoreColor(score)}">${score || '—'}</span></td>
+        <td style="font-size:11px;color:var(--text3)">${contact}</td>
+        <td style="font-size:11px;color:var(--text2);text-transform:capitalize">${escHtml(agent)}</td>
+        <td><button class="btn btn-ghost btn-sm" title="View"><i class="ti ti-eye"></i></button></td>
+      </tr>`;
+  }).join('');
+}
+
+function outcomeLabel(outcome) {
+  const map = {
+    meeting_booked:   `<span class="badge booked">Meeting Set</span>`,
+    interested:       `<span class="badge active">Interested</span>`,
+    follow_up_needed: `<span class="badge pending">Follow-up</span>`,
+    not_interested:   `<span class="badge paused">Not Interested</span>`,
+    no_answer:        `<span class="badge" style="background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)">No Answer</span>`,
+    escalated:        `<span class="badge pending">Human Review</span>`,
+    do_not_call:      `<span class="badge" style="background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)">Do Not Call</span>`,
+  };
+  return map[outcome] || `<span class="badge paused">Pending</span>`;
+}
+
+function filterCRMLeads(query) {
+  if (!query.trim()) return renderCRMLeads(_allCRMLeads);
+  const q = query.toLowerCase();
+  const filtered = _allCRMLeads.filter(l =>
+    (l.name || '').toLowerCase().includes(q) ||
+    (l.firstName || '').toLowerCase().includes(q) ||
+    (l.lastName  || '').toLowerCase().includes(q) ||
+    (l.company   || '').toLowerCase().includes(q) ||
+    (l.phone     || '').includes(q)
+  );
+  renderCRMLeads(filtered);
 }
 
 // ─── Upload Excel leads ───────────────────────────────────────────────────────
