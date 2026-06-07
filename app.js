@@ -919,7 +919,7 @@ function getSchedule() {
   return schedule;
 }
 
-async function createCampaign() {
+async function createCampaign(autoStart = false) {
   const name       = document.getElementById('camp-name')?.value?.trim();
   const agentId    = document.getElementById('camp-agent')?.value;
   const dailyLimit = document.getElementById('camp-daily-limit')?.value;
@@ -948,12 +948,22 @@ async function createCampaign() {
       if (data.imported) {
         await api(`/api/campaigns/${campaign.id}`, {
           method: 'PATCH',
-          body: JSON.stringify({ leadCount: data.imported, status: 'active' }),
+          body: JSON.stringify({ leadCount: data.imported }),
         });
-        showToast(`✅ Campaign created — ${data.imported} leads imported`, 'success');
+
+        if (autoStart) {
+          await api(`/api/campaigns/${campaign.id}/start`, { method: 'POST' });
+          showToast(`▶ Campaign started — dialling ${data.imported} leads now`, 'success');
+        } else {
+          showToast(`✅ Campaign saved — ${data.imported} leads imported`, 'success');
+        }
       }
     } else {
-      showToast(`✅ Campaign "${name}" created as draft`, 'success');
+      if (autoStart) {
+        showToast(`⚠️ No leads uploaded — campaign saved as draft`, 'warning');
+      } else {
+        showToast(`✅ Campaign "${name}" saved as draft`, 'success');
+      }
     }
 
     closeModal('new-campaign');

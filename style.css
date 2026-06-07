@@ -206,6 +206,8 @@ body {
 .btn i { font-size: 15px; }
 .btn-primary { background: linear-gradient(135deg, #4F6EF7 0%, #7C3AED 100%); color: #fff; box-shadow: 0 2px 8px rgba(79,110,247,0.30); }
 .btn-primary:hover { background: linear-gradient(135deg, #3655e0 0%, #6d28d9 100%); box-shadow: 0 3px 12px rgba(79,110,247,0.40); }
+.btn-secondary { background: var(--bg-card2); color: var(--text2); border: 1px solid var(--border2); }
+.btn-secondary:hover { background: var(--bg-hover); color: var(--text1); }
 .btn-ghost { background: var(--bg-card); color: var(--text2); border: 1px solid var(--border); }
 .btn-ghost:hover { color: var(--text1); border-color: var(--border2); }
 .btn-danger { background: var(--red-dim); color: var(--red); border: 1px solid rgba(239,68,68,0.2); }
