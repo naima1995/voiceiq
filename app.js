@@ -277,7 +277,7 @@ async function loadDashboard() {
 
     // Metric cards — from real computed analytics
     if (analyticsRes.status === 'fulfilled') {
-      renderDashboardMetrics(analyticsRes.value?.today || {});
+      renderDashboardMetrics(analyticsRes.value?.today || {}, analyticsRes.value?.yesterday || {});
     }
 
     if (agentsRes.status === 'fulfilled' && agentsRes.value?.agents) {
@@ -345,14 +345,44 @@ function renderDashboardCampaigns(campaigns) {
 }
 
 // ─── Dashboard metric cards ───────────────────────────────────────────────────
-function renderDashboardMetrics(today) {
-  // today = { total, answered, answerRate, booked, bookingRate, avgScore }
-  const conversion = today.bookingRate != null ? today.bookingRate + '%' : '—';
+function renderDashboardMetrics(today, yesterday = {}) {
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+
   set('dash-calls-today',  today.total      ?? 0);
   set('dash-bookings',     today.booked     ?? 0);
   set('dash-answer-rate',  (today.answerRate ?? 0) + '%');
-  set('dash-conversion',   conversion);
+  set('dash-conversion',   today.bookingRate != null ? today.bookingRate + '%' : '—');
+
+  // Helper — builds "+N vs yesterday" or "same as yesterday"
+  function trendText(todayVal, yestVal, suffix = '') {
+    if (yestVal == null || (todayVal === 0 && yestVal === 0)) return 'no data yesterday';
+    const diff = todayVal - yestVal;
+    if (diff === 0) return 'same as yesterday';
+    return `${diff > 0 ? '+' : ''}${diff}${suffix} vs yesterday`;
+  }
+  function trendClass(todayVal, yestVal) {
+    if (yestVal == null) return 'neutral';
+    return todayVal > yestVal ? 'up' : todayVal < yestVal ? 'down' : 'neutral';
+  }
+  function trendIcon(cls) {
+    if (cls === 'up')   return '<i class="ti ti-trending-up" style="font-size:13px"></i> ';
+    if (cls === 'down') return '<i class="ti ti-trending-down" style="font-size:13px"></i> ';
+    return '';
+  }
+
+  function setTrend(id, todayVal, yestVal, suffix = '') {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const cls  = trendClass(todayVal, yestVal);
+    const text = trendText(todayVal, yestVal, suffix);
+    el.className = `metric-trend ${cls}`;
+    el.innerHTML = trendIcon(cls) + text;
+  }
+
+  setTrend('dash-calls-trend',      today.total      ?? 0, yesterday.total,       '');
+  setTrend('dash-bookings-trend',    today.booked     ?? 0, yesterday.booked,      '');
+  setTrend('dash-answer-trend',      today.answerRate ?? 0, yesterday.answerRate,  '%');
+  setTrend('dash-conversion-trend',  today.bookingRate ?? 0, yesterday.bookingRate, '%');
 }
 
 // ─── Live calls table ─────────────────────────────────────────────────────────
