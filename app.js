@@ -1256,6 +1256,144 @@ function initApp() {
   loadDashboard();
 }
 
+// ─── Agent Tasks ─────────────────────────────────────────────────────────
+
+const agentTasks = JSON.parse(localStorage.getItem('viq_agent_tasks') || '[]');
+
+function saveAgentTasks() {
+  localStorage.setItem('viq_agent_tasks', JSON.stringify(agentTasks));
+}
+
+function switchAgentTab(tab) {
+  ['agents','tasks'].forEach(t => {
+    document.getElementById(`agent-tab-${t}`).classList.toggle('active', t === tab);
+    document.getElementById(`agent-panel-${t}`).style.display = t === tab ? '' : 'none';
+  });
+  if (tab === 'tasks') renderAgentTasks();
+}
+
+const taskTypeLabels = {
+  capture_attribute: 'Capture Lead Attribute',
+  update_status:     'Update Lead Status',
+  qualify_lead:      'Qualify Lead',
+  custom:            'Custom Instruction',
+};
+const taskTypeIcons = {
+  capture_attribute: 'ti-file-description',
+  update_status:     'ti-circle-check',
+  qualify_lead:      'ti-user-check',
+  custom:            'ti-bolt',
+};
+
+function renderAgentTasks() {
+  const list  = document.getElementById('tasks-list');
+  const empty = document.getElementById('tasks-empty');
+  if (!list) return;
+
+  if (!agentTasks.length) {
+    list.innerHTML = '';
+    empty.style.display = '';
+    return;
+  }
+  empty.style.display = 'none';
+  list.innerHTML = agentTasks.map((t, i) => `
+    <div class="card" style="padding:0">
+      <div style="display:flex;align-items:center;gap:14px;padding:16px 20px">
+        <div style="width:40px;height:40px;background:var(--accent-dim);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <i class="ti ${taskTypeIcons[t.type] || 'ti-bolt'}" style="color:var(--accent);font-size:1.1rem"></i>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:0.9rem">${escHtml(t.name)}</div>
+          <div style="font-size:0.78rem;color:var(--text-muted);margin-top:2px">${taskTypeLabels[t.type] || t.type}${t.agentId ? ` · <span style="color:var(--accent);text-transform:capitalize">${t.agentId}</span>` : ' · All agents'}</div>
+          ${t.instructions ? `<div style="font-size:0.78rem;color:var(--text-muted);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:500px">${escHtml(t.instructions)}</div>` : ''}
+          ${t.attributes?.length ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">${t.attributes.map(a => `<span class="badge" style="font-size:0.7rem">${escHtml(a)}</span>`).join('')}</div>` : ''}
+        </div>
+        <div style="display:flex;gap:8px;flex-shrink:0">
+          <button class="btn btn-ghost btn-sm" onclick="editAgentTask(${i})" title="Edit"><i class="ti ti-pencil"></i></button>
+          <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteAgentTask(${i})" title="Delete"><i class="ti ti-trash"></i></button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+let _editTaskIndex = -1;
+
+function openAddTaskModal(editIndex = -1) {
+  _editTaskIndex = editIndex;
+  const t = editIndex >= 0 ? agentTasks[editIndex] : null;
+
+  document.getElementById('task-modal-title').textContent = editIndex >= 0 ? 'Edit Task' : 'Add Agent Task';
+  document.getElementById('task-name').value         = t?.name || '';
+  document.getElementById('task-type').value         = t?.type || 'capture_attribute';
+  document.getElementById('task-agent').value        = t?.agentId || '';
+  document.getElementById('task-instructions').value = t?.instructions || '';
+
+  // Render attributes
+  const attrList = document.getElementById('task-attr-list');
+  attrList.innerHTML = '';
+  (t?.attributes || []).forEach(a => addTaskAttribute(a));
+
+  toggleTaskAttributesGroup();
+  document.getElementById('add-task-modal').style.display = 'flex';
+}
+
+function closeAddTaskModal() {
+  document.getElementById('add-task-modal').style.display = 'none';
+}
+
+function toggleTaskAttributesGroup() {
+  const type = document.getElementById('task-type').value;
+  document.getElementById('task-attributes-group').style.display =
+    type === 'capture_attribute' ? '' : 'none';
+}
+
+function addTaskAttribute(value = '') {
+  const list = document.getElementById('task-attr-list');
+  const row  = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:8px;align-items:center';
+  row.innerHTML = `
+    <input class="form-input task-attr-input" value="${escHtml(value)}" placeholder="e.g. insurance_provider, age, budget" style="flex:1">
+    <button class="btn btn-ghost btn-sm" style="color:var(--red);padding:4px 8px" onclick="this.parentElement.remove()"><i class="ti ti-x"></i></button>
+  `;
+  list.appendChild(row);
+}
+
+function submitAddTask() {
+  const name         = document.getElementById('task-name').value.trim();
+  const type         = document.getElementById('task-type').value;
+  const agentId      = document.getElementById('task-agent').value;
+  const instructions = document.getElementById('task-instructions').value.trim();
+  const attributes   = [...document.querySelectorAll('.task-attr-input')]
+    .map(i => i.value.trim()).filter(Boolean);
+
+  if (!name) { showToast('Task name is required', 'error'); return; }
+
+  const task = { name, type, agentId: agentId || null, instructions, attributes, createdAt: new Date().toISOString() };
+
+  if (_editTaskIndex >= 0) {
+    agentTasks[_editTaskIndex] = task;
+  } else {
+    agentTasks.push(task);
+  }
+
+  saveAgentTasks();
+  closeAddTaskModal();
+  renderAgentTasks();
+  showToast(`Task "${name}" saved`);
+}
+
+function editAgentTask(index) {
+  openAddTaskModal(index);
+}
+
+function deleteAgentTask(index) {
+  if (!confirm(`Delete task "${agentTasks[index].name}"?`)) return;
+  agentTasks.splice(index, 1);
+  saveAgentTasks();
+  renderAgentTasks();
+}
+
 // ─── Knowledge Base ───────────────────────────────────────────────────────
 
 async function loadKnowledgeBases() {
