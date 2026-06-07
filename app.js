@@ -1190,28 +1190,70 @@ function clearAssistantChat() {
 }
 
 // ─── Objection Handling Builder ───────────────────────────────────────────────
+const OBJECTIONS_VERSION = 'v2_protection';
+
 const defaultObjections = [
   {
     id: 'obj_1',
     title: 'Not interested',
-    prompt: `I completely understand, {{first_name}} — I wouldn't want to take up your time if it's not relevant. Can I just ask, is that because the timing isn't right, or is it more about {{objection_reason}}? I ask only because many of our clients felt the same before they saw the actual numbers…`,
+    prompt: `Oh, not to worry at all — I completely understand! Can I just ask, is it that you're already happy with what you've got in place, or is it just not a great time right now? I only ask because a lot of people say that and then find the review was actually really useful. There's absolutely no commitment involved.`,
   },
   {
     id: 'obj_2',
-    title: 'Voicemail',
-    prompt: `Hi {{first_name}}, this is {{agent_name}} calling from {{company_name}}. I was reaching out about {{call_reason}}. I'll try you again shortly, but feel free to call us back at your convenience. Have a great day!`,
+    title: 'I\'m happy with my cover',
+    prompt: `Oh that's really good to hear, honestly! The review isn't about changing anything — it's more just so you know where you stand and whether what you've got is still working as hard for you as it should be. Most people who do it stay exactly where they are — they just feel a lot more confident about it. Would that be worth knowing?`,
   },
   {
     id: 'obj_3',
+    title: 'I already have a financial advisor',
+    prompt: `Oh perfect — that's brilliant, actually. This would be completely independent of that, just a second opinion really on what's available in the market now versus what you've already got. Sometimes a fresh pair of eyes picks up something that's easy to miss. Would you be open to a quick 15-minute call, just to compare?`,
+  },
+  {
+    id: 'obj_4',
+    title: 'I\'m too busy',
+    prompt: `Of course — I completely get that, life's hectic! The good news is the advisor works entirely around your schedule, so it really can be whenever suits you. Even 15 minutes at a quiet moment could make a real difference. Is there a day this week that's a little less manic for you?`,
+  },
+  {
+    id: 'obj_5',
+    title: 'Send me something in writing',
+    prompt: `Absolutely, of course — I can certainly arrange that. The only thing is, I'd love to make sure whatever they send is actually relevant to your situation rather than just something generic. Would it be alright if the advisor gave you a very quick call first — even just 10 minutes — so they can tailor it properly for you?`,
+  },
+  {
+    id: 'obj_6',
+    title: 'I\'ll think about it',
+    prompt: `Of course, take your time — there's no rush at all! What I can do is just pop a provisional slot in with the advisor, and they'll call you at that time. If you decide it's not for you, honestly no problem whatsoever — you can always just let it go. What day would suit you best?`,
+  },
+  {
+    id: 'obj_7',
+    title: 'How did you get my number?',
+    prompt: `Oh, that's a completely fair question! Your details were passed to us as someone who might benefit from a free protection review. If you'd prefer not to be contacted, I'll make a note of that right away — absolutely no problem at all, and I do apologise for any inconvenience. While I have you though — when did you last have your cover looked at? It might genuinely be worth a quick check.`,
+  },
+  {
+    id: 'obj_8',
+    title: 'My premiums are low / good value',
+    prompt: `Oh that's great — honestly, that's really reassuring to hear! Sometimes though it isn't just about the price — it's about what's actually covered. Some of the newer policies now include things like serious illness support, GP helplines, and hospitalisation cover that a lot of older policies just don't have. It might be worth a quick look just to compare what you're getting for your money?`,
+  },
+  {
+    id: 'obj_9',
+    title: 'Voicemail',
+    prompt: `Hi {{first_name}}, it's {{agent_name}} here — I was just calling on behalf of a local financial advisor regarding your existing protection cover. Nothing to worry about at all, I'll try you again shortly. Do have a lovely day, bye for now!`,
+  },
+  {
+    id: 'obj_10',
     title: 'Call back later',
-    prompt: `Of course, I completely respect that — when would be a better time for me to call back? I want to make sure I catch you when it's convenient. Would later today work, or would tomorrow morning be better?`,
+    prompt: `Of course — not a problem at all! When would be a good time for me to try you again? I want to make sure I catch you when it's actually convenient. Would later today work, or would tomorrow be better — morning or afternoon?`,
   },
 ];
 
-let objections = JSON.parse(localStorage.getItem('voiceiq_objections') || 'null') || defaultObjections;
+const savedObjs     = localStorage.getItem('voiceiq_objections');
+const savedObjsVer  = localStorage.getItem('voiceiq_objections_ver');
+let objections = (savedObjs && savedObjsVer === OBJECTIONS_VERSION)
+  ? JSON.parse(savedObjs)
+  : defaultObjections;
 
 function saveObjections() {
   localStorage.setItem('voiceiq_objections', JSON.stringify(objections));
+  localStorage.setItem('voiceiq_objections_ver', OBJECTIONS_VERSION);
 }
 
 function renderObjections() {

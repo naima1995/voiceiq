@@ -595,12 +595,25 @@
             </div>
             <div class="card-body">
               <div class="form-group">
-                <label class="form-label">Opening Greeting</label>
-                <textarea class="prompt-editor" id="prompt-ta" rows="5">Hello, am I speaking with {{first_name}}? Brilliant — my name is {{agent_name}}, I'm calling on behalf of {{company_name}}. I hope I've caught you at a good time? 
+                <label class="form-label">Survey Script &amp; Opening Greeting</label>
+                <textarea class="prompt-editor" id="prompt-ta" rows="14">Hi {{first_name}}, my name is {{agent_name}} — I'm calling on behalf of a local independent financial advisor. I hope I haven't caught you at a bad time?
 
-I'm reaching out because {{call_reason}}. Based on what I know about {{prospect_company}}, I think there's a real opportunity here for you.
+I'm just carrying out a short survey today — nothing too involved, just a couple of quick questions about existing protection cover. It honestly won't take more than a minute or so.
 
-Do you have just two or three minutes to hear a little more?</textarea>
+{{#if provider}}
+I can see you've currently got your cover with {{provider}} — is that still the case?
+{{else}}
+Do you currently have any form of life insurance or protection cover in place?
+{{/if}}
+
+And roughly speaking, when was the last time that cover was actually reviewed — would you say it's been a couple of years or more?
+
+That's really common, to be honest — most people set it up and it just sits there. The thing is, both what's available and what things cost have changed quite a lot, and a lot of people find they're either paying a bit more than they need to, or there are gaps they weren't really aware of.
+
+CLOSE:
+What the advisor does is a completely free, no-obligation review — they look at what you've got, compare it against what's available now, and just let you know where you stand. A lot of people are genuinely surprised by what's changed.
+
+Would it be worth having them give you a quick call — even just 15 minutes — so you've got the full picture?</textarea>
               </div>
               <!-- ── Objection Handling ─────────────────────────────────── -->
               <div class="form-group">
@@ -615,7 +628,7 @@ Do you have just two or three minutes to hear a little more?</textarea>
 
               <div class="form-group">
                 <label class="form-label">Booking Transition</label>
-                <textarea class="form-textarea" rows="3">That's great to hear! What tends to work best for people is a quick 20-minute call — no slides, no pitch, just an honest conversation. I can see {{available_slot_1}} or {{available_slot_2}} are free in the diary. Which works better for you?</textarea>
+                <textarea class="form-textarea" rows="3">Oh brilliant, that's great — I'm really pleased! So the advisor will give you a call — it's only about 15 minutes, completely relaxed, no pressure whatsoever. What day works best for you, and would morning or afternoon suit you better?</textarea>
               </div>
             </div>
           </div>
