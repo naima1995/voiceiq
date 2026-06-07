@@ -267,11 +267,12 @@ function showToast(message, type = 'info') {
 // ─── Load & render all dashboard data ────────────────────────────────────────
 async function loadDashboard() {
   try {
-    const [analyticsRes, agentsRes, callsRes, eventsRes] = await Promise.allSettled([
+    const [analyticsRes, agentsRes, callsRes, eventsRes, campaignsRes] = await Promise.allSettled([
       api('/api/calls/analytics/summary'),
       api('/api/agents'),
       api('/api/calls'),
       api('/api/calendar/events?maxResults=5&daysAhead=1'),
+      api('/api/campaigns'),
     ]);
 
     // Metric cards — from real computed analytics
@@ -301,9 +302,46 @@ async function loadDashboard() {
       renderUpcomingBookings(events);
       console.log('Calendar events loaded:', events.length);
     }
+
+    if (campaignsRes.status === 'fulfilled') {
+      renderDashboardCampaigns(campaignsRes.value?.campaigns || []);
+    }
   } catch (err) {
     console.warn('Dashboard load error:', err.message);
   }
+}
+
+function renderDashboardCampaigns(campaigns) {
+  const container = document.getElementById('dash-active-campaigns');
+  const countEl   = document.getElementById('dash-active-campaigns-count');
+  if (!container) return;
+
+  const active = campaigns.filter(c => c.status === 'active');
+  if (countEl) countEl.textContent = active.length ? `${active.length} running` : 'none running';
+
+  if (!active.length) {
+    container.innerHTML = `<div style="padding:24px 18px;text-align:center;color:var(--text3);font-size:12px">No active campaigns</div>`;
+    return;
+  }
+
+  const barColors = ['var(--accent)', 'var(--purple)', 'var(--green)', 'var(--amber)'];
+  container.innerHTML = active.map((c, i) => {
+    const total   = c.leadCount   || 0;
+    const called  = c.calledCount || 0;
+    const booked  = c.bookings    || 0;
+    const pct     = total > 0 ? Math.round((called / total) * 100) : 0;
+    const color   = barColors[i % barColors.length];
+    const isLast  = i === active.length - 1;
+    return `
+      <div style="padding:10px 18px;${isLast ? '' : 'border-bottom:1px solid var(--border)'}">
+        <div class="flex justify-between items-center" style="margin-bottom:6px">
+          <span style="font-size:12px;font-weight:500;color:var(--text1)">${escHtml(c.name)}</span>
+          <span style="font-size:11px;font-weight:600;color:${color}">${pct}%</span>
+        </div>
+        <div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:${color}"></div></div>
+        <div style="font-size:10px;color:var(--text3);margin-top:5px">${called} / ${total} leads${booked ? ` · ${booked} booked` : ''}</div>
+      </div>`;
+  }).join('');
 }
 
 // ─── Dashboard metric cards ───────────────────────────────────────────────────
