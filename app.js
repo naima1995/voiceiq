@@ -1473,7 +1473,10 @@ async function loadKnowledgeBases() {
       <tr>
         <td style="color:var(--text-muted)">${kb.id}</td>
         <td>
-          <div style="font-weight:500">${escHtml(kb.name)}</div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-weight:500">${escHtml(kb.name)}</span>
+            ${kb.builtin ? `<span class="badge" style="background:linear-gradient(135deg,rgba(79,110,247,0.12),rgba(124,58,237,0.10));color:var(--accent);border:1px solid rgba(79,110,247,0.22);font-size:9px;padding:2px 7px;">Built-in</span>` : ''}
+          </div>
           ${kb.description ? `<div style="font-size:0.75rem;color:var(--text-muted)">${escHtml(kb.description)}</div>` : ''}
         </td>
         <td><span class="badge" style="font-size:0.7rem">${kb.fileType}</span> <span style="font-size:0.8rem;color:var(--text-muted)">${escHtml(kb.fileName)}</span></td>
@@ -1482,7 +1485,10 @@ async function loadKnowledgeBases() {
         <td>
           <div style="display:flex;gap:6px">
             <button class="btn btn-ghost btn-sm" title="View" onclick="viewKB(${kb.id})"><i class="ti ti-eye"></i></button>
-            <button class="btn btn-ghost btn-sm" title="Delete" onclick="deleteKB(${kb.id}, '${escHtml(kb.name)}')" style="color:var(--red)"><i class="ti ti-trash"></i></button>
+            ${kb.builtin
+              ? `<button class="btn btn-ghost btn-sm" title="Built-in — cannot be deleted" disabled style="opacity:0.35;cursor:not-allowed"><i class="ti ti-lock"></i></button>`
+              : `<button class="btn btn-ghost btn-sm" title="Delete" onclick="deleteKB(${kb.id}, '${escHtml(kb.name)}')" style="color:var(--red)"><i class="ti ti-trash"></i></button>`
+            }
           </div>
         </td>
       </tr>
