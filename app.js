@@ -818,7 +818,13 @@ async function loadCampaigns() {
         <td style="color:var(--green);font-weight:600">${c.booked || '—'}</td>
         <td>${convRate}</td>
         <td><span class="${statusCls}">${statusLabel}</span></td>
-        <td><button class="btn btn-ghost btn-sm" onclick="deleteCampaign('${c.id}')"><i class="ti ti-trash"></i></button></td>
+        <td style="display:flex;gap:6px;align-items:center">
+          ${c.status === 'active'
+            ? `<button class="btn btn-sm" style="background:var(--amber);color:#fff;border:none" onclick="pauseCampaign('${c.id}')"><i class="ti ti-player-pause"></i> Pause</button>`
+            : `<button class="btn btn-sm" style="background:var(--green);color:#fff;border:none" onclick="startCampaign('${c.id}')"><i class="ti ti-player-play"></i> Start</button>`
+          }
+          <button class="btn btn-ghost btn-sm" onclick="deleteCampaign('${c.id}')"><i class="ti ti-trash"></i></button>
+        </td>
       </tr>`;
     }).join('');
   } catch (err) {
@@ -954,6 +960,26 @@ async function createCampaign() {
     loadCampaigns();
   } catch (err) {
     showToast(`❌ Failed: ${err.message}`, 'error');
+  }
+}
+
+async function startCampaign(id) {
+  try {
+    const data = await api(`/api/campaigns/${id}/start`, { method: 'POST' });
+    showToast(`▶ Campaign started — dialling leads now`, 'success');
+    loadCampaigns();
+  } catch (err) {
+    showToast('Could not start campaign', 'error');
+  }
+}
+
+async function pauseCampaign(id) {
+  try {
+    await api(`/api/campaigns/${id}/pause`, { method: 'POST' });
+    showToast('⏸ Campaign paused', 'success');
+    loadCampaigns();
+  } catch (err) {
+    showToast('Could not pause campaign', 'error');
   }
 }
 
