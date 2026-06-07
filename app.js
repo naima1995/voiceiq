@@ -216,10 +216,34 @@ function connectWebSocket() {
   return ws;
 }
 
+// Track active call count for the sidebar live card
+let _liveCallCount = 0;
+
+function updateSidebarLiveCard() {
+  const footer = document.getElementById('sidebar-footer');
+  const nameEl = document.getElementById('agent-live-name');
+  const subEl  = document.getElementById('agent-live-sub');
+  if (!footer) return;
+  if (_liveCallCount > 0) {
+    footer.style.display = '';
+    if (subEl) subEl.textContent = _liveCallCount === 1 ? '1 live call active' : `${_liveCallCount} live calls active`;
+  } else {
+    footer.style.display = 'none';
+    if (nameEl) nameEl.textContent = '—';
+  }
+}
+
 function handleLiveEvent(msg) {
   if (msg.type === 'call.started') {
+    _liveCallCount++;
+    const agentId = msg.data?.agentId || '';
+    const nameEl  = document.getElementById('agent-live-name');
+    if (nameEl && agentId) nameEl.textContent = agentId.charAt(0).toUpperCase() + agentId.slice(1) + ' — Active';
+    updateSidebarLiveCard();
     showToast(`📞 New call started — ${msg.data?.fromNumber || ''}`, 'info');
   } else if (msg.type === 'call.ended') {
+    _liveCallCount = Math.max(0, _liveCallCount - 1);
+    updateSidebarLiveCard();
     showToast(`✅ Call ended — ${msg.data?.duration}s`, 'success');
   } else if (msg.type === 'call.summary') {
     showToast(`📋 Call summary ready`, 'success');
