@@ -928,21 +928,33 @@ function getSchedule() {
   return schedule;
 }
 
-async function createCampaign(autoStart = false) {
+async function createCampaign(mode = 'schedule') {
   const name       = document.getElementById('camp-name')?.value?.trim();
   const agentId    = document.getElementById('camp-agent')?.value;
   const dailyLimit = document.getElementById('camp-daily-limit')?.value;
   const startDate  = document.getElementById('camp-start-date')?.value;
-  const timezone  = document.getElementById('camp-timezone')?.value || 'Europe/London';
-  const schedule  = getSchedule();
-  const fileInput = document.getElementById('camp-leads-file');
+  const startTime  = document.getElementById('camp-start-time')?.value || '09:00';
+  const timezone   = document.getElementById('camp-timezone')?.value || 'Europe/London';
+  const schedule   = getSchedule();
+  const fileInput  = document.getElementById('camp-leads-file');
 
   if (!name) { showToast('Campaign name is required', 'error'); return; }
+
+  // For scheduled launch, date is required
+  if (mode === 'schedule' && !startDate) {
+    showToast('Please select a date and time to schedule the launch', 'error');
+    return;
+  }
+
+  // Build scheduledAt ISO string from date + time
+  const scheduledAt = (mode === 'schedule' && startDate)
+    ? new Date(`${startDate}T${startTime}:00`).toISOString()
+    : null;
 
   try {
     const campaign = await api('/api/campaigns', {
       method: 'POST',
-      body: JSON.stringify({ name, agentId, dailyLimit, startDate, timezone, schedule }),
+      body: JSON.stringify({ name, agentId, dailyLimit, startDate, timezone, schedule, scheduledAt }),
     });
 
     // Upload leads file if provided
@@ -960,18 +972,22 @@ async function createCampaign(autoStart = false) {
           body: JSON.stringify({ leadCount: data.imported }),
         });
 
-        if (autoStart) {
+        if (mode === 'now') {
           await api(`/api/campaigns/${campaign.id}/start`, { method: 'POST' });
           showToast(`▶ Campaign started — dialling ${data.imported} leads now`, 'success');
         } else {
-          showToast(`✅ Campaign saved — ${data.imported} leads imported`, 'success');
+          const dateLabel = new Date(scheduledAt).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
+          showToast(`🗓 Campaign scheduled for ${dateLabel}`, 'success');
         }
       }
     } else {
-      if (autoStart) {
-        showToast(`⚠️ No leads uploaded — campaign saved as draft`, 'warning');
+      if (mode === 'now') {
+        showToast(`⚠️ No leads uploaded — campaign saved`, 'warning');
       } else {
-        showToast(`✅ Campaign "${name}" saved as draft`, 'success');
+        const dateLabel = scheduledAt
+          ? new Date(scheduledAt).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })
+          : 'the selected time';
+        showToast(`🗓 Campaign scheduled for ${dateLabel}`, 'success');
       }
     }
 

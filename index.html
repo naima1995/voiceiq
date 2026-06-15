@@ -1052,10 +1052,13 @@ Would it be worth having them give you a quick call — even just 15 minutes —
         </div>
       </div>
 
-      <!-- Start date (native calendar picker) -->
+      <!-- Start date + time -->
       <div class="form-group">
-        <label class="form-label"><i class="ti ti-calendar" style="font-size:13px;margin-right:4px"></i>Start date</label>
-        <input id="camp-start-date" type="date" class="form-input" style="color-scheme:light;cursor:pointer">
+        <label class="form-label"><i class="ti ti-calendar" style="font-size:13px;margin-right:4px"></i>Schedule launch</label>
+        <div style="display:flex;gap:8px">
+          <input id="camp-start-date" type="date" class="form-input" style="color-scheme:light;cursor:pointer;flex:1">
+          <input id="camp-start-time" type="time" class="form-input" style="color-scheme:light;cursor:pointer;width:120px" value="09:00">
+        </div>
       </div>
 
       <!-- Timezone -->
@@ -1165,8 +1168,8 @@ Would it be worth having them give you a quick call — even just 15 minutes —
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('new-campaign')">Cancel</button>
-      <button class="btn btn-secondary" onclick="createCampaign(false)"><i class="ti ti-device-floppy"></i> Save as Draft</button>
-      <button class="btn btn-primary" onclick="createCampaign(true)"><i class="ti ti-bolt"></i> Start Now</button>
+      <button class="btn btn-secondary" onclick="createCampaign('schedule')"><i class="ti ti-calendar-time"></i> Schedule Launch</button>
+      <button class="btn btn-primary" onclick="createCampaign('now')"><i class="ti ti-bolt"></i> Start Now</button>
     </div>
   </div>
 </div>
