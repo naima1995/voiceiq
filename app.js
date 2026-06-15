@@ -1268,20 +1268,23 @@ function normalisePhone(raw) {
   return n;
 }
 
+function openTestCallModal() {
+  openModal('test-call');
+}
+
 async function triggerTestCall() {
   const raw     = document.getElementById('test-call-number')?.value?.trim();
-  const agentId = document.getElementById('test-call-agent')?.value || 'james';
+  const agentId = document.getElementById('test-call-agent')?.value || 'rachel';
   if (!raw) { showToast('Enter a number to call', 'error'); return; }
 
   const toNumber = normalisePhone(raw);
 
-  // Validate before sending
-  if (!toNumber.startsWith('+447') || toNumber.length !== 13) {
-    showToast(`❌ Invalid number — must be a UK mobile starting with 7 (e.g. 07911123456)`, 'error');
+  if (!toNumber.startsWith('+44')) {
+    showToast(`❌ Invalid number — must be a UK number (e.g. 07911 123456)`, 'error');
     return;
   }
 
-  document.getElementById('test-call-number').value = toNumber;
+  closeModal('test-call');
   await makeCall({ toNumber, agentId });
 }
 

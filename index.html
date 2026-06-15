@@ -590,7 +590,7 @@
               </div>
               <div class="flex gap-2">
                 <button class="btn btn-ghost btn-sm"><i class="ti ti-eye"></i> Preview</button>
-                <button class="btn btn-ghost btn-sm"><i class="ti ti-player-play"></i> Test Call</button>
+                <button class="btn btn-ghost btn-sm" onclick="openTestCallModal()"><i class="ti ti-player-play"></i> Test Call</button>
               </div>
             </div>
             <div class="card-body">
@@ -614,6 +614,9 @@ CLOSE:
 What the advisor does is a completely free, no-obligation review — they look at what you've got, compare it against what's available now, and just let you know where you stand. A lot of people are genuinely surprised by what's changed.
 
 Would it be worth having them give you a quick call — even just 15 minutes — so you've got the full picture?</textarea>
+              <div style="display:flex;gap:8px;margin-top:8px">
+                <button class="btn btn-ghost btn-sm" onclick="askAssistantWithContext('Review my current script and suggest specific improvements for a UK protection insurance survey call. Wrap the improved version in a code block so I can apply it.')"><i class="ti ti-sparkles"></i> Improve with AI</button>
+                <button class="btn btn-ghost btn-sm" onclick="askAssistantWithContext('Rewrite my current script to be shorter and more conversational for a phone call. Wrap the result in a code block.')"><i class="ti ti-writing"></i> Shorten & rewrite</button>
               </div>
               <!-- ── Objection Handling ─────────────────────────────────── -->
               <div class="form-group">
@@ -1170,6 +1173,36 @@ Would it be worth having them give you a quick call — even just 15 minutes —
       <button class="btn btn-ghost" onclick="closeModal('new-campaign')">Cancel</button>
       <button class="btn btn-secondary" onclick="createCampaign('schedule')"><i class="ti ti-calendar-time"></i> Schedule Launch</button>
       <button class="btn btn-primary" onclick="createCampaign('now')"><i class="ti ti-bolt"></i> Start Now</button>
+    </div>
+  </div>
+</div>
+
+<!-- Test Call Modal -->
+<div class="modal-overlay" id="modal-test-call">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header">
+      <div class="modal-title"><i class="ti ti-phone-outgoing" style="margin-right:6px"></i>Make a Test Call</div>
+      <button class="modal-close" onclick="closeModal('test-call')">×</button>
+    </div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:14px">
+      <div class="form-group">
+        <label class="form-label">Phone number</label>
+        <input class="form-input" id="test-call-number" placeholder="07700 900 123" type="tel">
+        <div style="font-size:11px;color:var(--text3);margin-top:4px">UK mobile number (07xxx or +447xxx)</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">AI Agent</label>
+        <select class="form-select" id="test-call-agent">
+          <option value="rachel">Rachel — Southern British Female</option>
+          <option value="james">James — Neutral UK Male</option>
+          <option value="shelley">Shelley — Warm British Professional</option>
+          <option value="alexis">Alexis — Clear Confident British</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('test-call')">Cancel</button>
+      <button class="btn btn-primary" onclick="triggerTestCall()"><i class="ti ti-phone-outgoing"></i> Call Now</button>
     </div>
   </div>
 </div>
