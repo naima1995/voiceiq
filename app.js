@@ -693,7 +693,7 @@ function navigate(page) {
   if (page === 'teams')        loadTwilioStatus();
   if (page === 'agents')       loadTwilioStatus();
   if (page === 'campaigns')    loadCampaigns();
-  if (page === 'prompt')       { renderObjections(); loadAgentScript(); }
+  if (page === 'prompt')       { renderObjections(); loadAgentScript(true); }
   if (page === 'integrations') loadCalendarStatus();
   if (page === 'knowledge')    loadKnowledgeBases();
   if (page === 'crm')          loadCRMLeads();
@@ -1611,8 +1611,25 @@ function updateObjectionPrompt(id, value) {
 
 // ─── Prompt Builder — load/save agent script ─────────────────────────────────
 
-async function loadAgentScript() {
-  const agentId = document.getElementById('prompt-agent-select')?.value;
+async function loadAgentScript(populate = false) {
+  const select = document.getElementById('prompt-agent-select');
+  if (!select) return;
+
+  // Populate dropdown from API on first load
+  if (populate) {
+    try {
+      const data = await api('/api/agents');
+      const agents = data.agents || [];
+      select.innerHTML = agents.map(a =>
+        `<option value="${a.id}">${a.name}</option>`
+      ).join('');
+    } catch (err) {
+      showToast(`Failed to load agents: ${err.message}`, 'error');
+      return;
+    }
+  }
+
+  const agentId = select.value;
   if (!agentId) return;
   try {
     const agent = await api(`/api/agents/${agentId}`);
