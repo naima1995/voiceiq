@@ -1187,12 +1187,12 @@ Would it be worth having them give you a quick call — even just 15 minutes —
     <div class="modal-body" style="display:flex;flex-direction:column;gap:14px">
       <div class="form-group">
         <label class="form-label">Phone number</label>
-        <input class="form-input" id="test-call-number" placeholder="07700 900 123" type="tel">
+        <input class="form-input" id="modal-test-number" placeholder="07700 900 123" type="tel">
         <div style="font-size:11px;color:var(--text3);margin-top:4px">UK mobile number (07xxx or +447xxx)</div>
       </div>
       <div class="form-group">
         <label class="form-label">AI Agent</label>
-        <select class="form-select" id="test-call-agent">
+        <select class="form-select" id="modal-test-agent">
           <option value="rachel">Rachel — Southern British Female</option>
           <option value="james">James — Neutral UK Male</option>
           <option value="shelley">Shelley — Warm British Professional</option>
@@ -1202,7 +1202,7 @@ Would it be worth having them give you a quick call — even just 15 minutes —
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('test-call')">Cancel</button>
-      <button class="btn btn-primary" onclick="triggerTestCall()"><i class="ti ti-phone-outgoing"></i> Call Now</button>
+      <button class="btn btn-primary" onclick="triggerModalTestCall()"><i class="ti ti-phone-outgoing"></i> Call Now</button>
     </div>
   </div>
 </div>

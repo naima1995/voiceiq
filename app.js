@@ -1272,6 +1272,21 @@ function openTestCallModal() {
   openModal('test-call');
 }
 
+async function triggerModalTestCall() {
+  const raw     = document.getElementById('modal-test-number')?.value?.trim();
+  const agentId = document.getElementById('modal-test-agent')?.value || 'rachel';
+  if (!raw) { showToast('Enter a number to call', 'error'); return; }
+
+  const toNumber = normalisePhone(raw);
+  if (!toNumber.startsWith('+44')) {
+    showToast(`❌ Invalid number — must be a UK number (e.g. 07911 123456)`, 'error');
+    return;
+  }
+
+  closeModal('test-call');
+  await makeCall({ toNumber, agentId });
+}
+
 async function triggerTestCall() {
   const raw     = document.getElementById('test-call-number')?.value?.trim();
   const agentId = document.getElementById('test-call-agent')?.value || 'rachel';
