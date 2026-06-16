@@ -581,16 +581,16 @@
           <div class="card mb-4" style="margin-bottom:14px">
             <div class="card-header">
               <div class="flex items-center gap-2">
-                <select class="form-select" style="width:220px">
-                  <option>Q3 Outbound Sales Script</option>
-                  <option>Product Demo Script</option>
-                  <option>Renewal Follow-up Script</option>
-                  <option>Inbound Greeting Script</option>
+                <select class="form-select" style="width:200px" id="prompt-agent-select" onchange="loadAgentScript()">
+                  <option value="rachel">Rachel</option>
+                  <option value="james">James</option>
+                  <option value="shelley">Shelley</option>
+                  <option value="alexis">Alexis</option>
                 </select>
               </div>
               <div class="flex gap-2">
-                <button class="btn btn-ghost btn-sm"><i class="ti ti-eye"></i> Preview</button>
                 <button class="btn btn-ghost btn-sm" onclick="openTestCallModal()"><i class="ti ti-player-play"></i> Test Call</button>
+                <button class="btn btn-primary btn-sm" onclick="saveAgentScript()"><i class="ti ti-device-floppy"></i> Save to Agent</button>
               </div>
             </div>
             <div class="card-body">

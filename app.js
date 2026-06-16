@@ -693,7 +693,7 @@ function navigate(page) {
   if (page === 'teams')        loadTwilioStatus();
   if (page === 'agents')       loadTwilioStatus();
   if (page === 'campaigns')    loadCampaigns();
-  if (page === 'prompt')       renderObjections();
+  if (page === 'prompt')       { renderObjections(); loadAgentScript(); }
   if (page === 'integrations') loadCalendarStatus();
   if (page === 'knowledge')    loadKnowledgeBases();
   if (page === 'crm')          loadCRMLeads();
@@ -1607,6 +1607,36 @@ function updateObjectionTitle(id, value) {
 function updateObjectionPrompt(id, value) {
   const obj = objections.find(o => o.id === id);
   if (obj) { obj.prompt = value; saveObjections(); }
+}
+
+// ─── Prompt Builder — load/save agent script ─────────────────────────────────
+
+async function loadAgentScript() {
+  const agentId = document.getElementById('prompt-agent-select')?.value;
+  if (!agentId) return;
+  try {
+    const agent = await api(`/api/agents/${agentId}`);
+    const ta = document.getElementById('prompt-ta');
+    if (ta && agent.script) ta.value = agent.script;
+  } catch (err) {
+    showToast(`Failed to load agent script: ${err.message}`, 'error');
+  }
+}
+
+async function saveAgentScript() {
+  const agentId = document.getElementById('prompt-agent-select')?.value;
+  const script  = document.getElementById('prompt-ta')?.value?.trim();
+  if (!agentId) { showToast('Select an agent first', 'error'); return; }
+  if (!script)  { showToast('Script is empty', 'error'); return; }
+  try {
+    await api(`/api/agents/${agentId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ script }),
+    });
+    showToast(`✅ Script saved to ${agentId.charAt(0).toUpperCase() + agentId.slice(1)}`, 'success');
+  } catch (err) {
+    showToast(`Failed to save: ${err.message}`, 'error');
+  }
 }
 
 // PROMPT VARIABLES
