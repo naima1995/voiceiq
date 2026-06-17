@@ -665,15 +665,135 @@ async function loadCallLog() {
   }
 }
 
-// ─── Load calendar events (used by Calendar page) ────────────────────────────
+// ─── Calendar page state ──────────────────────────────────────────────────────
+let _calYear  = new Date().getFullYear();
+let _calMonth = new Date().getMonth(); // 0-indexed
+let _calEvents = [];
+
 async function loadCalendarEvents() {
   try {
-    const data = await api('/api/calendar/events?maxResults=10&daysAhead=14');
-    return data.events;
+    const data = await api('/api/calendar/events?maxResults=100&daysAhead=60');
+    return data.events || [];
   } catch (err) {
     console.warn('Calendar load error:', err.message);
     return [];
   }
+}
+
+async function initCalendar() {
+  _calYear  = new Date().getFullYear();
+  _calMonth = new Date().getMonth();
+  _calEvents = await loadCalendarEvents();
+  renderCalendarGrid();
+  renderDayPanel(new Date());
+}
+
+function calPrevMonth() {
+  _calMonth--;
+  if (_calMonth < 0) { _calMonth = 11; _calYear--; }
+  renderCalendarGrid();
+}
+
+function calNextMonth() {
+  _calMonth++;
+  if (_calMonth > 11) { _calMonth = 0; _calYear++; }
+  renderCalendarGrid();
+}
+
+function renderCalendarGrid() {
+  const label = document.getElementById('cal-month-label');
+  const grid  = document.getElementById('cal-grid-days');
+  if (!label || !grid) return;
+
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  label.textContent = `${MONTHS[_calMonth]} ${_calYear}`;
+
+  const today     = new Date();
+  const firstDay  = new Date(_calYear, _calMonth, 1);
+  const lastDay   = new Date(_calYear, _calMonth + 1, 0);
+
+  // Monday-first: getDay() returns 0=Sun, shift so Mon=0
+  let startOffset = (firstDay.getDay() + 6) % 7;
+
+  // Build set of days-with-events for this month (YYYY-MM-DD keys)
+  const eventDays = {};
+  _calEvents.forEach(ev => {
+    const d = new Date(ev.start);
+    if (d.getFullYear() === _calYear && d.getMonth() === _calMonth) {
+      const key = d.toLocaleDateString('en-CA'); // YYYY-MM-DD
+      if (!eventDays[key]) eventDays[key] = [];
+      eventDays[key].push(ev);
+    }
+  });
+
+  let html = '';
+
+  // Leading empty cells (days from previous month)
+  const prevLast = new Date(_calYear, _calMonth, 0).getDate();
+  for (let i = startOffset - 1; i >= 0; i--) {
+    html += `<div class="cal-day other-month">${prevLast - i}</div>`;
+  }
+
+  // Days of this month
+  for (let d = 1; d <= lastDay.getDate(); d++) {
+    const date    = new Date(_calYear, _calMonth, d);
+    const key     = date.toLocaleDateString('en-CA');
+    const evs     = eventDays[key] || [];
+    const isToday = today.getFullYear() === _calYear && today.getMonth() === _calMonth && today.getDate() === d;
+    const hasBooking = evs.some(e => e.title?.toLowerCase().includes('reminder') || e.title?.toLowerCase().includes('call'));
+    const hasEvent   = evs.length > 0 && !hasBooking;
+
+    let cls = 'cal-day';
+    if (isToday)    cls += ' today';
+    if (hasBooking) cls += ' booked';
+    else if (hasEvent) cls += ' has-event';
+
+    html += `<div class="${cls}" onclick="renderDayPanel(new Date(${_calYear},${_calMonth},${d}))" style="cursor:pointer">${d}</div>`;
+  }
+
+  // Trailing cells
+  const total = startOffset + lastDay.getDate();
+  const trailing = total % 7 === 0 ? 0 : 7 - (total % 7);
+  for (let d = 1; d <= trailing; d++) {
+    html += `<div class="cal-day other-month">${d}</div>`;
+  }
+
+  grid.innerHTML = html;
+}
+
+function renderDayPanel(date) {
+  const titleEl = document.getElementById('cal-panel-title');
+  const dateEl  = document.getElementById('bookings-date');
+  const el      = document.getElementById('upcoming-bookings');
+  if (!el) return;
+
+  const isToday = date.toDateString() === new Date().toDateString();
+  if (titleEl) titleEl.textContent = isToday ? "Today's Bookings" : "Bookings";
+  if (dateEl)  dateEl.textContent  = date.toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
+
+  const key = date.toLocaleDateString('en-CA');
+  const evs = _calEvents.filter(ev => new Date(ev.start).toLocaleDateString('en-CA') === key);
+
+  if (!evs.length) {
+    el.innerHTML = `<div style="padding:24px 18px;text-align:center;color:var(--text3);font-size:12px">No bookings on this day</div>`;
+    return;
+  }
+
+  el.innerHTML = evs.map((ev, i) => {
+    const start   = new Date(ev.start);
+    const timeStr = start.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+    const desc    = ev.description ? ev.description.split('\n').slice(0,2).join(' · ') : '';
+    return `
+      <div style="padding:12px 18px;${i < evs.length - 1 ? 'border-bottom:1px solid var(--border)' : ''}">
+        <div class="flex justify-between items-center mb-4" style="margin-bottom:6px">
+          <span style="font-size:12px;font-weight:600;color:var(--text1)">${ev.title || 'Booking'}</span>
+          <span class="badge booked">${timeStr}</span>
+        </div>
+        <div style="font-size:11px;color:var(--text3);line-height:1.6">
+          ${desc}${ev.htmlLink ? ` · <a href="${ev.htmlLink}" target="_blank" style="color:var(--accent)">View</a>` : ''}
+        </div>
+      </div>`;
+  }).join('');
 }
 
 // NAV
@@ -695,6 +815,7 @@ function navigate(page) {
   if (page === 'campaigns')    loadCampaigns();
   if (page === 'prompt')       { renderObjections(); loadAgentScript(true); }
   if (page === 'integrations') loadCalendarStatus();
+  if (page === 'calendar')     initCalendar();
   if (page === 'knowledge')    loadKnowledgeBases();
   if (page === 'crm')          loadCRMLeads();
 }
