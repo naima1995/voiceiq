@@ -909,6 +909,191 @@ function showEventDetail(ev) {
   document.body.appendChild(overlay);
 }
 
+// ─── Analytics ────────────────────────────────────────────────────────────────
+let _anView = 'week';
+
+function setAnalyticsView(view) {
+  _anView = view;
+  ['day','week','month'].forEach(v => {
+    const btn = document.getElementById('an-view-' + v);
+    if (btn) btn.style.background = v === view ? 'var(--bg-card)' : '';
+  });
+  loadAnalytics();
+}
+
+async function loadAnalytics() {
+  const now   = new Date();
+  let from, to, label, chartLabel, agentLabel;
+
+  if (_anView === 'day') {
+    from = new Date(now); from.setHours(0,0,0,0);
+    to   = new Date(now); to.setHours(23,59,59,999);
+    label      = 'Today — ' + now.toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
+    chartLabel = 'Today by hour';
+    agentLabel = 'Today';
+  } else if (_anView === 'week') {
+    const dow = (now.getDay() + 6) % 7;
+    from = new Date(now); from.setDate(now.getDate() - dow); from.setHours(0,0,0,0);
+    to   = new Date(from); to.setDate(from.getDate() + 6); to.setHours(23,59,59,999);
+    label      = from.toLocaleDateString('en-GB', { day:'numeric', month:'short' }) + ' – ' + to.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+    chartLabel = 'This week by day';
+    agentLabel = 'This week';
+  } else {
+    from = new Date(now.getFullYear(), now.getMonth(), 1);
+    to   = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+    label      = now.toLocaleDateString('en-GB', { month:'long', year:'numeric' });
+    chartLabel = 'This month by week';
+    agentLabel = 'This month';
+  }
+
+  const labelEl = document.getElementById('an-period-label');
+  if (labelEl) labelEl.textContent = label;
+  const chartLabelEl = document.getElementById('an-chart-label');
+  if (chartLabelEl) chartLabelEl.textContent = chartLabel;
+  const agentLabelEl = document.getElementById('an-agent-label');
+  if (agentLabelEl) agentLabelEl.textContent = agentLabel;
+
+  // Fetch calls in range
+  let calls = [];
+  try {
+    const params = new URLSearchParams({ limit: 1000, from: from.toISOString(), to: to.toISOString() });
+    const data = await api('/api/calls?' + params);
+    calls = data.calls || [];
+  } catch (e) {
+    console.warn('Analytics fetch failed', e.message);
+  }
+
+  // Also fetch agents for performance section
+  let agents = [];
+  try {
+    const data = await api('/api/agents');
+    agents = data.agents || [];
+  } catch (e) {}
+
+  // KPI calculations
+  const total    = calls.length;
+  const answered = calls.filter(c => !['no-answer','no_answer','busy','failed','canceled'].includes(c.outcome || c.status)).length;
+  const booked   = calls.filter(c => c.outcome === 'meeting_booked' || c.outcome === 'booked').length;
+  const answerRate = total ? Math.round((answered / total) * 100) : 0;
+  const bookRate   = answered ? Math.round((booked / answered) * 100) : 0;
+  const scores   = calls.map(c => c.summary?.avgCallScore).filter(Boolean);
+  const avgScore = scores.length ? (scores.reduce((a,b) => a+b,0) / scores.length).toFixed(1) : '—';
+
+  setText('an-calls',       total || '0');
+  setText('an-bookings',    booked || '0');
+  setText('an-answer-rate', total ? answerRate + '%' : '—');
+  setText('an-score',       avgScore);
+  setText('an-calls-label', _anView === 'day' ? 'Calls Today' : _anView === 'week' ? 'Calls This Week' : 'Calls This Month');
+  setText('an-calls-trend', total ? answered + ' answered · ' + bookRate + '% booking rate' : 'No calls yet');
+  setText('an-bookings-trend', booked ? bookRate + '% booking rate' : 'No bookings yet');
+  setText('an-answer-trend', total ? answered + ' of ' + total + ' answered' : '');
+
+  // Chart
+  renderAnalyticsChart(calls, from, to);
+
+  // Agent performance
+  renderAgentPerformance(calls, agents);
+}
+
+function setText(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+function renderAnalyticsChart(calls, from, to) {
+  const chart = document.getElementById('conv-chart');
+  if (!chart) return;
+
+  // Build buckets depending on view
+  let buckets = [];
+  if (_anView === 'day') {
+    // Hourly 8am–8pm
+    for (let h = 8; h <= 20; h++) {
+      const label = String(h).padStart(2,'0') + ':00';
+      const inBucket = calls.filter(c => {
+        const d = new Date(c.loggedAt || c.createdAt);
+        return d.getHours() === h;
+      });
+      buckets.push({ label, total: inBucket.length, booked: inBucket.filter(c => c.outcome === 'meeting_booked').length });
+    }
+  } else if (_anView === 'week') {
+    const DNAMES = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    for (let i = 0; i < 7; i++) {
+      const day = new Date(from); day.setDate(from.getDate() + i);
+      const key = day.toLocaleDateString('en-CA');
+      const inBucket = calls.filter(c => new Date(c.loggedAt || c.createdAt).toLocaleDateString('en-CA') === key);
+      buckets.push({ label: DNAMES[i], total: inBucket.length, booked: inBucket.filter(c => c.outcome === 'meeting_booked').length });
+    }
+  } else {
+    // Monthly — group by week number within month
+    const weeks = Math.ceil((new Date(from.getFullYear(), from.getMonth()+1,0).getDate()) / 7);
+    for (let w = 0; w < weeks; w++) {
+      const wStart = new Date(from); wStart.setDate(1 + w * 7);
+      const wEnd   = new Date(wStart); wEnd.setDate(wStart.getDate() + 6);
+      const inBucket = calls.filter(c => {
+        const d = new Date(c.loggedAt || c.createdAt);
+        return d >= wStart && d <= wEnd;
+      });
+      buckets.push({ label: 'Wk ' + (w+1), total: inBucket.length, booked: inBucket.filter(c => c.outcome === 'meeting_booked').length });
+    }
+  }
+
+  const maxVal = Math.max(...buckets.map(b => b.total), 1);
+  chart.innerHTML = buckets.map(b => `
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">
+      <div style="display:flex;align-items:flex-end;gap:2px;height:80px">
+        <div title="${b.booked} bookings" style="width:14px;background:var(--green);border-radius:3px 3px 0 0;height:${Math.round((b.booked/maxVal)*80)}px;min-height:${b.booked?2:0}px;transition:height .3s"></div>
+        <div title="${b.total} calls" style="width:14px;background:var(--accent);border-radius:3px 3px 0 0;height:${Math.round((b.total/maxVal)*80)}px;min-height:${b.total?2:0}px;transition:height .3s"></div>
+      </div>
+      <div style="font-size:10px;color:var(--text3)">${b.label}</div>
+      <div style="font-size:9px;color:var(--text3)">${b.total}</div>
+    </div>`).join('');
+}
+
+function renderAgentPerformance(calls, agents) {
+  const el = document.getElementById('an-agent-perf');
+  if (!el) return;
+
+  // Group calls by agentId
+  const agentMap = {};
+  calls.forEach(c => {
+    if (!c.agentId) return;
+    if (!agentMap[c.agentId]) agentMap[c.agentId] = { calls: 0, booked: 0, scores: [] };
+    agentMap[c.agentId].calls++;
+    if (c.outcome === 'meeting_booked') agentMap[c.agentId].booked++;
+    if (c.summary?.avgCallScore) agentMap[c.agentId].scores.push(c.summary.avgCallScore);
+  });
+
+  const agentIds = Object.keys(agentMap);
+  if (!agentIds.length) {
+    el.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text3);font-size:12px">No call data for this period</div>`;
+    return;
+  }
+
+  const COLORS = ['var(--green)','var(--accent)','var(--purple)','var(--amber)'];
+  const rows = agentIds
+    .map(id => {
+      const s    = agentMap[id];
+      const name = agents.find(a => a.id === id)?.name || id;
+      const avg  = s.scores.length ? (s.scores.reduce((a,b)=>a+b,0)/s.scores.length).toFixed(1) : '—';
+      return { id, name, calls: s.calls, booked: s.booked, avg };
+    })
+    .sort((a, b) => b.calls - a.calls);
+
+  const maxCalls = Math.max(...rows.map(r => r.calls), 1);
+
+  el.innerHTML = `<div style="display:flex;flex-direction:column;gap:14px">` +
+    rows.map((r, i) => `
+      <div>
+        <div class="flex justify-between" style="margin-bottom:5px">
+          <span style="font-size:12px;font-weight:500;color:var(--text1)">${r.name}</span>
+          <span style="font-size:12px;color:${COLORS[i%COLORS.length]};font-weight:600">${r.avg !== '—' ? r.avg + ' · ' : ''}${r.calls} calls · ${r.booked} booked</span>
+        </div>
+        <div class="prog-bar"><div class="prog-fill" style="width:${Math.round((r.calls/maxCalls)*100)}%;background:${COLORS[i%COLORS.length]}"></div></div>
+      </div>`).join('') +
+  `</div>`;
+}
+
 // NAV
 function navigate(page) {
   document.querySelectorAll('.nav-item').forEach(el => {
@@ -929,6 +1114,7 @@ function navigate(page) {
   if (page === 'prompt')       { renderObjections(); loadAgentScript(true); }
   if (page === 'integrations') loadCalendarStatus();
   if (page === 'calendar')     initCalendar();
+  if (page === 'analytics')    loadAnalytics();
   if (page === 'knowledge')    loadKnowledgeBases();
   if (page === 'crm')          loadCRMLeads();
 }
@@ -972,7 +1158,7 @@ function renderPageActions(page) {
     calendar: `<button class="btn btn-ghost btn-sm"><i class="ti ti-brand-google"></i> Sync Google</button><button class="btn btn-primary"><i class="ti ti-plus"></i> Manual Book</button>`,
     prompt: `<button class="btn btn-ghost btn-sm"><i class="ti ti-copy"></i> Duplicate</button><button class="btn btn-primary"><i class="ti ti-device-floppy"></i> Save Script</button>`,
     crm: `<label class="btn btn-ghost btn-sm" style="cursor:pointer"><i class="ti ti-upload"></i> Import Excel<input type="file" accept=".xlsx,.xls" style="display:none" onchange="uploadLeads(this)"></label><button class="btn btn-primary"><i class="ti ti-plus"></i> Add Lead</button>`,
-    analytics: `<select class="form-select" style="width:130px;padding:7px 10px"><option>Last 7 days</option><option>Last 30 days</option><option>This month</option></select>`,
+    analytics: `<button class="btn btn-ghost btn-sm" onclick="loadAnalytics()"><i class="ti ti-refresh"></i> Refresh</button>`,
     integrations: `<button class="btn btn-ghost btn-sm"><i class="ti ti-refresh"></i> Refresh</button>`,
     teams: `<span id="twilio-status"></span>`,
     settings: ``

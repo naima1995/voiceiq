@@ -688,40 +688,63 @@ Would it be worth having them give you a quick call — even just 15 minutes —
 
     <!-- ══════════════════════════ ANALYTICS ══════════════════════════ -->
     <section class="page-section" id="page-analytics">
+      <!-- Period selector -->
+      <div class="flex gap-2 mb-4" style="margin-bottom:16px">
+        <div style="display:flex;background:var(--bg-hover);border-radius:8px;padding:2px;gap:2px">
+          <button id="an-view-day"   onclick="setAnalyticsView('day')"   class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 12px;border-radius:6px">Today</button>
+          <button id="an-view-week"  onclick="setAnalyticsView('week')"  class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 12px;border-radius:6px;background:var(--bg-card)">Weekly</button>
+          <button id="an-view-month" onclick="setAnalyticsView('month')" class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 12px;border-radius:6px">Monthly</button>
+        </div>
+        <span style="font-size:12px;color:var(--text3);padding:6px 4px" id="an-period-label"></span>
+      </div>
+      <!-- KPI cards -->
       <div class="grid-4 mb-4">
-        <div class="metric-card blue"><div class="metric-icon blue"><i class="ti ti-phone"></i></div><div class="metric-label">Total Calls (Month)</div><div class="metric-value">4,821</div><div class="metric-trend up"><i class="ti ti-trending-up" style="font-size:13px"></i> +22% vs last month</div></div>
-        <div class="metric-card green"><div class="metric-icon green"><i class="ti ti-calendar-check"></i></div><div class="metric-label">Appointments</div><div class="metric-value">321</div><div class="metric-trend up"><i class="ti ti-trending-up" style="font-size:13px"></i> 6.7% booking rate</div></div>
-        <div class="metric-card purple"><div class="metric-icon purple"><i class="ti ti-mood-smile"></i></div><div class="metric-label">Positive Sentiment</div><div class="metric-value">71%</div><div class="metric-trend up"><i class="ti ti-trending-up" style="font-size:13px"></i> +3% this month</div></div>
-        <div class="metric-card amber"><div class="metric-icon amber"><i class="ti ti-star"></i></div><div class="metric-label">Avg AI Score</div><div class="metric-value">4.7</div><div class="metric-trend neutral">out of 5.0</div></div>
+        <div class="metric-card blue">
+          <div class="metric-icon blue"><i class="ti ti-phone"></i></div>
+          <div class="metric-label" id="an-calls-label">Total Calls</div>
+          <div class="metric-value" id="an-calls">—</div>
+          <div class="metric-trend neutral" id="an-calls-trend"></div>
+        </div>
+        <div class="metric-card green">
+          <div class="metric-icon green"><i class="ti ti-calendar-check"></i></div>
+          <div class="metric-label">Appointments</div>
+          <div class="metric-value" id="an-bookings">—</div>
+          <div class="metric-trend neutral" id="an-bookings-trend"></div>
+        </div>
+        <div class="metric-card purple">
+          <div class="metric-icon purple"><i class="ti ti-phone-incoming"></i></div>
+          <div class="metric-label">Answer Rate</div>
+          <div class="metric-value" id="an-answer-rate">—</div>
+          <div class="metric-trend neutral" id="an-answer-trend"></div>
+        </div>
+        <div class="metric-card amber">
+          <div class="metric-icon amber"><i class="ti ti-star"></i></div>
+          <div class="metric-label">Avg AI Score</div>
+          <div class="metric-value" id="an-score">—</div>
+          <div class="metric-trend neutral">out of 5.0</div>
+        </div>
       </div>
       <div class="grid-2">
         <div class="card">
-          <div class="card-header"><div class="card-title">Calls vs Conversions</div><div class="card-sub">This week</div></div>
+          <div class="card-header">
+            <div class="card-title">Calls vs Bookings</div>
+            <div class="card-sub" id="an-chart-label"></div>
+          </div>
           <div class="card-body">
             <div class="bar-chart" id="conv-chart"></div>
             <div class="flex gap-4 mt-4" style="margin-top:14px">
-              <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text3)"><div style="width:10px;height:10px;background:var(--green);border-radius:2px"></div>Conversions</div>
+              <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text3)"><div style="width:10px;height:10px;background:var(--green);border-radius:2px"></div>Bookings</div>
               <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text3)"><div style="width:10px;height:10px;background:var(--accent);border-radius:2px"></div>Total calls</div>
             </div>
           </div>
         </div>
         <div class="card">
-          <div class="card-header"><div class="card-title">Agent Performance</div><div class="card-sub">This month</div></div>
-          <div class="card-body">
-            <div style="display:flex;flex-direction:column;gap:14px">
-              <div>
-                <div class="flex justify-between" style="margin-bottom:5px"><span style="font-size:12px;font-weight:500;color:var(--text1)">Sophia</span><span style="font-size:12px;color:var(--green);font-weight:600">4.9 · 156 calls</span></div>
-                <div class="prog-bar"><div class="prog-fill" style="width:92%;background:var(--green)"></div></div>
-              </div>
-              <div>
-                <div class="flex justify-between" style="margin-bottom:5px"><span style="font-size:12px;font-weight:500;color:var(--text1)">Charlotte</span><span style="font-size:12px;color:var(--accent);font-weight:600">4.8 · 94 calls</span></div>
-                <div class="prog-bar"><div class="prog-fill" style="width:85%;background:var(--accent)"></div></div>
-              </div>
-              <div>
-                <div class="flex justify-between" style="margin-bottom:5px"><span style="font-size:12px;font-weight:500;color:var(--text1)">James</span><span style="font-size:12px;color:var(--purple);font-weight:600">4.7 · 91 calls</span></div>
-                <div class="prog-bar"><div class="prog-fill" style="width:78%;background:var(--purple)"></div></div>
-              </div>
-            </div>
+          <div class="card-header">
+            <div class="card-title">Agent Performance</div>
+            <div class="card-sub" id="an-agent-label"></div>
+          </div>
+          <div class="card-body" id="an-agent-perf">
+            <div style="text-align:center;padding:24px;color:var(--text3);font-size:12px">Loading...</div>
           </div>
         </div>
       </div>
