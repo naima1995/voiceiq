@@ -666,13 +666,16 @@ async function loadCallLog() {
 }
 
 // ─── Calendar page state ──────────────────────────────────────────────────────
-let _calYear  = new Date().getFullYear();
-let _calMonth = new Date().getMonth(); // 0-indexed
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DAYS   = ['Mo','Tu','We','Th','Fr','Sa','Su'];
+
+let _calView   = 'month';   // 'day' | 'week' | 'month'
+let _calAnchor = new Date(); // reference date for current view
 let _calEvents = [];
 
 async function loadCalendarEvents() {
   try {
-    const data = await api('/api/calendar/events?maxResults=100&daysAhead=60');
+    const data = await api('/api/calendar/events?maxResults=200&daysAhead=90');
     return data.events || [];
   } catch (err) {
     console.warn('Calendar load error:', err.message);
@@ -681,98 +684,190 @@ async function loadCalendarEvents() {
 }
 
 async function initCalendar() {
-  _calYear  = new Date().getFullYear();
-  _calMonth = new Date().getMonth();
+  _calAnchor = new Date();
   _calEvents = await loadCalendarEvents();
-  renderCalendarGrid();
-  renderDayPanel(new Date());
+  setCalView(_calView);
 }
 
-function calPrevMonth() {
-  _calMonth--;
-  if (_calMonth < 0) { _calMonth = 11; _calYear--; }
-  renderCalendarGrid();
-}
-
-function calNextMonth() {
-  _calMonth++;
-  if (_calMonth > 11) { _calMonth = 0; _calYear++; }
-  renderCalendarGrid();
-}
-
-function renderCalendarGrid() {
-  const label = document.getElementById('cal-month-label');
-  const grid  = document.getElementById('cal-grid-days');
-  if (!label || !grid) return;
-
-  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  label.textContent = `${MONTHS[_calMonth]} ${_calYear}`;
-
-  const today     = new Date();
-  const firstDay  = new Date(_calYear, _calMonth, 1);
-  const lastDay   = new Date(_calYear, _calMonth + 1, 0);
-
-  // Monday-first: getDay() returns 0=Sun, shift so Mon=0
-  let startOffset = (firstDay.getDay() + 6) % 7;
-
-  // Build set of days-with-events for this month (YYYY-MM-DD keys)
-  const eventDays = {};
-  _calEvents.forEach(ev => {
-    const d = new Date(ev.start);
-    if (d.getFullYear() === _calYear && d.getMonth() === _calMonth) {
-      const key = d.toLocaleDateString('en-CA'); // YYYY-MM-DD
-      if (!eventDays[key]) eventDays[key] = [];
-      eventDays[key].push(ev);
-    }
+function setCalView(view) {
+  _calView = view;
+  ['day','week','month'].forEach(v => {
+    const btn = document.getElementById('cal-view-' + v);
+    if (btn) btn.style.background = v === view ? 'var(--bg-card)' : '';
   });
+  renderCalView();
+}
+
+function calPrev() {
+  const a = new Date(_calAnchor);
+  if (_calView === 'day')   a.setDate(a.getDate() - 1);
+  if (_calView === 'week')  a.setDate(a.getDate() - 7);
+  if (_calView === 'month') a.setMonth(a.getMonth() - 1);
+  _calAnchor = a;
+  renderCalView();
+}
+
+function calNext() {
+  const a = new Date(_calAnchor);
+  if (_calView === 'day')   a.setDate(a.getDate() + 1);
+  if (_calView === 'week')  a.setDate(a.getDate() + 7);
+  if (_calView === 'month') a.setMonth(a.getMonth() + 1);
+  _calAnchor = a;
+  renderCalView();
+}
+
+function renderCalView() {
+  if (_calView === 'month') renderMonthView();
+  if (_calView === 'week')  renderWeekView();
+  if (_calView === 'day')   renderDayView();
+}
+
+// ── helpers ──────────────────────────────────────────────────────────────────
+function isoDate(d) { return d.toLocaleDateString('en-CA'); }
+function eventsOn(dateKey) { return _calEvents.filter(ev => isoDate(new Date(ev.start)) === dateKey); }
+function timeStr(d) { return new Date(d).toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }); }
+function isBooking(ev) { return /reminder|call back|call reminder/i.test(ev.title || ''); }
+
+function eventPill(ev) {
+  const cls = isBooking(ev) ? 'background:var(--green-dim);color:var(--green)' : 'background:var(--accent-dim);color:var(--accent)';
+  return `<div style="font-size:10px;padding:1px 5px;border-radius:4px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${cls}">${timeStr(ev.start)} ${ev.title || 'Event'}</div>`;
+}
+
+function setLabel(text) {
+  const el = document.getElementById('cal-month-label');
+  if (el) el.textContent = text;
+}
+
+function showDayHeaders() {
+  const wrap = document.querySelector('#cal-grid-days')?.previousElementSibling;
+  if (wrap) wrap.style.display = '';
+}
+function hideDayHeaders() {
+  const wrap = document.querySelector('#cal-grid-days')?.previousElementSibling;
+  if (wrap) wrap.style.display = 'none';
+}
+
+// ── Month view ────────────────────────────────────────────────────────────────
+function renderMonthView() {
+  const grid = document.getElementById('cal-grid-days');
+  if (!grid) return;
+  showDayHeaders();
+
+  const yr = _calAnchor.getFullYear(), mo = _calAnchor.getMonth();
+  setLabel(`${MONTHS[mo]} ${yr}`);
+
+  const today    = new Date();
+  const firstDay = new Date(yr, mo, 1);
+  const lastDay  = new Date(yr, mo + 1, 0);
+  const offset   = (firstDay.getDay() + 6) % 7;
+  const prevLast = new Date(yr, mo, 0).getDate();
 
   let html = '';
-
-  // Leading empty cells (days from previous month)
-  const prevLast = new Date(_calYear, _calMonth, 0).getDate();
-  for (let i = startOffset - 1; i >= 0; i--) {
+  for (let i = offset - 1; i >= 0; i--)
     html += `<div class="cal-day other-month">${prevLast - i}</div>`;
-  }
 
-  // Days of this month
   for (let d = 1; d <= lastDay.getDate(); d++) {
-    const date    = new Date(_calYear, _calMonth, d);
-    const key     = date.toLocaleDateString('en-CA');
-    const evs     = eventDays[key] || [];
-    const isToday = today.getFullYear() === _calYear && today.getMonth() === _calMonth && today.getDate() === d;
-    const hasBooking = evs.some(e => e.title?.toLowerCase().includes('reminder') || e.title?.toLowerCase().includes('call'));
-    const hasEvent   = evs.length > 0 && !hasBooking;
-
-    let cls = 'cal-day';
-    if (isToday)    cls += ' today';
-    if (hasBooking) cls += ' booked';
-    else if (hasEvent) cls += ' has-event';
-
-    html += `<div class="${cls}" onclick="renderDayPanel(new Date(${_calYear},${_calMonth},${d}))" style="cursor:pointer">${d}</div>`;
+    const date = new Date(yr, mo, d);
+    const key  = isoDate(date);
+    const evs  = eventsOn(key);
+    const isToday = today.getFullYear() === yr && today.getMonth() === mo && today.getDate() === d;
+    const hasBk   = evs.some(isBooking);
+    let cls = 'cal-day' + (isToday ? ' today' : '') + (hasBk ? ' booked' : evs.length ? ' has-event' : '');
+    const pills = evs.slice(0, 2).map(eventPill).join('') + (evs.length > 2 ? `<div style="font-size:9px;color:var(--text3);margin-top:2px">+${evs.length-2} more</div>` : '');
+    html += `<div class="${cls}" onclick="renderDayPanel(new Date(${yr},${mo},${d}))" style="cursor:pointer;align-items:flex-start;padding:6px 8px;min-height:64px">
+      <span style="font-size:12px">${d}</span>${pills}</div>`;
   }
 
-  // Trailing cells
-  const total = startOffset + lastDay.getDate();
+  const total    = offset + lastDay.getDate();
   const trailing = total % 7 === 0 ? 0 : 7 - (total % 7);
-  for (let d = 1; d <= trailing; d++) {
+  for (let d = 1; d <= trailing; d++)
     html += `<div class="cal-day other-month">${d}</div>`;
+
+  grid.innerHTML = html;
+  renderDayPanel(_calAnchor);
+}
+
+// ── Week view ─────────────────────────────────────────────────────────────────
+function renderWeekView() {
+  const grid = document.getElementById('cal-grid-days');
+  if (!grid) return;
+  showDayHeaders();
+
+  // Find Monday of the anchor's week
+  const anchor = new Date(_calAnchor);
+  const dow    = (anchor.getDay() + 6) % 7; // Mon=0
+  anchor.setDate(anchor.getDate() - dow);
+
+  const yr1 = anchor.getFullYear(), mo1 = anchor.getMonth(), d1 = anchor.getDate();
+  const end  = new Date(anchor); end.setDate(end.getDate() + 6);
+  setLabel(`${d1} ${MONTHS[mo1]} – ${end.getDate()} ${MONTHS[end.getMonth()]} ${end.getFullYear()}`);
+
+  const today = new Date();
+  let html = '';
+  for (let i = 0; i < 7; i++) {
+    const date    = new Date(anchor); date.setDate(anchor.getDate() + i);
+    const key     = isoDate(date);
+    const evs     = eventsOn(key);
+    const isToday = isoDate(date) === isoDate(today);
+    const hasBk   = evs.some(isBooking);
+    let cls = 'cal-day' + (isToday ? ' today' : '') + (hasBk ? ' booked' : evs.length ? ' has-event' : '');
+    const pills = evs.map(eventPill).join('');
+    html += `<div class="${cls}" onclick="renderDayPanel(new Date(${date.getFullYear()},${date.getMonth()},${date.getDate()}))" style="cursor:pointer;align-items:flex-start;padding:6px 8px;min-height:80px">
+      <span style="font-size:12px">${date.getDate()}</span>${pills}</div>`;
   }
 
   grid.innerHTML = html;
+  renderDayPanel(_calAnchor);
 }
 
+// ── Day view ──────────────────────────────────────────────────────────────────
+function renderDayView() {
+  const grid = document.getElementById('cal-grid-days');
+  if (!grid) return;
+  hideDayHeaders();
+
+  const today = new Date();
+  setLabel(_calAnchor.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' }));
+
+  const key  = isoDate(_calAnchor);
+  const evs  = eventsOn(key).sort((a, b) => new Date(a.start) - new Date(b.start));
+
+  // 8am–8pm hourly slots
+  let html = '<div style="display:grid;grid-template-columns:48px 1fr;gap:0;width:100%">';
+  for (let h = 8; h <= 20; h++) {
+    const label = `${String(h).padStart(2,'0')}:00`;
+    const slotEvs = evs.filter(ev => new Date(ev.start).getHours() === h);
+    const isNow   = isoDate(today) === key && today.getHours() === h;
+    html += `
+      <div style="font-size:10px;color:var(--text3);padding:8px 6px 8px 0;text-align:right;border-top:1px solid var(--border)">${label}</div>
+      <div style="border-top:1px solid var(--border);padding:4px 8px;min-height:36px;${isNow ? 'background:var(--accent-dim)' : ''}">
+        ${slotEvs.map(ev => {
+          const bg = isBooking(ev) ? 'var(--green-dim)' : 'var(--accent-dim)';
+          const fg = isBooking(ev) ? 'var(--green)'     : 'var(--accent)';
+          return `<div onclick="showEventDetail(${JSON.stringify(ev).replace(/"/g,'&quot;')})" style="font-size:11px;padding:3px 8px;border-radius:6px;background:${bg};color:${fg};margin-bottom:2px;cursor:pointer;font-weight:500">
+            ${timeStr(ev.start)} · ${ev.title || 'Event'}
+          </div>`;
+        }).join('')}
+      </div>`;
+  }
+  html += '</div>';
+  grid.innerHTML = html;
+  renderDayPanel(_calAnchor);
+}
+
+// ── Right panel: bookings list for selected day ───────────────────────────────
 function renderDayPanel(date) {
   const titleEl = document.getElementById('cal-panel-title');
   const dateEl  = document.getElementById('bookings-date');
   const el      = document.getElementById('upcoming-bookings');
   if (!el) return;
 
-  const isToday = date.toDateString() === new Date().toDateString();
+  _calAnchor = new Date(date);
+  const isToday = isoDate(date) === isoDate(new Date());
   if (titleEl) titleEl.textContent = isToday ? "Today's Bookings" : "Bookings";
   if (dateEl)  dateEl.textContent  = date.toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
 
-  const key = date.toLocaleDateString('en-CA');
-  const evs = _calEvents.filter(ev => new Date(ev.start).toLocaleDateString('en-CA') === key);
+  const evs = eventsOn(isoDate(date)).sort((a, b) => new Date(a.start) - new Date(b.start));
 
   if (!evs.length) {
     el.innerHTML = `<div style="padding:24px 18px;text-align:center;color:var(--text3);font-size:12px">No bookings on this day</div>`;
@@ -780,20 +875,38 @@ function renderDayPanel(date) {
   }
 
   el.innerHTML = evs.map((ev, i) => {
-    const start   = new Date(ev.start);
-    const timeStr = start.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
-    const desc    = ev.description ? ev.description.split('\n').slice(0,2).join(' · ') : '';
+    const desc = ev.description ? ev.description.split('\n').filter(l => l.trim()).slice(0,3).join('<br>') : '';
     return `
-      <div style="padding:12px 18px;${i < evs.length - 1 ? 'border-bottom:1px solid var(--border)' : ''}">
-        <div class="flex justify-between items-center mb-4" style="margin-bottom:6px">
+      <div style="padding:12px 18px;${i < evs.length-1 ? 'border-bottom:1px solid var(--border)' : ''};cursor:pointer" onclick="showEventDetail(${JSON.stringify(ev).replace(/"/g,'&quot;')})">
+        <div class="flex justify-between items-center" style="margin-bottom:4px">
           <span style="font-size:12px;font-weight:600;color:var(--text1)">${ev.title || 'Booking'}</span>
-          <span class="badge booked">${timeStr}</span>
+          <span class="badge booked">${timeStr(ev.start)}</span>
         </div>
-        <div style="font-size:11px;color:var(--text3);line-height:1.6">
-          ${desc}${ev.htmlLink ? ` · <a href="${ev.htmlLink}" target="_blank" style="color:var(--accent)">View</a>` : ''}
-        </div>
+        <div style="font-size:11px;color:var(--text3);line-height:1.6">${desc}</div>
+        ${ev.htmlLink ? `<a href="${ev.htmlLink}" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none">View in Google Calendar →</a>` : ''}
       </div>`;
   }).join('');
+}
+
+function showEventDetail(ev) {
+  if (typeof ev === 'string') try { ev = JSON.parse(ev); } catch(e) { return; }
+  // Remove existing detail panel if any
+  document.getElementById('cal-detail-overlay')?.remove();
+
+  const desc = ev.description ? ev.description.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>') : 'No notes.';
+  const overlay = document.createElement('div');
+  overlay.id = 'cal-detail-overlay';
+  overlay.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center`;
+  overlay.innerHTML = `
+    <div style="background:var(--bg-card);border:1px solid var(--border2);border-radius:16px;padding:24px;width:480px;max-width:90vw;max-height:80vh;overflow-y:auto;position:relative">
+      <button onclick="document.getElementById('cal-detail-overlay').remove()" style="position:absolute;top:14px;right:14px;background:none;border:none;cursor:pointer;color:var(--text3);font-size:18px">✕</button>
+      <div style="font-size:15px;font-weight:700;color:var(--text1);margin-bottom:6px;padding-right:24px">${ev.title || 'Event'}</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:16px">${timeStr(ev.start)}${ev.end ? ' – ' + timeStr(ev.end) : ''}</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.8">${desc}</div>
+      ${ev.htmlLink ? `<a href="${ev.htmlLink}" target="_blank" style="display:inline-block;margin-top:16px;font-size:12px;color:var(--accent);text-decoration:none">Open in Google Calendar →</a>` : ''}
+    </div>`;
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
 }
 
 // NAV

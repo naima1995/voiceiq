@@ -456,11 +456,16 @@
         <div class="card">
           <div class="card-header">
             <div class="flex items-center gap-2">
-              <button class="btn btn-ghost btn-sm" onclick="calPrevMonth()"><i class="ti ti-chevron-left"></i></button>
-              <span style="font-size:14px;font-weight:600" id="cal-month-label"></span>
-              <button class="btn btn-ghost btn-sm" onclick="calNextMonth()"><i class="ti ti-chevron-right"></i></button>
+              <button class="btn btn-ghost btn-sm" onclick="calPrev()"><i class="ti ti-chevron-left"></i></button>
+              <span style="font-size:14px;font-weight:600;min-width:160px;text-align:center" id="cal-month-label"></span>
+              <button class="btn btn-ghost btn-sm" onclick="calNext()"><i class="ti ti-chevron-right"></i></button>
             </div>
-            <div class="flex gap-2">
+            <div class="flex gap-2 items-center">
+              <div style="display:flex;background:var(--bg-hover);border-radius:8px;padding:2px;gap:2px">
+                <button id="cal-view-day"   onclick="setCalView('day')"   class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 10px;border-radius:6px">Day</button>
+                <button id="cal-view-week"  onclick="setCalView('week')"  class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 10px;border-radius:6px">Week</button>
+                <button id="cal-view-month" onclick="setCalView('month')" class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 10px;border-radius:6px;background:var(--bg-card)">Month</button>
+              </div>
               <span class="badge active" style="font-size:10px" id="cal-sync-badge">Google Cal synced</span>
             </div>
           </div>
