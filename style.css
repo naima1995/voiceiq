@@ -628,3 +628,6 @@ body {
   border: 2px solid var(--accent);
   cursor: pointer;
 }
+.agent-slider:focus { outline: none; }
+.agent-slider:focus-visible { outline: none; }
+.agent-slider::-webkit-slider-thumb:focus { outline: none; box-shadow: 0 1px 4px rgba(79,110,247,0.30); }

@@ -1481,6 +1481,7 @@ async function openEditAgent(agentId) {
       const el = document.getElementById(id);
       if (!el) return;
       el.value = val;
+      el.blur();
       const label = document.getElementById(id + '-val');
       if (label) label.textContent = val + '%';
     };
