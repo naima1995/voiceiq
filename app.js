@@ -739,12 +739,10 @@ function setLabel(text) {
 }
 
 function showDayHeaders() {
-  const wrap = document.querySelector('#cal-grid-days')?.previousElementSibling;
-  if (wrap) wrap.style.display = '';
+  document.getElementById('cal-wrapper')?.classList.remove('cal-day-view');
 }
 function hideDayHeaders() {
-  const wrap = document.querySelector('#cal-grid-days')?.previousElementSibling;
-  if (wrap) wrap.style.display = 'none';
+  document.getElementById('cal-wrapper')?.classList.add('cal-day-view');
 }
 
 // ── Month view ────────────────────────────────────────────────────────────────
@@ -762,28 +760,32 @@ function renderMonthView() {
   const offset   = (firstDay.getDay() + 6) % 7;
   const prevLast = new Date(yr, mo, 0).getDate();
 
-  let html = '';
+  const cells = [];
   for (let i = offset - 1; i >= 0; i--)
-    html += `<div class="cal-day other-month">${prevLast - i}</div>`;
+    cells.push(`<div class="cal-day other-month"><span class="cal-day-num">${prevLast - i}</span></div>`);
 
   for (let d = 1; d <= lastDay.getDate(); d++) {
-    const date = new Date(yr, mo, d);
-    const key  = isoDate(date);
-    const evs  = eventsOn(key);
+    const date    = new Date(yr, mo, d);
+    const key     = isoDate(date);
+    const evs     = eventsOn(key);
     const isToday = today.getFullYear() === yr && today.getMonth() === mo && today.getDate() === d;
     const hasBk   = evs.some(isBooking);
-    let cls = 'cal-day' + (isToday ? ' today' : '') + (hasBk ? ' booked' : evs.length ? ' has-event' : '');
+    const cls = 'cal-day' + (isToday ? ' today' : '') + (hasBk ? ' booked' : evs.length ? ' has-event' : '');
     const pills = evs.slice(0, 2).map(eventPill).join('') + (evs.length > 2 ? `<div style="font-size:9px;color:var(--text3);margin-top:2px">+${evs.length-2} more</div>` : '');
-    html += `<div class="${cls}" onclick="renderDayPanel(new Date(${yr},${mo},${d}))" style="cursor:pointer;align-items:flex-start;padding:6px 8px;min-height:64px">
-      <span style="font-size:12px">${d}</span>${pills}</div>`;
+    cells.push(`<div class="${cls}" onclick="renderDayPanel(new Date(${yr},${mo},${d}))"><span class="cal-day-num">${d}</span>${pills}</div>`);
   }
 
   const total    = offset + lastDay.getDate();
   const trailing = total % 7 === 0 ? 0 : 7 - (total % 7);
   for (let d = 1; d <= trailing; d++)
-    html += `<div class="cal-day other-month">${d}</div>`;
+    cells.push(`<div class="cal-day other-month"><span class="cal-day-num">${d}</span></div>`);
 
-  grid.innerHTML = html;
+  // Mark last row so its bottom border is removed
+  const lastRowStart = cells.length - ((cells.length % 7) || 7);
+  for (let i = lastRowStart; i < cells.length; i++)
+    cells[i] = cells[i].replace('class="cal-day', 'class="cal-day last-row');
+
+  grid.innerHTML = cells.join('');
   renderDayPanel(_calAnchor);
 }
 
@@ -810,10 +812,9 @@ function renderWeekView() {
     const evs     = eventsOn(key);
     const isToday = isoDate(date) === isoDate(today);
     const hasBk   = evs.some(isBooking);
-    let cls = 'cal-day' + (isToday ? ' today' : '') + (hasBk ? ' booked' : evs.length ? ' has-event' : '');
+    const cls = 'cal-day last-row' + (isToday ? ' today' : '') + (hasBk ? ' booked' : evs.length ? ' has-event' : '');
     const pills = evs.map(eventPill).join('');
-    html += `<div class="${cls}" onclick="renderDayPanel(new Date(${date.getFullYear()},${date.getMonth()},${date.getDate()}))" style="cursor:pointer;align-items:flex-start;padding:6px 8px;min-height:80px">
-      <span style="font-size:12px">${date.getDate()}</span>${pills}</div>`;
+    html += `<div class="${cls}" onclick="renderDayPanel(new Date(${date.getFullYear()},${date.getMonth()},${date.getDate()}))"><span class="cal-day-num">${date.getDate()}</span>${pills}</div>`;
   }
 
   grid.innerHTML = html;
