@@ -1494,8 +1494,7 @@ async function openEditAgent(agentId) {
     set('agent-stability',  s.stability   ?? 60);
     set('agent-voicespeed', s.voiceSpeed  ?? 80);
 
-    const styleEl = document.getElementById('agent-convo-style');
-    if (styleEl) styleEl.value = s.conversationStyle || 'formal';
+    setConvoStyle(s.conversationStyle || 'formal');
   } catch (err) {
     console.warn('Could not load agent settings for modal', err.message);
   }
