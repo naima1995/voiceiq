@@ -1464,18 +1464,41 @@ async function createAgent() {
 }
 
 // Open configure modal pre-filled with agent's current settings
-function openEditAgent(agentId) {
-  // Re-use new-agent modal, pre-fill values
+async function openEditAgent(agentId) {
   const modal = document.getElementById('modal-new-agent');
-  // Store agent id for save
   modal.dataset.editId = agentId;
-  // Try to read from last-loaded agents list
-  const card = document.querySelector(`[onclick="openEditAgent('${agentId}')"]`)?.closest('.card');
-  // Just open the modal — user can adjust then save
   document.getElementById('modal-new-agent').querySelector('.modal-title').textContent = 'Configure Agent';
   document.querySelector('#modal-new-agent .btn-primary').textContent = 'Save Settings';
   document.querySelector('#modal-new-agent .btn-primary').setAttribute('onclick', `saveAgentSettings('${agentId}')`);
   openModal('new-agent');
+
+  // Fetch current agent values and populate sliders
+  try {
+    const agent = await api(`/api/agents/${agentId}`);
+    const s = agent.settings || {};
+
+    const set = (id, val) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.value = val;
+      const label = document.getElementById(id + '-val');
+      if (label) label.textContent = val + '%';
+    };
+
+    if (agent.name)   { const el = document.getElementById('agent-name');   if (el) el.value = agent.name; }
+    if (agent.accent) { const el = document.getElementById('agent-accent'); if (el) el.value = agent.accent; }
+    if (agent.gender) { const el = document.getElementById('agent-gender'); if (el) el.value = agent.gender; }
+
+    set('agent-creativity', s.creativity  ?? 75);
+    set('agent-patience',   s.patience    ?? 70);
+    set('agent-stability',  s.stability   ?? 60);
+    set('agent-voicespeed', s.voiceSpeed  ?? 80);
+
+    const styleEl = document.getElementById('agent-convo-style');
+    if (styleEl) styleEl.value = s.conversationStyle || 'formal';
+  } catch (err) {
+    console.warn('Could not load agent settings for modal', err.message);
+  }
 }
 
 async function saveAgentSettings(agentId) {
