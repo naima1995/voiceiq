@@ -840,6 +840,66 @@ function clearCallFilters() {
 
 function applyCallFilters() { renderCallLogRows(); }
 
+// Called when sliders move — enforce min <= max, update track highlight + label
+function onDurSlider() {
+  const minEl = document.getElementById('filter-duration-min');
+  const maxEl = document.getElementById('filter-duration-max');
+  if (!minEl || !maxEl) return;
+  let lo = parseInt(minEl.value);
+  let hi = parseInt(maxEl.value);
+  if (lo > hi) { lo = hi; minEl.value = lo; }
+
+  const range = parseInt(minEl.max) - parseInt(minEl.min);
+  const pLo   = ((lo - parseInt(minEl.min)) / range) * 100;
+  const pHi   = ((hi - parseInt(minEl.min)) / range) * 100;
+
+  const track = document.getElementById('filter-dur-track');
+  if (track) { track.style.left = pLo + '%'; track.style.right = (100 - pHi) + '%'; }
+
+  const totalMax = parseInt(minEl.max);
+  const label    = document.getElementById('filter-duration-label');
+  if (label) label.textContent = (lo === 0 && hi === totalMax) ? 'Any' : `${fmtDurMins(lo)} – ${fmtDurMins(hi)}`;
+
+  renderCallLogRows();
+}
+
+function fmtDurMins(mins) {
+  if (mins < 1) return `${mins * 60}s`;
+  const m = Math.floor(mins);
+  const s = Math.round((mins - m) * 60);
+  return s ? `${m}m ${s}s` : `${m}m`;
+}
+
+// Initialise slider bounds from actual call durations in _allCalls
+function initDurSlider() {
+  const minEl = document.getElementById('filter-duration-min');
+  const maxEl = document.getElementById('filter-duration-max');
+  if (!minEl || !maxEl || !_allCalls.length) return;
+
+  const durations = _allCalls.map(c => c.duration || 0).filter(d => d > 0);
+  if (!durations.length) return;
+
+  const dataMinSecs = Math.min(...durations);
+  const dataMaxSecs = Math.max(...durations);
+  // Round to nearest minute, with at least 1 minute spread
+  const sliderMin = Math.floor(dataMinSecs / 60);
+  const sliderMax = Math.max(sliderMin + 1, Math.ceil(dataMaxSecs / 60));
+
+  minEl.min = sliderMin; minEl.max = sliderMax; minEl.value = sliderMin;
+  maxEl.min = sliderMin; maxEl.max = sliderMax; maxEl.value = sliderMax;
+
+  const minLabel = document.getElementById('filter-dur-min-label');
+  const maxLabel = document.getElementById('filter-dur-max-label');
+  if (minLabel) minLabel.textContent = fmtDurMins(sliderMin);
+  if (maxLabel) maxLabel.textContent = fmtDurMins(sliderMax);
+
+  const label = document.getElementById('filter-duration-label');
+  if (label) label.textContent = 'Any';
+
+  const track = document.getElementById('filter-dur-track');
+  if (track) { track.style.left = '0%'; track.style.right = '0%'; }
+}
+
 function sortCallLog(col) {
   if (_sortCol === col) {
     _sortDir = _sortDir === 'asc' ? 'desc' : 'asc';
@@ -863,10 +923,13 @@ function renderCallLogRows() {
 
   const phone      = (document.getElementById('filter-phone')?.value || '').trim().toLowerCase();
   const booked     = document.getElementById('filter-booked')?.value || '';
-  const durMinMins = parseFloat(document.getElementById('filter-duration-min')?.value) || 0;
-  const durMaxMins = parseFloat(document.getElementById('filter-duration-max')?.value) || Infinity;
-  const durMinSecs = durMinMins * 60;
-  const durMaxSecs = durMaxMins < Infinity ? durMaxMins * 60 : Infinity;
+  const minEl     = document.getElementById('filter-duration-min');
+  const maxEl     = document.getElementById('filter-duration-max');
+  const durMinSecs = minEl ? parseInt(minEl.value) * 60 : 0;
+  const durMaxSecs = maxEl ? parseInt(maxEl.value) * 60 : Infinity;
+  const atFullRange = minEl && maxEl && minEl.value === minEl.min && maxEl.value === maxEl.max;
+  const durMinMins = minEl ? parseInt(minEl.value) : 0;
+  const durMaxMins = maxEl ? parseInt(maxEl.value) : Infinity;
 
   let calls = [..._allCalls];
 
@@ -876,8 +939,9 @@ function renderCallLogRows() {
   if (phone)          calls = calls.filter(c => (c.toNumber || c.fromNumber || '').toLowerCase().includes(phone));
   if (booked === 'yes') calls = calls.filter(c => !!(c.bookingId || c.outcome === 'meeting_booked' || c.summary?.outcome === 'meeting_booked'));
   if (booked === 'no')  calls = calls.filter(c => !(c.bookingId || c.outcome === 'meeting_booked' || c.summary?.outcome === 'meeting_booked'));
-  if (durMinSecs)          calls = calls.filter(c => (c.duration || 0) >= durMinSecs);
-  if (durMaxSecs < Infinity) calls = calls.filter(c => (c.duration || 0) <= durMaxSecs);
+  if (!atFullRange) {
+    calls = calls.filter(c => (c.duration || 0) >= durMinSecs && (c.duration || 0) <= durMaxSecs);
+  }
 
   // Sort
   calls.sort((a, b) => {
@@ -918,8 +982,7 @@ function renderCallLogRows() {
   const chips = [];
   if (phone) chips.push({ label: `Number: ${phone}`, clear: () => { document.getElementById('filter-phone').value = ''; renderCallLogRows(); } });
   if (booked) chips.push({ label: `Booked: ${booked}`, clear: () => { document.getElementById('filter-booked').value = ''; renderCallLogRows(); } });
-  if (durMinMins) chips.push({ label: `Min ${durMinMins}m`, clear: () => { document.getElementById('filter-duration-min').value = ''; renderCallLogRows(); } });
-  if (durMaxMins < Infinity) chips.push({ label: `Max ${durMaxMins}m`, clear: () => { document.getElementById('filter-duration-max').value = ''; renderCallLogRows(); } });
+  if (!atFullRange) chips.push({ label: `Duration: ${fmtDurMins(durMinMins)}–${fmtDurMins(durMaxMins)}`, clear: () => { initDurSlider(); renderCallLogRows(); } });
 
   const chipsEl = document.getElementById('call-filter-chips');
   if (chipsEl) {
@@ -994,6 +1057,7 @@ async function loadCallLog() {
     const data = await api('/api/calls');
     const calls = data.calls || [];
     _allCalls = calls;
+    initDurSlider();
 
     // Update metric cards
     const today = new Date().toDateString();

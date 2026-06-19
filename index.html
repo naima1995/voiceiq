@@ -1345,12 +1345,26 @@ Would it be worth having them give you a quick call — even just 15 minutes —
     </select>
   </div>
   <div>
-    <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Min Duration (minutes)</label>
-    <input id="filter-duration-min" class="form-input" type="number" placeholder="e.g. 1" min="0" step="0.5" style="width:100%;padding:6px 10px;font-size:12px" oninput="applyCallFilters()">
-  </div>
-  <div>
-    <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Max Duration (minutes)</label>
-    <input id="filter-duration-max" class="form-input" type="number" placeholder="e.g. 10" min="0" step="0.5" style="width:100%;padding:6px 10px;font-size:12px" oninput="applyCallFilters()">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <label style="font-size:11px;color:var(--text3)">Call Duration</label>
+      <span id="filter-duration-label" style="font-size:11px;font-weight:600;color:var(--accent)">Any</span>
+    </div>
+    <div style="position:relative;height:32px;margin:0 4px">
+      <!-- track background -->
+      <div style="position:absolute;top:50%;left:0;right:0;height:4px;background:var(--bg-hover);border-radius:2px;transform:translateY(-50%)"></div>
+      <!-- highlighted range -->
+      <div id="filter-dur-track" style="position:absolute;top:50%;height:4px;background:var(--accent);border-radius:2px;transform:translateY(-50%);left:0%;right:0%"></div>
+      <input id="filter-duration-min" type="range" min="0" max="30" step="1" value="0"
+        style="position:absolute;width:100%;top:50%;transform:translateY(-50%);appearance:none;-webkit-appearance:none;background:transparent;pointer-events:all;accent-color:var(--accent);z-index:2"
+        oninput="onDurSlider()">
+      <input id="filter-duration-max" type="range" min="0" max="30" step="1" value="30"
+        style="position:absolute;width:100%;top:50%;transform:translateY(-50%);appearance:none;-webkit-appearance:none;background:transparent;pointer-events:all;accent-color:var(--accent);z-index:1"
+        oninput="onDurSlider()">
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:4px">
+      <span id="filter-dur-min-label" style="font-size:10px;color:var(--text3)">0m</span>
+      <span id="filter-dur-max-label" style="font-size:10px;color:var(--text3)">30m</span>
+    </div>
   </div>
   <div class="flex gap-2">
     <button class="btn btn-ghost btn-sm w-full" onclick="clearCallFilters()">Clear</button>
