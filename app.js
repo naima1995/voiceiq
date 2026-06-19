@@ -733,7 +733,7 @@ async function viewCall(callId) {
         const transcriptHtml = `
           <div>
             <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">
-              Conversation Transcript <span style="font-weight:400;text-transform:none;letter-spacing:0">(${tr.messages.length} turns · kept 24 h)</span>
+              Conversation Transcript <span style="font-weight:400;text-transform:none;letter-spacing:0">(${tr.messages.length} turns · kept 48 h)</span>
             </div>
             <div style="display:flex;flex-direction:column;gap:8px">
               ${tr.messages.map(m => {
@@ -749,7 +749,7 @@ async function viewCall(callId) {
         document.getElementById('call-detail-body').innerHTML += transcriptHtml;
       } else {
         document.getElementById('call-detail-body').innerHTML +=
-          `<div style="font-size:11px;color:var(--text3);text-align:center;padding:12px 0">No transcript available (calls older than 24 h are cleared)</div>`;
+          `<div style="font-size:11px;color:var(--text3);text-align:center;padding:12px 0">No transcript available (calls older than 48 h are cleared)</div>`;
       }
     } catch (_) { /* transcript optional */ }
   } catch (err) {
