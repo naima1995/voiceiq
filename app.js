@@ -524,7 +524,8 @@ function renderAgentsPage(agents) {
         </div>` : ''}
         <div class="flex gap-2" style="margin-top:14px">
           <button class="btn btn-ghost btn-sm w-full" onclick="openEditAgent('${a.id}')"><i class="ti ti-settings"></i> Configure</button>
-          <button class="btn btn-danger btn-sm"><i class="ti ti-player-pause"></i> Pause</button>
+          <button class="btn btn-ghost btn-sm" onclick="toggleAgentStatus('${a.id}','${a.status}')" title="${a.status === 'active' ? 'Pause' : 'Activate'}"><i class="ti ti-${a.status === 'active' ? 'player-pause' : 'player-play'}"></i></button>
+          <button class="btn btn-danger btn-sm" onclick="deleteAgent('${a.id}','${a.name}')" title="Delete agent"><i class="ti ti-trash"></i></button>
         </div>
       </div>`;
     grid.insertBefore(card, newCard);
@@ -1642,6 +1643,30 @@ async function saveAgentSettings(agentId) {
     document.getElementById('modal-new-agent').querySelector('.modal-title').textContent = 'Create AI Voice Agent';
     document.querySelector('#modal-new-agent .btn-primary').setAttribute('onclick', 'createAgent()');
     document.querySelector('#modal-new-agent .btn-primary').innerHTML = '<i class="ti ti-check"></i> Create Agent';
+    const data = await api('/api/agents');
+    if (data?.agents) renderAgentsPage(data.agents);
+  } catch (err) {
+    showToast(`❌ ${err.message}`, 'error');
+  }
+}
+
+async function deleteAgent(agentId, agentName) {
+  if (!confirm(`Delete agent "${agentName}"? This cannot be undone.`)) return;
+  try {
+    await api(`/api/agents/${agentId}`, { method: 'DELETE' });
+    showToast(`🗑 Agent "${agentName}" deleted`, 'success');
+    const data = await api('/api/agents');
+    if (data?.agents) renderAgentsPage(data.agents);
+  } catch (err) {
+    showToast(`❌ ${err.message}`, 'error');
+  }
+}
+
+async function toggleAgentStatus(agentId, currentStatus) {
+  const newStatus = currentStatus === 'active' ? 'paused' : 'active';
+  try {
+    await api(`/api/agents/${agentId}`, { method: 'PATCH', body: JSON.stringify({ status: newStatus }) });
+    showToast(`Agent ${newStatus === 'active' ? 'activated' : 'paused'}`, 'success');
     const data = await api('/api/agents');
     if (data?.agents) renderAgentsPage(data.agents);
   } catch (err) {
