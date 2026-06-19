@@ -2084,6 +2084,120 @@ async function loadAgentScript(populate = false) {
   } catch (err) {
     showToast(`Failed to load agent script: ${err.message}`, 'error');
   }
+
+  loadPromptKBPanel();
+}
+
+// ─── Prompt Builder — Knowledge Base panel ────────────────────────────────────
+
+async function loadPromptKBPanel() {
+  const agentId = document.getElementById('prompt-agent-select')?.value;
+  const list    = document.getElementById('prompt-kb-list');
+  if (!list) return;
+
+  if (!agentId) {
+    list.innerHTML = `<div style="font-size:12px;color:var(--text3);padding:8px 0">Select an agent to see active knowledge bases.</div>`;
+    return;
+  }
+
+  list.innerHTML = `<div style="font-size:12px;color:var(--text3);padding:8px 0">Loading…</div>`;
+
+  try {
+    const data = await api('/api/knowledge');
+    const all  = data.knowledgeBases || [];
+    // Active = assigned to this agent OR shared (agentId null)
+    const active = all.filter(kb => kb.agentId === agentId || kb.agentId === null);
+
+    if (!active.length) {
+      list.innerHTML = `<div style="font-size:12px;color:var(--text3);padding:8px 0">No knowledge bases assigned. Click <strong>Assign</strong> to add one.</div>`;
+      return;
+    }
+
+    list.innerHTML = active.map(kb => `
+      <div style="display:flex;align-items:flex-start;gap:10px;padding:8px 10px;background:var(--bg-hover);border-radius:8px;border:1px solid var(--border)">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(kb.name)}</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px">
+            ${kb.fileType || 'TEXT'} · ${(kb.charCount||0).toLocaleString()} chars ·
+            <span style="color:${kb.agentId ? 'var(--accent)' : 'var(--green)'}">
+              ${kb.agentId ? 'This agent' : 'Shared'}${kb.builtin ? ' · Built-in' : ''}
+            </span>
+          </div>
+          ${kb.description ? `<div style="font-size:10px;color:var(--text3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(kb.description)}</div>` : ''}
+        </div>
+        ${(!kb.builtin && kb.agentId === agentId)
+          ? `<button onclick="unassignKB(${kb.id})" title="Remove from agent" style="background:none;border:none;cursor:pointer;color:var(--text3);padding:2px;flex-shrink:0"><i class="ti ti-x" style="font-size:14px"></i></button>`
+          : ''}
+      </div>
+    `).join('');
+  } catch (err) {
+    list.innerHTML = `<div style="font-size:12px;color:var(--red);padding:8px 0">Failed to load knowledge bases.</div>`;
+  }
+}
+
+async function openAssignKBModal() {
+  const agentId = document.getElementById('prompt-agent-select')?.value;
+  if (!agentId) { showToast('Select an agent first', 'error'); return; }
+
+  const container = document.getElementById('assign-kb-list');
+  container.innerHTML = `<div style="font-size:12px;color:var(--text3)">Loading…</div>`;
+  openModal('assign-kb');
+
+  try {
+    const data = await api('/api/knowledge');
+    const all  = data.knowledgeBases || [];
+    // Show KBs not yet assigned to this agent (shared ones already active, skip them)
+    const assignable = all.filter(kb => kb.agentId !== agentId && !kb.builtin);
+
+    if (!assignable.length) {
+      container.innerHTML = `<div style="font-size:12px;color:var(--text3)">No unassigned knowledge bases. Upload one from the Knowledge Base page first.</div>`;
+      return;
+    }
+
+    container.innerHTML = assignable.map(kb => `
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg-hover);border-radius:8px;border:1px solid var(--border)">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:600">${escHtml(kb.name)}</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px">
+            ${kb.fileType || 'TEXT'} · ${(kb.charCount||0).toLocaleString()} chars ·
+            <span style="color:${kb.agentId ? 'var(--amber)' : 'var(--green)'}">
+              ${kb.agentId ? `Assigned to ${kb.agentId}` : 'Shared (all agents)'}
+            </span>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm" style="font-size:11px;flex-shrink:0" onclick="assignKB(${kb.id}, '${agentId}')">Assign</button>
+      </div>
+    `).join('');
+  } catch (err) {
+    container.innerHTML = `<div style="font-size:12px;color:var(--red)">Failed to load knowledge bases.</div>`;
+  }
+}
+
+async function assignKB(kbId, agentId) {
+  try {
+    await api(`/api/knowledge/${kbId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ agentId }),
+    });
+    showToast('Knowledge base assigned', 'success');
+    closeModal('assign-kb');
+    loadPromptKBPanel();
+  } catch (err) {
+    showToast(`Failed to assign: ${err.message}`, 'error');
+  }
+}
+
+async function unassignKB(kbId) {
+  try {
+    await api(`/api/knowledge/${kbId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ agentId: null }),
+    });
+    showToast('Removed from agent — now shared across all agents', 'success');
+    loadPromptKBPanel();
+  } catch (err) {
+    showToast(`Failed to remove: ${err.message}`, 'error');
+  }
 }
 
 async function saveAgentScript() {

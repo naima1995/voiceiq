@@ -643,6 +643,33 @@ Would it be worth having them give you a quick call — even just 15 minutes —
               <div class="toggle-wrap"><div class="toggle on" onclick="toggleSwitch(this)"></div><span style="font-size:12px;color:var(--text2)">GDPR consent recording</span></div>
             </div>
           </div>
+          <!-- ── Knowledge Base panel ──────────────────────────────── -->
+          <div class="card" id="prompt-kb-card">
+            <div class="card-header">
+              <div class="card-title">Knowledge Base</div>
+              <button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="openAssignKBModal()"><i class="ti ti-plus"></i> Assign</button>
+            </div>
+            <div class="card-body" style="padding-top:4px">
+              <div id="prompt-kb-list" style="display:flex;flex-direction:column;gap:8px">
+                <div style="font-size:12px;color:var(--text3);padding:8px 0">Select an agent to see active knowledge bases.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Assign KB modal ───────────────────────────────────── -->
+          <div class="modal-overlay" id="modal-assign-kb" style="display:none" onclick="if(event.target===this)closeModal('assign-kb')">
+            <div class="modal" style="max-width:480px">
+              <div class="modal-header">
+                <div class="modal-title">Assign Knowledge Base</div>
+                <button class="modal-close" onclick="closeModal('assign-kb')"><i class="ti ti-x"></i></button>
+              </div>
+              <div class="modal-body" style="display:flex;flex-direction:column;gap:12px">
+                <p style="font-size:12px;color:var(--text3);margin:0">Select a knowledge base to assign to the current agent. Shared entries (assigned to All Agents) are always included automatically.</p>
+                <div id="assign-kb-list" style="display:flex;flex-direction:column;gap:8px;max-height:320px;overflow-y:auto"></div>
+              </div>
+            </div>
+          </div>
+
           <div class="card">
             <div class="card-header"><div class="card-title">Tone & Compliance</div></div>
             <div class="card-body">
