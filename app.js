@@ -725,6 +725,33 @@ async function viewCall(callId) {
     }
 
     document.getElementById('call-detail-body').innerHTML = html;
+
+    // Load transcript asynchronously and append if available
+    try {
+      const tr = await api(`/api/calls/${callId}/transcript`);
+      if (tr?.messages?.length) {
+        const transcriptHtml = `
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">
+              Conversation Transcript <span style="font-weight:400;text-transform:none;letter-spacing:0">(${tr.messages.length} turns · kept 24 h)</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              ${tr.messages.map(m => {
+                const isAgent = m.role === 'agent';
+                const time = new Date(m.ts).toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+                return `<div style="display:flex;flex-direction:column;align-items:${isAgent ? 'flex-start' : 'flex-end'}">
+                  <div style="font-size:10px;color:var(--text3);margin-bottom:3px;padding:0 4px">${isAgent ? '🤖 Agent' : '👤 Caller'} · ${time}</div>
+                  <div style="max-width:85%;padding:8px 12px;border-radius:${isAgent ? '4px 12px 12px 12px' : '12px 4px 12px 12px'};background:${isAgent ? 'var(--bg-card2)' : 'var(--accent-dim)'};font-size:12px;color:var(--text1);line-height:1.5">${escHtml(m.text)}</div>
+                </div>`;
+              }).join('')}
+            </div>
+          </div>`;
+        document.getElementById('call-detail-body').innerHTML += transcriptHtml;
+      } else {
+        document.getElementById('call-detail-body').innerHTML +=
+          `<div style="font-size:11px;color:var(--text3);text-align:center;padding:12px 0">No transcript available (calls older than 24 h are cleared)</div>`;
+      }
+    } catch (_) { /* transcript optional */ }
   } catch (err) {
     document.getElementById('call-detail-body').innerHTML = `<div style="color:var(--red);font-size:12px">Failed to load call: ${escHtml(err.message)}</div>`;
   }
