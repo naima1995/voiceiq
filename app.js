@@ -785,10 +785,12 @@ async function makeCall({ toNumber, agentId = 'james', leadData = {} }) {
   }
 }
 
-// ─── Call log filter state ────────────────────────────────────────────────────
+// ─── Call log filter + sort state ────────────────────────────────────────────
 let _allCalls      = [];   // full fetched list
 let _callDirection = '';   // '', 'outbound', 'inbound'
 let _filterOpen    = false;
+let _sortCol       = 'loggedAt';  // active sort column key
+let _sortDir       = 'desc';       // 'asc' | 'desc'
 
 function toggleCallFilter() {
   const panel = document.getElementById('call-filter-panel');
@@ -838,33 +840,86 @@ function clearCallFilters() {
 
 function applyCallFilters() { renderCallLogRows(); }
 
+function sortCallLog(col) {
+  if (_sortCol === col) {
+    _sortDir = _sortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    _sortCol = col;
+    _sortDir = col === 'loggedAt' ? 'desc' : 'asc';
+  }
+  renderCallLogRows();
+}
+
+function _sortIcon(col) {
+  if (_sortCol !== col) return `<i class="ti ti-arrows-sort" style="font-size:10px;opacity:.35;margin-left:4px"></i>`;
+  return _sortDir === 'asc'
+    ? `<i class="ti ti-sort-ascending" style="font-size:10px;color:var(--accent);margin-left:4px"></i>`
+    : `<i class="ti ti-sort-descending" style="font-size:10px;color:var(--accent);margin-left:4px"></i>`;
+}
+
 function renderCallLogRows() {
   const tbody   = document.getElementById('call-log-tbody');
   if (!tbody) return;
 
-  const phone   = (document.getElementById('filter-phone')?.value || '').trim().toLowerCase();
-  const booked  = document.getElementById('filter-booked')?.value || '';
-  const durMin  = parseInt(document.getElementById('filter-duration-min')?.value) || 0;
-  const durMax  = parseInt(document.getElementById('filter-duration-max')?.value) || Infinity;
+  const phone      = (document.getElementById('filter-phone')?.value || '').trim().toLowerCase();
+  const booked     = document.getElementById('filter-booked')?.value || '';
+  const durMinMins = parseFloat(document.getElementById('filter-duration-min')?.value) || 0;
+  const durMaxMins = parseFloat(document.getElementById('filter-duration-max')?.value) || Infinity;
+  const durMinSecs = durMinMins * 60;
+  const durMaxSecs = durMaxMins < Infinity ? durMaxMins * 60 : Infinity;
 
-  let calls = _allCalls;
+  let calls = [..._allCalls];
 
   if (_callDirection === 'outbound') calls = calls.filter(c => c.direction !== 'inbound');
   else if (_callDirection === 'inbound') calls = calls.filter(c => c.direction === 'inbound');
-  // 'live' filter — active calls are in-memory only; skip for historical log
 
   if (phone)          calls = calls.filter(c => (c.toNumber || c.fromNumber || '').toLowerCase().includes(phone));
   if (booked === 'yes') calls = calls.filter(c => !!(c.bookingId || c.outcome === 'meeting_booked' || c.summary?.outcome === 'meeting_booked'));
   if (booked === 'no')  calls = calls.filter(c => !(c.bookingId || c.outcome === 'meeting_booked' || c.summary?.outcome === 'meeting_booked'));
-  if (durMin)         calls = calls.filter(c => (c.duration || 0) >= durMin);
-  if (durMax < Infinity) calls = calls.filter(c => (c.duration || 0) <= durMax);
+  if (durMinSecs)          calls = calls.filter(c => (c.duration || 0) >= durMinSecs);
+  if (durMaxSecs < Infinity) calls = calls.filter(c => (c.duration || 0) <= durMaxSecs);
 
-  // Update chips
+  // Sort
+  calls.sort((a, b) => {
+    let va, vb;
+    if (_sortCol === 'duration') {
+      va = a.duration || 0; vb = b.duration || 0;
+    } else if (_sortCol === 'booked') {
+      const isB = c => !!(c.bookingId || c.outcome === 'meeting_booked' || c.summary?.outcome === 'meeting_booked');
+      va = isB(a) ? 1 : 0; vb = isB(b) ? 1 : 0;
+    } else if (_sortCol === 'name') {
+      va = (a.summary?.leadName || a.toNumber || '').toLowerCase();
+      vb = (b.summary?.leadName || b.toNumber || '').toLowerCase();
+    } else {
+      va = new Date(a.loggedAt || 0).getTime();
+      vb = new Date(b.loggedAt || 0).getTime();
+    }
+    if (va < vb) return _sortDir === 'asc' ? -1 : 1;
+    if (va > vb) return _sortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  // Update sort icons in header
+  const thead = tbody.closest('table')?.querySelector('thead tr');
+  if (thead) {
+    const cols = [
+      { idx: 0, key: 'name' }, { idx: 4, key: 'duration' }, { idx: 6, key: 'booked' },
+    ];
+    cols.forEach(({ idx, key }) => {
+      const th = thead.children[idx];
+      if (!th) return;
+      th.style.cursor = 'pointer';
+      // Replace just the icon part without changing the label text
+      th.innerHTML = th.innerHTML.replace(/<i class="ti ti-(arrows-sort|sort-ascending|sort-descending)[^"]*"[^>]*><\/i>/g, '') + _sortIcon(key);
+    });
+  }
+
+  // Update filter chips
   const chips = [];
-  if (phone)          chips.push({ label: `Number: ${phone}`, clear: () => { document.getElementById('filter-phone').value = ''; renderCallLogRows(); } });
-  if (booked)         chips.push({ label: `Booked: ${booked}`, clear: () => { document.getElementById('filter-booked').value = ''; renderCallLogRows(); } });
-  if (durMin)         chips.push({ label: `Min ${durMin}s`, clear: () => { document.getElementById('filter-duration-min').value = ''; renderCallLogRows(); } });
-  if (durMax < Infinity) chips.push({ label: `Max ${durMax}s`, clear: () => { document.getElementById('filter-duration-max').value = ''; renderCallLogRows(); } });
+  if (phone) chips.push({ label: `Number: ${phone}`, clear: () => { document.getElementById('filter-phone').value = ''; renderCallLogRows(); } });
+  if (booked) chips.push({ label: `Booked: ${booked}`, clear: () => { document.getElementById('filter-booked').value = ''; renderCallLogRows(); } });
+  if (durMinMins) chips.push({ label: `Min ${durMinMins}m`, clear: () => { document.getElementById('filter-duration-min').value = ''; renderCallLogRows(); } });
+  if (durMaxMins < Infinity) chips.push({ label: `Max ${durMaxMins}m`, clear: () => { document.getElementById('filter-duration-max').value = ''; renderCallLogRows(); } });
 
   const chipsEl = document.getElementById('call-filter-chips');
   if (chipsEl) {
@@ -896,21 +951,23 @@ function renderCallLogRows() {
   };
 
   tbody.innerHTML = calls.map(c => {
-    const name     = c.leadData?.name || c.toNumber || 'Unknown';
+    const summary  = c.summary || {};
+    const leadName = summary.leadFname || summary.leadName || c.leadFname || '';
+    const name     = leadName || c.toNumber || 'Unknown';
     const number   = c.toNumber || c.fromNumber || '—';
     const dur      = c.duration ? `${Math.floor(c.duration/60)}:${String(c.duration%60).padStart(2,'0')}` : '—';
-    const outcome  = c.summary?.outcome || c.outcome || 'completed';
+    const outcome  = summary.outcome || c.outcome || 'completed';
     const o        = outcomeMap[outcome] || { cls: 'badge pending', label: outcome };
     const dirIcon  = c.direction === 'inbound'
       ? `<i class="ti ti-phone-incoming" style="color:var(--green)"></i> In`
       : `<i class="ti ti-phone-outgoing" style="color:var(--accent)"></i> Out`;
-    const isBooked = !!(c.bookingId || outcome === 'meeting_booked' || c.summary?.outcome === 'meeting_booked');
+    const isBooked = !!(c.bookingId || outcome === 'meeting_booked' || summary.outcome === 'meeting_booked');
     const meetingCell = isBooked
       ? `<span class="badge active" style="background:var(--green-dim);color:var(--green);border:1px solid rgba(34,197,94,.2)">Yes</span>`
       : `<span class="badge" style="background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)">No</span>`;
     const callRef  = c.callId || c.id;
     return `<tr>
-      <td class="bold">${name}</td>
+      <td class="bold">${escHtml(name)}</td>
       <td class="font-mono">${number}</td>
       <td><span class="badge mobile">${c.channel || 'Twilio'}</span></td>
       <td>${dirIcon}</td>

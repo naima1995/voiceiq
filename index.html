@@ -440,7 +440,17 @@
         <!-- Active filter chips -->
         <div id="call-filter-chips" style="display:none;padding:8px 16px 0;display:flex;gap:6px;flex-wrap:wrap"></div>
         <table class="data-table">
-          <thead><tr><th>Contact</th><th>Number</th><th>Channel</th><th>Direction</th><th>Duration</th><th>Outcome</th><th>Meeting Booked</th><th>Transcript</th><th>Actions</th></tr></thead>
+          <thead><tr>
+            <th style="cursor:pointer" onclick="sortCallLog('name')">Lead Name</th>
+            <th>Number</th>
+            <th>Channel</th>
+            <th>Direction</th>
+            <th style="cursor:pointer" onclick="sortCallLog('duration')">Duration</th>
+            <th>Outcome</th>
+            <th style="cursor:pointer" onclick="sortCallLog('booked')">Meeting Booked</th>
+            <th>Transcript</th>
+            <th>Actions</th>
+          </tr></thead>
           <tbody id="call-log-tbody">
             <tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text3)">Loading calls…</td></tr>
           </tbody>
@@ -1335,12 +1345,12 @@ Would it be worth having them give you a quick call — even just 15 minutes —
     </select>
   </div>
   <div>
-    <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Min Duration (seconds)</label>
-    <input id="filter-duration-min" class="form-input" type="number" placeholder="e.g. 30" min="0" style="width:100%;padding:6px 10px;font-size:12px" oninput="applyCallFilters()">
+    <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Min Duration (minutes)</label>
+    <input id="filter-duration-min" class="form-input" type="number" placeholder="e.g. 1" min="0" step="0.5" style="width:100%;padding:6px 10px;font-size:12px" oninput="applyCallFilters()">
   </div>
   <div>
-    <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Max Duration (seconds)</label>
-    <input id="filter-duration-max" class="form-input" type="number" placeholder="e.g. 300" min="0" style="width:100%;padding:6px 10px;font-size:12px" oninput="applyCallFilters()">
+    <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Max Duration (minutes)</label>
+    <input id="filter-duration-max" class="form-input" type="number" placeholder="e.g. 10" min="0" step="0.5" style="width:100%;padding:6px 10px;font-size:12px" oninput="applyCallFilters()">
   </div>
   <div class="flex gap-2">
     <button class="btn btn-ghost btn-sm w-full" onclick="clearCallFilters()">Clear</button>
