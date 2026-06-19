@@ -609,7 +609,8 @@ function renderRecentActivity(calls) {
       return new Date(ts).toLocaleDateString('en-GB', { day:'numeric', month:'short' });
     })() : '—';
 
-    return `<tr>
+    const callRef = c.callId || c.id;
+    return `<tr style="cursor:pointer" onclick="viewCall('${callRef}')" title="View call detail">
       <td><span class="badge" style="${badgeStyle}">${badge}</span></td>
       <td>${agentLabel}</td>
       <td class="bold font-mono" style="font-size:11px">${name}</td>
@@ -618,6 +619,77 @@ function renderRecentActivity(calls) {
       <td class="text-dim">${timeAgo}</td>
     </tr>`;
   }).join('');
+}
+
+// ─── Call detail modal ───────────────────────────────────────────────────────
+async function viewCall(callId) {
+  openModal('call-detail');
+  document.getElementById('call-detail-title').textContent = 'Call Detail';
+  document.getElementById('call-detail-sub').textContent   = '';
+  document.getElementById('call-detail-body').innerHTML    = `<div style="text-align:center;padding:24px;color:var(--text3)">Loading…</div>`;
+
+  try {
+    const c = await api(`/api/calls/${callId}`);
+    const s = c.summary || {};
+
+    const isBooked   = !!(c.bookingId || c.outcome === 'meeting_booked' || s.outcome === 'meeting_booked');
+    const agentLabel = c.agentId ? c.agentId.charAt(0).toUpperCase() + c.agentId.slice(1) : '—';
+    const dur        = c.duration ? `${Math.floor(c.duration/60)}:${String(c.duration%60).padStart(2,'0')}` : '—';
+    const ts         = c.endedAt || c.loggedAt;
+    const dateLabel  = ts ? new Date(ts).toLocaleString('en-GB', { timeZone:'Europe/London', day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
+    const score      = s.avgCallScore;
+    const scoreColor = score >= 4 ? 'var(--green)' : score >= 3 ? 'var(--amber)' : 'var(--red)';
+
+    document.getElementById('call-detail-title').textContent = c.toNumber || 'Call Detail';
+    document.getElementById('call-detail-sub').textContent   = dateLabel;
+
+    function row(label, value) {
+      return `<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:12px;color:var(--text3);min-width:130px">${label}</span>
+        <span style="font-size:12px;font-weight:500;text-align:right;flex:1">${value}</span>
+      </div>`;
+    }
+
+    let html = `<div>`;
+    html += row('Agent',     agentLabel);
+    html += row('Number',    `<span class="font-mono">${c.toNumber || '—'}</span>`);
+    html += row('Direction', c.direction === 'inbound' ? 'Inbound' : 'Outbound');
+    html += row('Channel',   c.channel || 'Twilio');
+    html += row('Duration',  `<span class="font-mono">${dur}</span>`);
+    html += row('Status',    c.status || '—');
+    html += row('Outcome',   isBooked
+      ? `<span class="badge active" style="background:var(--green-dim);color:var(--green);border:1px solid rgba(34,197,94,.2)">Meeting booked</span>`
+      : `<span class="badge pending">${c.outcome || 'Completed'}</span>`);
+    html += row('Meeting booked', isBooked ? '✅ Yes' : '—');
+    if (c.bookingId) html += row('Booking ref', `<span class="font-mono" style="font-size:11px">${c.bookingId}</span>`);
+    html += `</div>`;
+
+    if (s.summary) {
+      html += `<div>
+        <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">AI Summary</div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.6;background:var(--bg-hover);padding:12px;border-radius:8px">${escHtml(s.summary)}</div>
+      </div>`;
+    }
+
+    if (score) {
+      html += `<div style="display:flex;align-items:center;gap:12px">
+        <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Call Score</div>
+        <div style="font-size:22px;font-weight:700;color:${scoreColor}">${score}<span style="font-size:13px;color:var(--text3)">/10</span></div>
+        ${s.sentiment ? `<span class="badge pending" style="margin-left:auto">${s.sentiment}</span>` : ''}
+      </div>`;
+    }
+
+    if (s.nextAction) {
+      html += `<div>
+        <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Next Action</div>
+        <div style="font-size:12px;color:var(--text2)">${escHtml(s.nextAction)}</div>
+      </div>`;
+    }
+
+    document.getElementById('call-detail-body').innerHTML = html;
+  } catch (err) {
+    document.getElementById('call-detail-body').innerHTML = `<div style="color:var(--red);font-size:12px">Failed to load call: ${escHtml(err.message)}</div>`;
+  }
 }
 
 // ─── Make outbound call (Twilio) ─────────────────────────────────────────────
@@ -698,7 +770,7 @@ async function loadCallLog() {
         <td class="font-mono">${dur}</td>
         <td><span class="${o.cls}" ${o.style ? `style="${o.style}"` : ''}>${o.label}</span></td>
         <td>${meetingCell}</td>
-        <td><button class="btn btn-ghost btn-sm"><i class="ti ti-eye"></i></button></td>
+        <td><button class="btn btn-ghost btn-sm" onclick="viewCall('${c.callId || c.id}')"><i class="ti ti-eye"></i></button></td>
       </tr>`;
     }).join('');
   } catch (err) {

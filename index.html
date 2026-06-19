@@ -953,6 +953,21 @@ Would it be worth having them give you a quick call — even just 15 minutes —
       </div>
     </div>
 
+    <!-- ── Call Detail Modal ──────────────────────────────────────────── -->
+    <div class="modal-overlay" id="modal-call-detail" style="display:none" onclick="if(event.target===this)closeModal('call-detail')">
+      <div class="modal" style="max-width:560px">
+        <div class="modal-header">
+          <div>
+            <div class="modal-title" id="call-detail-title">Call Detail</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px" id="call-detail-sub"></div>
+          </div>
+          <button class="modal-close" onclick="closeModal('call-detail')"><i class="ti ti-x"></i></button>
+        </div>
+        <div class="modal-body" style="display:flex;flex-direction:column;gap:16px" id="call-detail-body">
+        </div>
+      </div>
+    </div>
+
     <!-- View Knowledge Base Modal -->
     <div class="modal-overlay" id="view-kb-modal" style="display:none">
       <div class="modal" style="max-width:680px">
