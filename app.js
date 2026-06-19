@@ -792,14 +792,21 @@ let _filterOpen    = false;
 
 function toggleCallFilter() {
   const panel = document.getElementById('call-filter-panel');
+  const btn   = document.getElementById('call-filter-btn');
   if (!panel) return;
   _filterOpen = !_filterOpen;
-  panel.style.display = _filterOpen ? 'flex' : 'none';
-  const btn = document.getElementById('call-filter-btn');
-  if (btn) btn.style.background = _filterOpen ? 'var(--accent-dim)' : '';
-  // Close when clicking outside
   if (_filterOpen) {
+    // Position fixed relative to button's screen coords — escapes all overflow:hidden parents
+    const rect = btn.getBoundingClientRect();
+    panel.style.top   = (rect.bottom + 6) + 'px';
+    panel.style.right = (window.innerWidth - rect.right) + 'px';
+    panel.style.left  = 'auto';
+    panel.style.display = 'flex';
+    if (btn) btn.style.background = 'var(--accent-dim)';
     setTimeout(() => document.addEventListener('click', _closeFilterOutside, { once: true }), 0);
+  } else {
+    panel.style.display = 'none';
+    if (btn) btn.style.background = '';
   }
 }
 

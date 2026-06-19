@@ -424,7 +424,7 @@
         <div class="metric-card amber"><div class="metric-icon amber"><i class="ti ti-clock"></i></div><div class="metric-label">Avg Duration</div><div class="metric-value" id="calls-avg-duration">—</div><div class="metric-trend neutral">mins per call</div></div>
         <div class="metric-card purple"><div class="metric-icon purple"><i class="ti ti-calendar-check"></i></div><div class="metric-label">Booked Today</div><div class="metric-value" id="calls-booked-today">—</div><div class="metric-trend neutral">meetings</div></div>
       </div>
-      <div class="card" style="position:relative">
+      <div class="card">
         <div class="card-header">
           <div class="card-title">Call Log</div>
           <div class="flex gap-2">
@@ -435,34 +435,6 @@
               <div class="tab" onclick="setCallDirectionTab(this,'inbound')">Inbound</div>
             </div>
             <button class="btn btn-ghost btn-sm" id="call-filter-btn" onclick="toggleCallFilter()"><i class="ti ti-filter"></i> Filter</button>
-          </div>
-        </div>
-        <!-- Filter dropdown — positioned relative to the card, not the button row -->
-        <div id="call-filter-panel" style="display:none;position:absolute;top:56px;right:16px;z-index:300;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;width:300px;box-shadow:0 8px 32px rgba(0,0,0,.22);flex-direction:column;gap:12px">
-          <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Filter Calls</div>
-          <div>
-            <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Phone Number</label>
-            <input id="filter-phone" class="form-input" placeholder="+447…" style="width:100%;padding:6px 10px;font-size:12px" oninput="applyCallFilters()">
-          </div>
-          <div>
-            <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Meeting Booked</label>
-            <select id="filter-booked" class="form-select" style="width:100%;font-size:12px" onchange="applyCallFilters()">
-              <option value="">Any</option>
-              <option value="yes">Yes — booked</option>
-              <option value="no">No — not booked</option>
-            </select>
-          </div>
-          <div>
-            <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Min Duration (seconds)</label>
-            <input id="filter-duration-min" class="form-input" type="number" placeholder="e.g. 30" min="0" style="width:100%;padding:6px 10px;font-size:12px" oninput="applyCallFilters()">
-          </div>
-          <div>
-            <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Max Duration (seconds)</label>
-            <input id="filter-duration-max" class="form-input" type="number" placeholder="e.g. 300" min="0" style="width:100%;padding:6px 10px;font-size:12px" oninput="applyCallFilters()">
-          </div>
-          <div class="flex gap-2">
-            <button class="btn btn-ghost btn-sm w-full" onclick="clearCallFilters()">Clear</button>
-            <button class="btn btn-primary btn-sm w-full" onclick="toggleCallFilter()">Done</button>
           </div>
         </div>
         <!-- Active filter chips -->
@@ -1346,5 +1318,34 @@ Would it be worth having them give you a quick call — even just 15 minutes —
 </div><!-- /app-wrapper -->
 
 <script src="app.js"></script>
+
+<!-- Call Log filter panel — lives at body level to escape card overflow:hidden -->
+<div id="call-filter-panel" style="display:none;position:fixed;z-index:9999;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;width:300px;box-shadow:0 8px 32px rgba(0,0,0,.25);flex-direction:column;gap:12px">
+  <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Filter Calls</div>
+  <div>
+    <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Phone Number</label>
+    <input id="filter-phone" class="form-input" placeholder="+447…" style="width:100%;padding:6px 10px;font-size:12px" oninput="applyCallFilters()">
+  </div>
+  <div>
+    <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Meeting Booked</label>
+    <select id="filter-booked" class="form-select" style="width:100%;font-size:12px" onchange="applyCallFilters()">
+      <option value="">Any</option>
+      <option value="yes">Yes — booked</option>
+      <option value="no">No — not booked</option>
+    </select>
+  </div>
+  <div>
+    <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Min Duration (seconds)</label>
+    <input id="filter-duration-min" class="form-input" type="number" placeholder="e.g. 30" min="0" style="width:100%;padding:6px 10px;font-size:12px" oninput="applyCallFilters()">
+  </div>
+  <div>
+    <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Max Duration (seconds)</label>
+    <input id="filter-duration-max" class="form-input" type="number" placeholder="e.g. 300" min="0" style="width:100%;padding:6px 10px;font-size:12px" oninput="applyCallFilters()">
+  </div>
+  <div class="flex gap-2">
+    <button class="btn btn-ghost btn-sm w-full" onclick="clearCallFilters()">Clear</button>
+    <button class="btn btn-primary btn-sm w-full" onclick="toggleCallFilter()">Done</button>
+  </div>
+</div>
 </body>
 </html>
