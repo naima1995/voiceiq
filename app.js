@@ -277,7 +277,9 @@ async function loadDashboard() {
 
     // Metric cards — from real computed analytics
     if (analyticsRes.status === 'fulfilled') {
-      renderDashboardMetrics(analyticsRes.value?.today || {}, analyticsRes.value?.yesterday || {});
+      const av = analyticsRes.value || {};
+      renderDashboardMetrics(av.today || {}, av.yesterday || {});
+      if (av.weekly) renderWeeklyChart(av.weekly);
     }
 
     if (agentsRes.status === 'fulfilled' && agentsRes.value?.agents) {
@@ -383,6 +385,30 @@ function renderDashboardMetrics(today, yesterday = {}) {
   setTrend('dash-bookings-trend',    today.booked     ?? 0, yesterday.booked,      '');
   setTrend('dash-answer-trend',      today.answerRate ?? 0, yesterday.answerRate,  '%');
   setTrend('dash-conversion-trend',  today.bookingRate ?? 0, yesterday.bookingRate, '%');
+}
+
+// ─── Weekly call volume chart ─────────────────────────────────────────────────
+function renderWeeklyChart(weekly) {
+  const el = document.getElementById('call-chart');
+  if (!el) return;
+
+  const maxCalls = Math.max(...weekly.map(d => d.calls), 1);
+
+  el.innerHTML = weekly.map(d => {
+    const pct    = Math.round((d.calls / maxCalls) * 100);
+    const bPct   = d.calls > 0 ? Math.round((d.booked / d.calls) * 100) : 0;
+    const isToday = d === weekly[weekly.length - 1];
+    return `
+      <div class="bar-col" title="${d.calls} call${d.calls !== 1 ? 's' : ''}${d.booked ? `, ${d.booked} booked` : ''}">
+        <div class="bar-val">${d.calls || ''}</div>
+        <div class="bar-wrap">
+          <div class="bar-fill${isToday ? ' today' : ''}" style="height:${pct}%">
+            ${d.booked ? `<div class="bar-booked" style="height:${bPct}%"></div>` : ''}
+          </div>
+        </div>
+        <div class="bar-label${isToday ? ' today' : ''}">${d.label}</div>
+      </div>`;
+  }).join('');
 }
 
 // ─── Live calls table ─────────────────────────────────────────────────────────
@@ -544,37 +570,50 @@ function renderRecentActivity(calls) {
   const tbody = document.getElementById('recent-activity-tbody');
   if (!tbody) return;
 
-  const recent = calls.filter(c => c.status !== 'active' && c.status !== 'live').slice(0, 5);
+  const recent = calls.filter(c => c.status !== 'active' && c.status !== 'live').slice(0, 8);
 
   if (!recent.length) {
     tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text3)">No recent activity</td></tr>`;
     return;
   }
 
-  const outcomeMap = {
-    meeting_booked: { cls: 'badge active',  label: 'Meeting booked' },
-    booked:         { cls: 'badge active',  label: 'Meeting booked' },
-    qualified:      { cls: 'badge booked',  label: 'Qualified' },
-    transferred:    { cls: 'badge pending', label: 'Escalated' },
-    escalated:      { cls: 'badge pending', label: 'Escalated' },
-    no_answer:      { cls: 'badge', label: 'No answer', style: 'background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)' },
-    'no-answer':    { cls: 'badge', label: 'No answer', style: 'background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)' },
-    completed:      { cls: 'badge pending', label: 'Completed' },
-  };
-
   tbody.innerHTML = recent.map(c => {
-    const name      = c.leadData?.name || c.toNumber || 'Unknown';
-    const outcome   = c.summary?.outcome || c.outcome || 'completed';
-    const o         = outcomeMap[outcome] || { cls: 'badge pending', label: outcome };
-    const score     = c.summary?.avgCallScore || c.score;
-    const scoreColor = score >= 4 ? 'var(--green)' : score >= 3 ? 'var(--amber)' : 'var(--text3)';
-    const summaryText = c.summary?.summary || c.summary || '—';
-    const timeAgo   = c.endedAt ? Math.round((Date.now() - new Date(c.endedAt)) / 60000) + ' min' : '—';
+    const name    = c.toNumber || 'Unknown';
+    const agentId = c.agentId;
+    const agentLabel = agentId ? agentId.charAt(0).toUpperCase() + agentId.slice(1) : '—';
+
+    // Determine outcome badge
+    const isBooked   = !!(c.bookingId || c.outcome === 'meeting_booked' || c.summary?.outcome === 'meeting_booked');
+    const rawOutcome = c.summary?.outcome || c.outcome || '';
+    let badge, badgeStyle = '';
+    if (isBooked) {
+      badge = 'Meeting booked'; badgeStyle = 'background:var(--green-dim);color:var(--green);border:1px solid rgba(34,197,94,.2)';
+    } else if (rawOutcome === 'no_answer' || rawOutcome === 'no-answer') {
+      badge = 'No answer'; badgeStyle = 'background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)';
+    } else if (rawOutcome === 'qualified') {
+      badge = 'Qualified'; badgeStyle = '';
+    } else if (rawOutcome === 'transferred' || rawOutcome === 'escalated') {
+      badge = 'Escalated'; badgeStyle = '';
+    } else {
+      badge = 'Completed'; badgeStyle = '';
+    }
+
+    const summaryText = c.summary?.summary || '—';
+    const score       = c.summary?.avgCallScore;
+    const scoreColor  = score >= 4 ? 'var(--green)' : score >= 3 ? 'var(--amber)' : 'var(--text3)';
+    const ts          = c.endedAt || c.loggedAt;
+    const timeAgo     = ts ? (() => {
+      const mins = Math.round((Date.now() - new Date(ts)) / 60000);
+      if (mins < 60)   return `${mins}m ago`;
+      if (mins < 1440) return `${Math.round(mins/60)}h ago`;
+      return new Date(ts).toLocaleDateString('en-GB', { day:'numeric', month:'short' });
+    })() : '—';
+
     return `<tr>
-      <td><span class="${o.cls}" ${o.style ? `style="${o.style}"` : ''}>${o.label}</span></td>
-      <td>${c.agentId || '—'}</td>
-      <td class="bold">${name}</td>
-      <td>${summaryText}</td>
+      <td><span class="badge" style="${badgeStyle}">${badge}</span></td>
+      <td>${agentLabel}</td>
+      <td class="bold font-mono" style="font-size:11px">${name}</td>
+      <td style="max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text3);font-size:11px">${summaryText}</td>
       <td style="color:${scoreColor};font-weight:600">${score || '—'}</td>
       <td class="text-dim">${timeAgo}</td>
     </tr>`;
