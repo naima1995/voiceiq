@@ -757,6 +757,17 @@ async function viewCall(callId) {
   }
 }
 
+// Open call detail modal and jump straight to transcript section
+async function viewTranscript(callId) {
+  await viewCall(callId);
+  // Scroll transcript into view after modal renders
+  setTimeout(() => {
+    const body = document.getElementById('call-detail-body');
+    const section = body?.lastElementChild;
+    if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 400);
+}
+
 // ─── Make outbound call (Twilio) ─────────────────────────────────────────────
 async function makeCall({ toNumber, agentId = 'james', leadData = {} }) {
   toNumber = normalisePhone(toNumber);
@@ -799,7 +810,7 @@ async function loadCallLog() {
     set('calls-booked-today', booked);
 
     if (!calls.length) {
-      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text3)">No calls yet — make your first call from the Twilio Calling page</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text3)">No calls yet — make your first call from the Twilio Calling page</td></tr>`;
       return;
     }
 
@@ -827,6 +838,7 @@ async function loadCallLog() {
         ? `<span class="badge active" style="background:var(--green-dim);color:var(--green);border:1px solid rgba(34,197,94,.2)">Yes</span>`
         : `<span class="badge" style="background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)">No</span>`;
 
+      const callRef = c.callId || c.id;
       return `<tr>
         <td class="bold">${name}</td>
         <td class="font-mono">${number}</td>
@@ -835,11 +847,12 @@ async function loadCallLog() {
         <td class="font-mono">${dur}</td>
         <td><span class="${o.cls}" ${o.style ? `style="${o.style}"` : ''}>${o.label}</span></td>
         <td>${meetingCell}</td>
-        <td><button class="btn btn-ghost btn-sm" onclick="viewCall('${c.callId || c.id}')"><i class="ti ti-eye"></i></button></td>
+        <td><button class="btn btn-ghost btn-sm" onclick="viewTranscript('${callRef}')" title="View transcript"><i class="ti ti-message-dots"></i></button></td>
+        <td><button class="btn btn-ghost btn-sm" onclick="viewCall('${callRef}')" title="View call detail"><i class="ti ti-eye"></i></button></td>
       </tr>`;
     }).join('');
   } catch (err) {
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text3)">Could not load calls</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text3)">Could not load calls</td></tr>`;
   }
 }
 
