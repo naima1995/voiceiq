@@ -1156,7 +1156,7 @@ function renderPageActions(page) {
     agents: `<button class="btn btn-ghost btn-sm"><i class="ti ti-upload"></i> Import</button><button class="btn btn-primary" onclick="openModal('new-agent')"><i class="ti ti-plus"></i> New Agent</button>`,
     campaigns: `<label class="btn btn-ghost btn-sm" style="cursor:pointer"><i class="ti ti-upload"></i> Upload Excel<input type="file" accept=".xlsx,.xls" style="display:none" onchange="uploadLeads(this)"></label><button class="btn btn-primary" onclick="openModal('new-campaign')"><i class="ti ti-plus"></i> New Campaign</button>`,
     calls: `<button class="btn btn-ghost btn-sm"><i class="ti ti-download"></i> Export</button>`,
-    calendar: `<button class="btn btn-ghost btn-sm"><i class="ti ti-brand-google"></i> Sync Google</button><button class="btn btn-primary"><i class="ti ti-plus"></i> Manual Book</button>`,
+    calendar: `<button class="btn btn-ghost btn-sm"><i class="ti ti-brand-google"></i> Sync Google</button>`,
     prompt: `<button class="btn btn-ghost btn-sm"><i class="ti ti-copy"></i> Duplicate</button><button class="btn btn-primary"><i class="ti ti-device-floppy"></i> Save Script</button>`,
     crm: `<label class="btn btn-ghost btn-sm" style="cursor:pointer"><i class="ti ti-upload"></i> Import Excel<input type="file" accept=".xlsx,.xls" style="display:none" onchange="uploadLeads(this)"></label><button class="btn btn-primary"><i class="ti ti-plus"></i> Add Lead</button>`,
     analytics: `<button class="btn btn-ghost btn-sm" onclick="loadAnalytics()"><i class="ti ti-refresh"></i> Refresh</button>`,
