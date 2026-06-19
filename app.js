@@ -643,11 +643,13 @@ async function loadCallLog() {
       const dur      = c.duration ? `${Math.floor(c.duration/60)}:${String(c.duration%60).padStart(2,'0')}` : '—';
       const outcome  = c.summary?.outcome || c.outcome || 'completed';
       const o        = outcomeMap[outcome] || { cls: 'badge pending', label: outcome };
-      const score    = c.summary?.avgCallScore || c.score;
-      const scoreColor = score >= 4 ? 'var(--green)' : score >= 3 ? 'var(--amber)' : 'var(--red)';
       const dirIcon  = c.direction === 'inbound'
         ? `<i class="ti ti-phone-incoming" style="color:var(--green)"></i> In`
         : `<i class="ti ti-phone-outgoing" style="color:var(--accent)"></i> Out`;
+      const isBooked = outcome === 'meeting_booked' || outcome === 'booked' || c.summary?.outcome === 'meeting_booked';
+      const meetingCell = isBooked
+        ? `<span class="badge active" style="background:var(--green-dim);color:var(--green);border:1px solid rgba(34,197,94,.2)">Yes</span>`
+        : `<span class="badge" style="background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)">No</span>`;
 
       return `<tr>
         <td class="bold">${name}</td>
@@ -656,7 +658,7 @@ async function loadCallLog() {
         <td>${dirIcon}</td>
         <td class="font-mono">${dur}</td>
         <td><span class="${o.cls}" ${o.style ? `style="${o.style}"` : ''}>${o.label}</span></td>
-        <td style="color:${scoreColor};font-weight:600">${score || '—'}</td>
+        <td>${meetingCell}</td>
         <td><button class="btn btn-ghost btn-sm"><i class="ti ti-eye"></i></button></td>
       </tr>`;
     }).join('');
