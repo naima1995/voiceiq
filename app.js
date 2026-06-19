@@ -286,6 +286,7 @@ async function loadDashboard() {
       const agents = agentsRes.value.agents;
       renderDashboardAgents(agents);
       renderAgentsPage(agents);
+      populateAgentDropdowns(agents);
       // Update active agent count in subtitle
       const activeCount = agents.filter(a => a.status === 'active').length;
       const sub = document.getElementById('page-sub');
@@ -464,6 +465,38 @@ function renderDashboardAgents(agents) {
       <div class="status-dot ${a.status === 'active' ? 'on' : 'off'}"></div>
     </div>
   `).join('');
+}
+
+// ─── Populate all agent dropdowns from live agent list ────────────────────────
+function populateAgentDropdowns(agents) {
+  // Dropdowns with no leading "All agents" option
+  ['test-call-agent', 'modal-test-agent', 'camp-agent'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const cur = el.value;
+    el.innerHTML = agents.map(a => `<option value="${a.id}">${a.name} — ${a.accent}</option>`).join('');
+    if (agents.find(a => a.id === cur)) el.value = cur;
+  });
+
+  // Dropdowns with a leading "All agents" option
+  ['task-agent', 'kb-agent'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const cur = el.value;
+    const prefix = id === 'kb-agent'
+      ? `<option value="">All agents (shared)</option>`
+      : `<option value="">All agents</option>`;
+    el.innerHTML = prefix + agents.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+    if (cur) el.value = cur;
+  });
+
+  // Prompt builder select — only populate if empty (loadAgentScript handles it)
+  const promptSel = document.getElementById('prompt-agent-select');
+  if (promptSel && (promptSel.children.length === 0 || promptSel.options[0]?.value === '')) {
+    const cur = promptSel.value;
+    promptSel.innerHTML = agents.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+    if (agents.find(a => a.id === cur)) promptSel.value = cur;
+  }
 }
 
 // ─── Agents page cards ────────────────────────────────────────────────────────
@@ -1574,9 +1607,8 @@ async function createAgent() {
     });
     showToast(`✅ Agent "${name}" created`, 'success');
     closeModal('new-agent');
-    // Refresh agents page
     const data = await api('/api/agents');
-    if (data?.agents) renderAgentsPage(data.agents);
+    if (data?.agents) { renderAgentsPage(data.agents); populateAgentDropdowns(data.agents); }
   } catch (err) {
     showToast(`❌ ${err.message}`, 'error');
   }
@@ -1644,7 +1676,7 @@ async function saveAgentSettings(agentId) {
     document.querySelector('#modal-new-agent .btn-primary').setAttribute('onclick', 'createAgent()');
     document.querySelector('#modal-new-agent .btn-primary').innerHTML = '<i class="ti ti-check"></i> Create Agent';
     const data = await api('/api/agents');
-    if (data?.agents) renderAgentsPage(data.agents);
+    if (data?.agents) { renderAgentsPage(data.agents); populateAgentDropdowns(data.agents); }
   } catch (err) {
     showToast(`❌ ${err.message}`, 'error');
   }
@@ -1656,7 +1688,7 @@ async function deleteAgent(agentId, agentName) {
     await api(`/api/agents/${agentId}`, { method: 'DELETE' });
     showToast(`🗑 Agent "${agentName}" deleted`, 'success');
     const data = await api('/api/agents');
-    if (data?.agents) renderAgentsPage(data.agents);
+    if (data?.agents) { renderAgentsPage(data.agents); populateAgentDropdowns(data.agents); }
   } catch (err) {
     showToast(`❌ ${err.message}`, 'error');
   }
@@ -1668,7 +1700,7 @@ async function toggleAgentStatus(agentId, currentStatus) {
     await api(`/api/agents/${agentId}`, { method: 'PATCH', body: JSON.stringify({ status: newStatus }) });
     showToast(`Agent ${newStatus === 'active' ? 'activated' : 'paused'}`, 'success');
     const data = await api('/api/agents');
-    if (data?.agents) renderAgentsPage(data.agents);
+    if (data?.agents) { renderAgentsPage(data.agents); populateAgentDropdowns(data.agents); }
   } catch (err) {
     showToast(`❌ ${err.message}`, 'error');
   }
