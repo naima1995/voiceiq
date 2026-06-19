@@ -785,6 +785,142 @@ async function makeCall({ toNumber, agentId = 'james', leadData = {} }) {
   }
 }
 
+// ─── Call log filter state ────────────────────────────────────────────────────
+let _allCalls      = [];   // full fetched list
+let _callDirection = '';   // '', 'outbound', 'inbound'
+let _filterOpen    = false;
+
+function toggleCallFilter() {
+  const panel = document.getElementById('call-filter-panel');
+  if (!panel) return;
+  _filterOpen = !_filterOpen;
+  panel.style.display = _filterOpen ? 'flex' : 'none';
+  const btn = document.getElementById('call-filter-btn');
+  if (btn) btn.style.background = _filterOpen ? 'var(--accent-dim)' : '';
+  // Close when clicking outside
+  if (_filterOpen) {
+    setTimeout(() => document.addEventListener('click', _closeFilterOutside, { once: true }), 0);
+  }
+}
+
+function _closeFilterOutside(e) {
+  const panel = document.getElementById('call-filter-panel');
+  const btn   = document.getElementById('call-filter-btn');
+  if (panel && !panel.contains(e.target) && !btn?.contains(e.target)) {
+    panel.style.display = 'none';
+    _filterOpen = false;
+    const b = document.getElementById('call-filter-btn');
+    if (b) b.style.background = '';
+  }
+}
+
+function setCallDirectionTab(el, direction) {
+  document.querySelectorAll('#page-calls .tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  _callDirection = direction;
+  renderCallLogRows();
+}
+
+function clearCallFilters() {
+  ['filter-phone','filter-duration-min','filter-duration-max'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  const sel = document.getElementById('filter-booked'); if (sel) sel.value = '';
+  renderCallLogRows();
+}
+
+function applyCallFilters() { renderCallLogRows(); }
+
+function renderCallLogRows() {
+  const tbody   = document.getElementById('call-log-tbody');
+  if (!tbody) return;
+
+  const phone   = (document.getElementById('filter-phone')?.value || '').trim().toLowerCase();
+  const booked  = document.getElementById('filter-booked')?.value || '';
+  const durMin  = parseInt(document.getElementById('filter-duration-min')?.value) || 0;
+  const durMax  = parseInt(document.getElementById('filter-duration-max')?.value) || Infinity;
+
+  let calls = _allCalls;
+
+  if (_callDirection === 'outbound') calls = calls.filter(c => c.direction !== 'inbound');
+  else if (_callDirection === 'inbound') calls = calls.filter(c => c.direction === 'inbound');
+  // 'live' filter — active calls are in-memory only; skip for historical log
+
+  if (phone)          calls = calls.filter(c => (c.toNumber || c.fromNumber || '').toLowerCase().includes(phone));
+  if (booked === 'yes') calls = calls.filter(c => !!(c.bookingId || c.outcome === 'meeting_booked' || c.summary?.outcome === 'meeting_booked'));
+  if (booked === 'no')  calls = calls.filter(c => !(c.bookingId || c.outcome === 'meeting_booked' || c.summary?.outcome === 'meeting_booked'));
+  if (durMin)         calls = calls.filter(c => (c.duration || 0) >= durMin);
+  if (durMax < Infinity) calls = calls.filter(c => (c.duration || 0) <= durMax);
+
+  // Update chips
+  const chips = [];
+  if (phone)          chips.push({ label: `Number: ${phone}`, clear: () => { document.getElementById('filter-phone').value = ''; renderCallLogRows(); } });
+  if (booked)         chips.push({ label: `Booked: ${booked}`, clear: () => { document.getElementById('filter-booked').value = ''; renderCallLogRows(); } });
+  if (durMin)         chips.push({ label: `Min ${durMin}s`, clear: () => { document.getElementById('filter-duration-min').value = ''; renderCallLogRows(); } });
+  if (durMax < Infinity) chips.push({ label: `Max ${durMax}s`, clear: () => { document.getElementById('filter-duration-max').value = ''; renderCallLogRows(); } });
+
+  const chipsEl = document.getElementById('call-filter-chips');
+  if (chipsEl) {
+    chipsEl.style.display = chips.length ? 'flex' : 'none';
+    chipsEl.innerHTML = chips.map((ch, i) =>
+      `<span style="display:inline-flex;align-items:center;gap:4px;background:var(--accent-dim);color:var(--accent);font-size:11px;padding:3px 8px;border-radius:20px;cursor:pointer" onclick="_chipClear(${i})">
+        ${escHtml(ch.label)} <i class="ti ti-x" style="font-size:10px"></i>
+      </span>`
+    ).join('');
+    chipsEl._chipHandlers = chips.map(ch => ch.clear);
+  }
+
+  const btn = document.getElementById('call-filter-btn');
+  if (btn) btn.style.color = chips.length ? 'var(--accent)' : '';
+
+  if (!calls.length) {
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text3)">${_allCalls.length ? 'No calls match your filters' : 'No calls yet'}</td></tr>`;
+    return;
+  }
+
+  const outcomeMap = {
+    meeting_booked: { cls: 'badge active',  label: 'Booked' },
+    booked:         { cls: 'badge active',  label: 'Booked' },
+    qualified:      { cls: 'badge booked',  label: 'Qualified' },
+    transferred:    { cls: 'badge pending', label: 'Transferred' },
+    no_answer:      { cls: 'badge',         label: 'No answer', style: 'background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)' },
+    'no-answer':    { cls: 'badge',         label: 'No answer', style: 'background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)' },
+    completed:      { cls: 'badge pending', label: 'Completed' },
+  };
+
+  tbody.innerHTML = calls.map(c => {
+    const name     = c.leadData?.name || c.toNumber || 'Unknown';
+    const number   = c.toNumber || c.fromNumber || '—';
+    const dur      = c.duration ? `${Math.floor(c.duration/60)}:${String(c.duration%60).padStart(2,'0')}` : '—';
+    const outcome  = c.summary?.outcome || c.outcome || 'completed';
+    const o        = outcomeMap[outcome] || { cls: 'badge pending', label: outcome };
+    const dirIcon  = c.direction === 'inbound'
+      ? `<i class="ti ti-phone-incoming" style="color:var(--green)"></i> In`
+      : `<i class="ti ti-phone-outgoing" style="color:var(--accent)"></i> Out`;
+    const isBooked = !!(c.bookingId || outcome === 'meeting_booked' || c.summary?.outcome === 'meeting_booked');
+    const meetingCell = isBooked
+      ? `<span class="badge active" style="background:var(--green-dim);color:var(--green);border:1px solid rgba(34,197,94,.2)">Yes</span>`
+      : `<span class="badge" style="background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)">No</span>`;
+    const callRef  = c.callId || c.id;
+    return `<tr>
+      <td class="bold">${name}</td>
+      <td class="font-mono">${number}</td>
+      <td><span class="badge mobile">${c.channel || 'Twilio'}</span></td>
+      <td>${dirIcon}</td>
+      <td class="font-mono">${dur}</td>
+      <td><span class="${o.cls}" ${o.style ? `style="${o.style}"` : ''}>${o.label}</span></td>
+      <td>${meetingCell}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="viewTranscript('${callRef}')" title="View transcript"><i class="ti ti-message-dots"></i></button></td>
+      <td><button class="btn btn-ghost btn-sm" onclick="viewCall('${callRef}')" title="View call detail"><i class="ti ti-eye"></i></button></td>
+    </tr>`;
+  }).join('');
+}
+
+function _chipClear(i) {
+  const chipsEl = document.getElementById('call-filter-chips');
+  if (chipsEl?._chipHandlers?.[i]) chipsEl._chipHandlers[i]();
+}
+
 // ─── Render call log page ─────────────────────────────────────────────────────
 async function loadCallLog() {
   const tbody = document.getElementById('call-log-tbody');
@@ -793,6 +929,7 @@ async function loadCallLog() {
   try {
     const data = await api('/api/calls');
     const calls = data.calls || [];
+    _allCalls = calls;
 
     // Update metric cards
     const today = new Date().toDateString();
@@ -809,48 +946,7 @@ async function loadCallLog() {
     set('calls-avg-duration', avgDurStr);
     set('calls-booked-today', booked);
 
-    if (!calls.length) {
-      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text3)">No calls yet — make your first call from the Twilio Calling page</td></tr>`;
-      return;
-    }
-
-    const outcomeMap = {
-      meeting_booked: { cls: 'badge active',  label: 'Booked' },
-      booked:         { cls: 'badge active',  label: 'Booked' },
-      qualified:      { cls: 'badge booked',  label: 'Qualified' },
-      transferred:    { cls: 'badge pending', label: 'Transferred' },
-      no_answer:      { cls: 'badge',         label: 'No answer', style: 'background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)' },
-      'no-answer':    { cls: 'badge',         label: 'No answer', style: 'background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)' },
-      completed:      { cls: 'badge pending', label: 'Completed' },
-    };
-
-    tbody.innerHTML = calls.map(c => {
-      const name     = c.leadData?.name || c.toNumber || 'Unknown';
-      const number   = c.toNumber || c.fromNumber || '—';
-      const dur      = c.duration ? `${Math.floor(c.duration/60)}:${String(c.duration%60).padStart(2,'0')}` : '—';
-      const outcome  = c.summary?.outcome || c.outcome || 'completed';
-      const o        = outcomeMap[outcome] || { cls: 'badge pending', label: outcome };
-      const dirIcon  = c.direction === 'inbound'
-        ? `<i class="ti ti-phone-incoming" style="color:var(--green)"></i> In`
-        : `<i class="ti ti-phone-outgoing" style="color:var(--accent)"></i> Out`;
-      const isBooked = !!(c.bookingId || outcome === 'meeting_booked' || c.summary?.outcome === 'meeting_booked');
-      const meetingCell = isBooked
-        ? `<span class="badge active" style="background:var(--green-dim);color:var(--green);border:1px solid rgba(34,197,94,.2)">Yes</span>`
-        : `<span class="badge" style="background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)">No</span>`;
-
-      const callRef = c.callId || c.id;
-      return `<tr>
-        <td class="bold">${name}</td>
-        <td class="font-mono">${number}</td>
-        <td><span class="badge mobile">${c.channel || 'Twilio'}</span></td>
-        <td>${dirIcon}</td>
-        <td class="font-mono">${dur}</td>
-        <td><span class="${o.cls}" ${o.style ? `style="${o.style}"` : ''}>${o.label}</span></td>
-        <td>${meetingCell}</td>
-        <td><button class="btn btn-ghost btn-sm" onclick="viewTranscript('${callRef}')" title="View transcript"><i class="ti ti-message-dots"></i></button></td>
-        <td><button class="btn btn-ghost btn-sm" onclick="viewCall('${callRef}')" title="View call detail"><i class="ti ti-eye"></i></button></td>
-      </tr>`;
-    }).join('');
+    renderCallLogRows();
   } catch (err) {
     tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text3)">Could not load calls</td></tr>`;
   }

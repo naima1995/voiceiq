@@ -427,20 +427,50 @@
       <div class="card">
         <div class="card-header">
           <div class="card-title">Call Log</div>
-          <div class="flex gap-2">
+          <div class="flex gap-2" style="position:relative">
             <div class="tabs">
-              <div class="tab active">All</div>
-              <div class="tab">Live</div>
-              <div class="tab">Outbound</div>
-              <div class="tab">Inbound</div>
+              <div class="tab active" onclick="setCallDirectionTab(this,'')">All</div>
+              <div class="tab" onclick="setCallDirectionTab(this,'live')">Live</div>
+              <div class="tab" onclick="setCallDirectionTab(this,'outbound')">Outbound</div>
+              <div class="tab" onclick="setCallDirectionTab(this,'inbound')">Inbound</div>
             </div>
-            <button class="btn btn-ghost btn-sm"><i class="ti ti-filter"></i> Filter</button>
+            <button class="btn btn-ghost btn-sm" id="call-filter-btn" onclick="toggleCallFilter()"><i class="ti ti-filter"></i> Filter</button>
+            <!-- Filter dropdown -->
+            <div id="call-filter-panel" style="display:none;position:absolute;top:calc(100% + 6px);right:0;z-index:200;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;width:280px;box-shadow:0 8px 24px rgba(0,0,0,.18);display:flex;flex-direction:column;gap:12px">
+              <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Filter Calls</div>
+              <div>
+                <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Phone Number</label>
+                <input id="filter-phone" class="form-input" placeholder="+447…" style="width:100%;padding:6px 10px;font-size:12px" oninput="applyCallFilters()">
+              </div>
+              <div>
+                <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Meeting Booked</label>
+                <select id="filter-booked" class="form-select" style="width:100%;font-size:12px" onchange="applyCallFilters()">
+                  <option value="">Any</option>
+                  <option value="yes">Yes — booked</option>
+                  <option value="no">No — not booked</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Min Duration (seconds)</label>
+                <input id="filter-duration-min" class="form-input" type="number" placeholder="e.g. 30" min="0" style="width:100%;padding:6px 10px;font-size:12px" oninput="applyCallFilters()">
+              </div>
+              <div>
+                <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Max Duration (seconds)</label>
+                <input id="filter-duration-max" class="form-input" type="number" placeholder="e.g. 300" min="0" style="width:100%;padding:6px 10px;font-size:12px" oninput="applyCallFilters()">
+              </div>
+              <div class="flex gap-2">
+                <button class="btn btn-ghost btn-sm w-full" onclick="clearCallFilters()">Clear</button>
+                <button class="btn btn-primary btn-sm w-full" onclick="toggleCallFilter()">Done</button>
+              </div>
+            </div>
           </div>
         </div>
+        <!-- Active filter chips -->
+        <div id="call-filter-chips" style="display:none;padding:8px 16px 0;display:flex;gap:6px;flex-wrap:wrap"></div>
         <table class="data-table">
           <thead><tr><th>Contact</th><th>Number</th><th>Channel</th><th>Direction</th><th>Duration</th><th>Outcome</th><th>Meeting Booked</th><th>Transcript</th><th>Actions</th></tr></thead>
           <tbody id="call-log-tbody">
-            <tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text3)">Loading calls…</td></tr>
+            <tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text3)">Loading calls…</td></tr>
           </tbody>
         </table>
       </div>
