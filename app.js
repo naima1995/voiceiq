@@ -609,12 +609,16 @@ function renderRecentActivity(calls) {
       return new Date(ts).toLocaleDateString('en-GB', { day:'numeric', month:'short' });
     })() : '—';
 
+    const meetingCell = isBooked
+      ? `<span class="badge active" style="background:var(--green-dim);color:var(--green);border:1px solid rgba(34,197,94,.2)">Yes</span>`
+      : `<span class="badge" style="background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)">No</span>`;
+
     const callRef = c.callId || c.id;
     return `<tr style="cursor:pointer" onclick="viewCall('${callRef}')" title="View call detail">
       <td><span class="badge" style="${badgeStyle}">${badge}</span></td>
       <td>${agentLabel}</td>
-      <td class="bold font-mono" style="font-size:11px">${name}</td>
-      <td style="max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text3);font-size:11px">${summaryText}</td>
+      <td class="font-mono" style="font-size:11px">${name}</td>
+      <td>${meetingCell}</td>
       <td style="color:${scoreColor};font-weight:600">${score || '—'}</td>
       <td class="text-dim">${timeAgo}</td>
     </tr>`;
