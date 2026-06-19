@@ -611,7 +611,7 @@ async function loadCallLog() {
     const today = new Date().toDateString();
     const todayCalls = calls.filter(c => new Date(c.loggedAt || c.endedAt).toDateString() === today);
     const outbound = todayCalls.filter(c => c.direction === 'outbound').length;
-    const booked = todayCalls.filter(c => c.summary?.outcome === 'meeting_booked' || c.outcome === 'booked').length;
+    const booked = todayCalls.filter(c => c.bookingId || c.outcome === 'meeting_booked' || c.summary?.outcome === 'meeting_booked').length;
     const durations = todayCalls.filter(c => c.duration > 0).map(c => c.duration);
     const avgDur = durations.length ? Math.round(durations.reduce((a,b) => a+b,0) / durations.length) : 0;
     const avgDurStr = avgDur ? `${Math.floor(avgDur/60)}:${String(avgDur%60).padStart(2,'0')}` : '—';
@@ -646,7 +646,7 @@ async function loadCallLog() {
       const dirIcon  = c.direction === 'inbound'
         ? `<i class="ti ti-phone-incoming" style="color:var(--green)"></i> In`
         : `<i class="ti ti-phone-outgoing" style="color:var(--accent)"></i> Out`;
-      const isBooked = outcome === 'meeting_booked' || outcome === 'booked' || c.summary?.outcome === 'meeting_booked';
+      const isBooked = !!(c.bookingId || outcome === 'meeting_booked' || c.summary?.outcome === 'meeting_booked');
       const meetingCell = isBooked
         ? `<span class="badge active" style="background:var(--green-dim);color:var(--green);border:1px solid rgba(34,197,94,.2)">Yes</span>`
         : `<span class="badge" style="background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)">No</span>`;
