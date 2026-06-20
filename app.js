@@ -2636,6 +2636,20 @@ async function unassignKB(kbId) {
   }
 }
 
+async function resetAgentScript() {
+  const agentId = document.getElementById('prompt-agent-select')?.value;
+  if (!agentId) { showToast('Select an agent first', 'error'); return; }
+  if (!confirm('Reset this agent\'s script to the default protection survey script? Your current script will be overwritten.')) return;
+  try {
+    const data = await api('/api/agents/default-script');
+    const ta = document.getElementById('prompt-ta');
+    if (ta) ta.value = data.script;
+    showToast('Script reset to default — click Save to Agent to apply', 'info');
+  } catch (err) {
+    showToast(`❌ ${err.message}`, 'error');
+  }
+}
+
 async function saveAgentScript() {
   const agentId = document.getElementById('prompt-agent-select')?.value;
   const script  = document.getElementById('prompt-ta')?.value?.trim();
