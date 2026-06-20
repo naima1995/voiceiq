@@ -732,8 +732,13 @@ async function viewCall(callId) {
       if (tr?.messages?.length) {
         const transcriptHtml = `
           <div>
-            <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">
-              Conversation Transcript <span style="font-weight:400;text-transform:none;letter-spacing:0">(${tr.messages.length} turns · kept 48 h)</span>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+              <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">
+                Conversation Transcript <span style="font-weight:400;text-transform:none;letter-spacing:0">(${tr.messages.length} turns · kept 48 h)</span>
+              </div>
+              <button class="btn btn-ghost btn-sm" onclick="downloadTranscript('${callId}')" title="Download as .txt" style="font-size:11px;padding:3px 8px">
+                <i class="ti ti-download"></i> Download
+              </button>
             </div>
             <div style="display:flex;flex-direction:column;gap:8px">
               ${tr.messages.map(m => {
@@ -760,12 +765,43 @@ async function viewCall(callId) {
 // Open call detail modal and jump straight to transcript section
 async function viewTranscript(callId) {
   await viewCall(callId);
-  // Scroll transcript into view after modal renders
   setTimeout(() => {
     const body = document.getElementById('call-detail-body');
     const section = body?.lastElementChild;
     if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, 400);
+}
+
+// Download transcript as a .txt file (client-side blob — preserves Bearer auth)
+async function downloadTranscript(callId, name = '') {
+  try {
+    const tr = await api(`/api/calls/${callId}/transcript`);
+    if (!tr?.messages?.length) { showToast('No transcript available for this call', 'error'); return; }
+
+    const header = [
+      `VoiceIQ Call Transcript`,
+      `Call ID : ${callId}`,
+      `Exported : ${new Date().toLocaleString('en-GB', { timeZone: 'Europe/London' })}`,
+      `─`.repeat(60),
+      '',
+    ].join('\n');
+
+    const body = tr.messages.map(m => {
+      const time = new Date(m.ts).toLocaleString('en-GB', { timeZone: 'Europe/London' });
+      const role = m.role === 'agent' ? 'AGENT ' : 'CALLER';
+      return `[${time}]  ${role}: ${m.text}`;
+    }).join('\n\n');
+
+    const blob = new Blob([header + body], { type: 'text/plain;charset=utf-8' });
+    const url  = URL.createObjectURL(blob);
+    const a    = Object.assign(document.createElement('a'), { href: url, download: `transcript-${name || callId.slice(-8)}.txt` });
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    showToast('Failed to download transcript', 'error');
+  }
 }
 
 // ─── Make outbound call (Twilio) ─────────────────────────────────────────────
@@ -1037,7 +1073,10 @@ function renderCallLogRows() {
       <td class="font-mono">${dur}</td>
       <td><span class="${o.cls}" ${o.style ? `style="${o.style}"` : ''}>${o.label}</span></td>
       <td>${meetingCell}</td>
-      <td><button class="btn btn-ghost btn-sm" onclick="viewTranscript('${callRef}')" title="View transcript"><i class="ti ti-message-dots"></i></button></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-ghost btn-sm" onclick="viewTranscript('${callRef}')" title="View transcript"><i class="ti ti-message-dots"></i></button>
+        <button class="btn btn-ghost btn-sm" onclick="downloadTranscript('${callRef}','${escHtml(name)}')" title="Download transcript (.txt)"><i class="ti ti-download"></i></button>
+      </td>
       <td><button class="btn btn-ghost btn-sm" onclick="viewCall('${callRef}')" title="View call detail"><i class="ti ti-eye"></i></button></td>
     </tr>`;
   }).join('');
