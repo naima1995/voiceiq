@@ -247,6 +247,21 @@ function handleLiveEvent(msg) {
     showToast(`✅ Call ended — ${msg.data?.duration}s`, 'success');
   } else if (msg.type === 'call.summary') {
     showToast(`📋 Call summary ready`, 'success');
+  } else if (msg.type === 'campaign_completed') {
+    const reached = msg.data?.reached ?? 0;
+    showToast(`Campaign finished — ${reached} call${reached !== 1 ? 's' : ''} placed`, reached > 0 ? 'success' : 'error');
+    loadCampaigns();
+  } else if (msg.type === 'campaign_dial_failed') {
+    const phone = msg.data?.phone || '';
+    const err   = msg.data?.error || 'unknown error';
+    showToast(`Call failed (${phone}): ${err}`, 'error');
+  } else if (msg.type === 'campaign_dial_attempt') {
+    const name  = msg.data?.name || msg.data?.phone || '';
+    showToast(`Dialling ${name}…`, 'info');
+  } else if (msg.type === 'campaign_started') {
+    loadCampaigns();
+  } else if (msg.type === 'campaign_paused') {
+    loadCampaigns();
   }
 }
 
@@ -1702,11 +1717,15 @@ async function loadCampaigns() {
         <td style="color:var(--green);font-weight:600">${c.booked || '—'}</td>
         <td>${convRate}</td>
         <td><span class="${statusCls}">${statusLabel}</span></td>
-        <td style="display:flex;gap:6px;align-items:center">
+        <td style="display:flex;gap:6px;align-items:center;white-space:nowrap">
           ${c.status === 'active'
             ? `<button class="btn btn-sm" style="background:var(--amber);color:#fff;border:none" onclick="pauseCampaign('${c.id}')"><i class="ti ti-player-pause"></i> Pause</button>`
             : `<button class="btn btn-sm" style="background:var(--green);color:#fff;border:none" onclick="startCampaign('${c.id}')"><i class="ti ti-player-play"></i> Start</button>`
           }
+          <label class="btn btn-ghost btn-sm" title="Upload leads for this campaign" style="cursor:pointer">
+            <i class="ti ti-upload"></i>
+            <input type="file" accept=".xlsx,.xls" style="display:none" onchange="uploadLeadsForCampaign(this,'${c.id}')">
+          </label>
           <button class="btn btn-ghost btn-sm" onclick="deleteCampaign('${c.id}')"><i class="ti ti-trash"></i></button>
         </td>
       </tr>`;
@@ -2011,11 +2030,58 @@ async function toggleAgentStatus(agentId, currentStatus) {
 
 async function startCampaign(id) {
   try {
-    const data = await api(`/api/campaigns/${id}/start`, { method: 'POST' });
-    showToast(`▶ Campaign started — dialling leads now`, 'success');
+    // Check leads before starting so we can surface an actionable error
+    const leadsData = await api(`/api/campaigns/${id}/leads`).catch(() => null);
+    const pending = leadsData?.byStatus?.pending || 0;
+    const total   = leadsData?.total || 0;
+
+    if (pending === 0) {
+      if (total === 0) {
+        showToast('No leads loaded — upload an Excel file for this campaign first', 'error');
+      } else {
+        showToast(`No pending leads (${total} already called/failed) — upload a fresh list to retry`, 'error');
+      }
+      return;
+    }
+
+    await api(`/api/campaigns/${id}/start`, { method: 'POST' });
+    showToast(`▶ Campaign started — dialling ${pending} lead${pending !== 1 ? 's' : ''}`, 'success');
     loadCampaigns();
   } catch (err) {
     showToast('Could not start campaign', 'error');
+  }
+}
+
+// Upload leads directly to a specific campaign
+async function uploadLeadsForCampaign(input, campaignId) {
+  const file = input.files[0];
+  if (!file) return;
+
+  showToast(`Uploading ${file.name}…`, 'info');
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('campaignId', campaignId);
+
+  try {
+    const res  = await fetch(`${API_BASE}/api/leads/upload`, { method: 'POST', body: formData });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Upload failed');
+
+    // Update campaign leadCount
+    if (data.imported > 0) {
+      await api(`/api/campaigns/${campaignId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ leadCount: data.imported }),
+      });
+    }
+
+    let msg = `Imported ${data.imported} of ${data.total} leads`;
+    if (data.skipped > 0) msg += ` · ${data.skipped} skipped`;
+    showToast(msg, data.imported > 0 ? 'success' : 'error');
+    input.value = '';
+    loadCampaigns();
+  } catch (err) {
+    showToast(`Upload failed: ${err.message}`, 'error');
   }
 }
 
