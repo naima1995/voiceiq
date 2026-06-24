@@ -1059,8 +1059,11 @@ function renderCallLogRows() {
     booked:         { cls: 'badge active',  label: 'Booked' },
     qualified:      { cls: 'badge booked',  label: 'Qualified' },
     transferred:    { cls: 'badge pending', label: 'Transferred' },
-    no_answer:      { cls: 'badge',         label: 'No answer', style: 'background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)' },
-    'no-answer':    { cls: 'badge',         label: 'No answer', style: 'background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)' },
+    no_answer:      { cls: 'badge', label: 'No answer',  style: 'background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)' },
+    'no-answer':    { cls: 'badge', label: 'No answer',  style: 'background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)' },
+    voicemail:      { cls: 'badge', label: 'Voicemail',  style: 'background:rgba(139,92,246,.15);color:#a78bfa;border:1px solid rgba(139,92,246,.25)' },
+    busy:           { cls: 'badge', label: 'Busy',       style: 'background:var(--amber-dim,rgba(245,158,11,.15));color:var(--amber,#f59e0b);border:1px solid rgba(245,158,11,.25)' },
+    failed:         { cls: 'badge', label: 'Failed',     style: 'background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)' },
     completed:      { cls: 'badge pending', label: 'Completed' },
   };
 
