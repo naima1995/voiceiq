@@ -1061,7 +1061,8 @@ function renderCallLogRows() {
     transferred:    { cls: 'badge pending', label: 'Transferred' },
     no_answer:      { cls: 'badge', label: 'No answer',  style: 'background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)' },
     'no-answer':    { cls: 'badge', label: 'No answer',  style: 'background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)' },
-    voicemail:      { cls: 'badge', label: 'Voicemail',  style: 'background:rgba(139,92,246,.15);color:#a78bfa;border:1px solid rgba(139,92,246,.25)' },
+    voicemail:        { cls: 'badge', label: 'Voicemail',    style: 'background:rgba(139,92,246,.15);color:#a78bfa;border:1px solid rgba(139,92,246,.25)' },
+    follow_up_needed: { cls: 'badge', label: 'Voicemail',    style: 'background:rgba(139,92,246,.15);color:#a78bfa;border:1px solid rgba(139,92,246,.25)' },
     busy:           { cls: 'badge', label: 'Busy',       style: 'background:var(--amber-dim,rgba(245,158,11,.15));color:var(--amber,#f59e0b);border:1px solid rgba(245,158,11,.25)' },
     failed:         { cls: 'badge', label: 'Failed',     style: 'background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)' },
     completed:      { cls: 'badge pending', label: 'Completed' },
@@ -1073,7 +1074,8 @@ function renderCallLogRows() {
     const name     = leadName || c.toNumber || 'Unknown';
     const number   = c.toNumber || c.fromNumber || '—';
     const dur      = c.duration ? `${Math.floor(c.duration/60)}:${String(c.duration%60).padStart(2,'0')}` : '—';
-    const outcome  = summary.outcome || c.outcome || 'completed';
+    // DB outcome takes priority — prevents AI summary overriding voicemail/no_answer/busy
+    const outcome  = c.outcome || summary.outcome || 'completed';
     const o        = outcomeMap[outcome] || { cls: 'badge pending', label: outcome };
     const dirIcon  = c.direction === 'inbound'
       ? `<i class="ti ti-phone-incoming" style="color:var(--green)"></i> In`
