@@ -603,6 +603,19 @@ Would it be worth having them give you a quick call — even just 15 minutes —
                 <button class="btn btn-ghost btn-sm" onclick="askAssistantWithContext('Review my current script and suggest specific improvements for a UK protection insurance survey call. Wrap the improved version in a code block so I can apply it.')"><i class="ti ti-sparkles"></i> Improve with AI</button>
                 <button class="btn btn-ghost btn-sm" onclick="askAssistantWithContext('Rewrite my current script to be shorter and more conversational for a phone call. Wrap the result in a code block.')"><i class="ti ti-writing"></i> Shorten & rewrite</button>
               </div>
+
+              <!-- ── Version label + history ──────────────────────────────── -->
+              <div style="display:flex;gap:8px;margin-top:12px;align-items:center">
+                <input id="prompt-version-label" class="form-input" style="flex:1;font-size:12px" placeholder="Optional: label this version before saving (e.g. 'Added objection for price')">
+              </div>
+              <div style="margin-top:18px">
+                <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">
+                  <i class="ti ti-history" style="margin-right:4px"></i>Version History
+                </div>
+                <div id="script-versions-panel" style="font-size:12px;color:var(--text2)">
+                  <div style="font-size:11px;color:var(--text3)">Select an agent to see version history.</div>
+                </div>
+              </div>
               <!-- ── Objection Handling ─────────────────────────────────── -->
               <div class="form-group">
                 <div class="flex justify-between items-center" style="margin-bottom:10px">

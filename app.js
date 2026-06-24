@@ -2632,6 +2632,7 @@ async function loadAgentScript(populate = false) {
   }
 
   loadPromptKBPanel();
+  loadScriptVersions(agentId);
 }
 
 // ─── Prompt Builder — Knowledge Base panel ────────────────────────────────────
@@ -2763,16 +2764,97 @@ async function resetAgentScript() {
 async function saveAgentScript() {
   const agentId = document.getElementById('prompt-agent-select')?.value;
   const script  = document.getElementById('prompt-ta')?.value?.trim();
+  const label   = document.getElementById('prompt-version-label')?.value?.trim() || null;
   if (!agentId) { showToast('Select an agent first', 'error'); return; }
   if (!script)  { showToast('Script is empty', 'error'); return; }
   try {
     await api(`/api/agents/${agentId}`, {
       method: 'PATCH',
-      body: JSON.stringify({ script }),
+      body: JSON.stringify({ script, versionLabel: label }),
     });
-    showToast(`✅ Script saved to ${agentId.charAt(0).toUpperCase() + agentId.slice(1)}`, 'success');
+    if (document.getElementById('prompt-version-label')) {
+      document.getElementById('prompt-version-label').value = '';
+    }
+    showToast(`Script saved to ${agentId.charAt(0).toUpperCase() + agentId.slice(1)}`, 'success');
+    loadScriptVersions(agentId);
   } catch (err) {
     showToast(`Failed to save: ${err.message}`, 'error');
+  }
+}
+
+// ─── Script version history ───────────────────────────────────────────────────
+
+async function loadScriptVersions(agentId) {
+  const panel = document.getElementById('script-versions-panel');
+  if (!panel) return;
+  if (!agentId) { panel.innerHTML = ''; return; }
+
+  try {
+    const data = await api(`/api/agents/${agentId}/versions`);
+    const versions = data.versions || [];
+
+    if (!versions.length) {
+      panel.innerHTML = `<div style="font-size:11px;color:var(--text3);padding:8px 0">No previous versions yet — save a script to create a version.</div>`;
+      return;
+    }
+
+    panel.innerHTML = versions.map(v => {
+      const date = new Date(v.savedAt).toLocaleString('en-GB', {
+        day: '2-digit', month: 'short', year: 'numeric',
+        hour: '2-digit', minute: '2-digit',
+      });
+      const label = v.label ? `<span style="color:var(--accent);font-weight:600">${escHtml(v.label)}</span> · ` : '';
+      const preview = v.script.slice(0, 80).replace(/\n/g, ' ') + (v.script.length > 80 ? '…' : '');
+      return `<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:3px">${label}${date}</div>
+          <div style="font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(preview)}</div>
+        </div>
+        <div style="display:flex;gap:4px;flex-shrink:0">
+          <button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="previewVersion(${v.id},'${agentId}')" title="Preview this version">Preview</button>
+          <button class="btn btn-ghost btn-sm" style="font-size:11px;color:var(--amber)" onclick="restoreVersion(${v.id},'${agentId}')" title="Restore this version">Restore</button>
+        </div>
+      </div>`;
+    }).join('');
+  } catch (err) {
+    panel.innerHTML = `<div style="font-size:11px;color:var(--red)">Could not load versions</div>`;
+  }
+}
+
+async function previewVersion(versionId, agentId) {
+  try {
+    const data = await api(`/api/agents/${agentId}/versions`);
+    const v = (data.versions || []).find(x => x.id === versionId);
+    if (!v) return;
+
+    // Show in a simple overlay
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:10000;display:flex;align-items:center;justify-content:center';
+    overlay.innerHTML = `
+      <div style="background:var(--bg-card);border:1px solid var(--border2);border-radius:12px;width:min(700px,90vw);max-height:80vh;display:flex;flex-direction:column;overflow:hidden">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)">
+          <div style="font-size:13px;font-weight:600">Version preview · ${new Date(v.savedAt).toLocaleString('en-GB')}</div>
+          <button onclick="this.closest('div[style*=fixed]').remove()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px">×</button>
+        </div>
+        <pre style="margin:0;padding:16px 20px;overflow:auto;font-size:12px;line-height:1.6;color:var(--text1);white-space:pre-wrap;font-family:monospace">${escHtml(v.script)}</pre>
+      </div>`;
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  } catch (err) {
+    showToast('Could not load version preview', 'error');
+  }
+}
+
+async function restoreVersion(versionId, agentId) {
+  if (!confirm('Restore this version? Your current script will be saved as a version before restoring.')) return;
+  try {
+    const data = await api(`/api/agents/${agentId}/versions/${versionId}/restore`, { method: 'POST' });
+    const ta = document.getElementById('prompt-ta');
+    if (ta) ta.value = data.script;
+    showToast('Version restored — review and click Save to apply', 'success');
+    loadScriptVersions(agentId);
+  } catch (err) {
+    showToast(`Restore failed: ${err.message}`, 'error');
   }
 }
 
