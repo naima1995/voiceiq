@@ -1648,6 +1648,7 @@ function openModal(id) {
 }
 function closeModal(id) {
   document.getElementById('modal-' + id).classList.remove('open');
+  if (id === 'new-campaign') _resetCampaignModal();
 }
 window.addEventListener('click', e => {
   if (e.target.classList.contains('modal-overlay')) {
@@ -1731,6 +1732,7 @@ async function loadCampaigns() {
             <i class="ti ti-upload"></i>
             <input type="file" accept=".xlsx,.xls" style="display:none" onchange="uploadLeadsForCampaign(this,'${c.id}')">
           </label>
+          <button class="btn btn-ghost btn-sm" onclick="openEditCampaign(${JSON.stringify(c).replace(/"/g,'&quot;')})" title="Edit campaign"><i class="ti ti-pencil"></i></button>
           <button class="btn btn-ghost btn-sm" onclick="deleteCampaign('${c.id}')"><i class="ti ti-trash"></i></button>
         </td>
       </tr>`;
@@ -2105,6 +2107,78 @@ async function deleteCampaign(id) {
   await api(`/api/campaigns/${id}`, { method: 'DELETE' });
   showToast('Campaign deleted', 'success');
   loadCampaigns();
+}
+
+function openEditCampaign(c) {
+  // Switch modal to edit mode
+  document.getElementById('camp-edit-id').value     = c.id;
+  document.getElementById('camp-modal-title').textContent = 'Edit Campaign';
+  document.getElementById('camp-name').value         = c.name || '';
+  document.getElementById('camp-agent').value        = c.agentId || '';
+  document.getElementById('camp-daily-limit').value  = c.dailyLimit || '';
+  document.getElementById('camp-timezone').value     = c.timezone || 'Europe/London';
+
+  if (c.startDate) document.getElementById('camp-start-date').value = c.startDate;
+
+  // Restore per-day schedule
+  const sched = c.schedule || {};
+  const days = ['mon','tue','wed','thu','fri','sat','sun'];
+  days.forEach(day => {
+    const d = sched[day];
+    if (!d) return;
+    const toggle = document.querySelector(`.sched-toggle[data-day="${day}"]`);
+    const from   = document.querySelector(`.sched-from[data-day="${day}"]`);
+    const to     = document.querySelector(`.sched-to[data-day="${day}"]`);
+    if (toggle) { toggle.checked = !!d.enabled; toggleDay(toggle); }
+    if (from)   from.value = d.from || '08:00';
+    if (to)     to.value   = d.to   || '18:00';
+  });
+
+  // Show Save Changes, hide create buttons
+  document.getElementById('camp-btn-schedule').style.display = 'none';
+  document.getElementById('camp-btn-start').style.display    = 'none';
+  document.getElementById('camp-btn-save').style.display     = '';
+  // Hide leads file upload (not relevant for edit)
+  const leadsGroup = document.getElementById('camp-leads-file')?.closest('.form-group');
+  if (leadsGroup) leadsGroup.style.display = 'none';
+
+  openModal('new-campaign');
+  updateSchedulePreview();
+}
+
+async function saveCampaignEdit() {
+  const id         = document.getElementById('camp-edit-id').value;
+  const name       = document.getElementById('camp-name')?.value?.trim();
+  const agentId    = document.getElementById('camp-agent')?.value;
+  const dailyLimit = document.getElementById('camp-daily-limit')?.value;
+  const startDate  = document.getElementById('camp-start-date')?.value;
+  const timezone   = document.getElementById('camp-timezone')?.value || 'Europe/London';
+  const schedule   = getSchedule();
+
+  if (!name) { showToast('Campaign name is required', 'error'); return; }
+
+  try {
+    await api(`/api/campaigns/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ name, agentId, dailyLimit: parseInt(dailyLimit) || 200, startDate, timezone, schedule }),
+    });
+    showToast('Campaign updated', 'success');
+    closeModal('new-campaign');
+    _resetCampaignModal();
+    loadCampaigns();
+  } catch (err) {
+    showToast(`Failed to update: ${err.message}`, 'error');
+  }
+}
+
+function _resetCampaignModal() {
+  document.getElementById('camp-edit-id').value = '';
+  document.getElementById('camp-modal-title').textContent = 'Create New Campaign';
+  document.getElementById('camp-btn-schedule').style.display = '';
+  document.getElementById('camp-btn-start').style.display    = '';
+  document.getElementById('camp-btn-save').style.display     = 'none';
+  const leadsGroup = document.getElementById('camp-leads-file')?.closest('.form-group');
+  if (leadsGroup) leadsGroup.style.display = '';
 }
 
 // ─── CRM / Leads ─────────────────────────────────────────────────────────────

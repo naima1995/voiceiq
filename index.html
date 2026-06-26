@@ -1079,14 +1079,15 @@ Would it be worth having them give you a quick call — even just 15 minutes —
 
 <!-- ═══════════ MODALS ═══════════ -->
 
-<!-- New Campaign Modal -->
+<!-- New / Edit Campaign Modal -->
 <div class="modal-overlay" id="modal-new-campaign">
   <div class="modal" style="max-width:560px">
     <div class="modal-header">
-      <div class="modal-title">Create New Campaign</div>
+      <div class="modal-title" id="camp-modal-title">Create New Campaign</div>
       <button class="btn btn-ghost btn-sm" onclick="closeModal('new-campaign')"><i class="ti ti-x"></i></button>
     </div>
     <div class="modal-body" style="display:flex;flex-direction:column;gap:14px">
+      <input type="hidden" id="camp-edit-id">
 
       <!-- Campaign name -->
       <div class="form-group">
@@ -1224,8 +1225,9 @@ Would it be worth having them give you a quick call — even just 15 minutes —
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('new-campaign')">Cancel</button>
-      <button class="btn btn-secondary" onclick="createCampaign('schedule')"><i class="ti ti-calendar-time"></i> Schedule Launch</button>
-      <button class="btn btn-primary" onclick="createCampaign('now')"><i class="ti ti-bolt"></i> Start Now</button>
+      <button class="btn btn-secondary" id="camp-btn-schedule" onclick="createCampaign('schedule')"><i class="ti ti-calendar-time"></i> Schedule Launch</button>
+      <button class="btn btn-primary" id="camp-btn-start" onclick="createCampaign('now')"><i class="ti ti-bolt"></i> Start Now</button>
+      <button class="btn btn-primary" id="camp-btn-save" style="display:none" onclick="saveCampaignEdit()"><i class="ti ti-device-floppy"></i> Save Changes</button>
     </div>
   </div>
 </div>
