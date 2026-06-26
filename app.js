@@ -262,6 +262,8 @@ function handleLiveEvent(msg) {
     loadCampaigns();
   } else if (msg.type === 'campaign_paused') {
     loadCampaigns();
+  } else if (msg.type === 'campaign_waiting') {
+    showToast('Campaign is active but outside calling hours — will resume automatically', 'info');
   }
 }
 
@@ -1710,8 +1712,21 @@ async function loadCampaigns() {
       const color    = colors[i % colors.length];
       const pct      = c.leadCount > 0 ? Math.round((c.reached / c.leadCount) * 100) : 0;
       const convRate = c.reached  > 0 ? ((c.booked / c.reached) * 100).toFixed(1) + '%' : '—';
-      const statusCls = c.status === 'active' ? 'badge active' : c.status === 'paused' ? 'badge paused' : 'badge pending';
-      const statusLabel = c.status.charAt(0).toUpperCase() + c.status.slice(1);
+      const statusCls = c.status === 'active'    ? 'badge active'
+        : c.status === 'paused'    ? 'badge pending'
+        : c.status === 'scheduled' ? 'badge'
+        : c.status === 'completed' ? 'badge'
+        : 'badge pending';
+      const statusStyle = c.status === 'scheduled'
+        ? 'style="background:rgba(139,92,246,.15);color:#a78bfa;border:1px solid rgba(139,92,246,.25)"'
+        : c.status === 'completed'
+        ? 'style="background:var(--bg-hover);color:var(--text3)"'
+        : '';
+      const schedAt = c.scheduledAt
+        ? ` · ${new Date(c.scheduledAt).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}`
+        : '';
+      const statusLabel = c.status === 'scheduled' ? `Scheduled${schedAt}`
+        : c.status.charAt(0).toUpperCase() + c.status.slice(1);
       return `<tr>
         <td class="bold">${c.name}</td>
         <td>${c.agentId || '—'}</td>
@@ -1722,7 +1737,7 @@ async function loadCampaigns() {
         </div></td>
         <td style="color:var(--green);font-weight:600">${c.booked || '—'}</td>
         <td>${convRate}</td>
-        <td><span class="${statusCls}">${statusLabel}</span></td>
+        <td><span class="${statusCls}" ${statusStyle}>${statusLabel}</span></td>
         <td style="display:flex;gap:6px;align-items:center;white-space:nowrap">
           ${c.status === 'active'
             ? `<button class="btn btn-sm" style="background:var(--amber);color:#fff;border:none" onclick="pauseCampaign('${c.id}')"><i class="ti ti-player-pause"></i> Pause</button>`
