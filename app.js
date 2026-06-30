@@ -262,6 +262,9 @@ function handleLiveEvent(msg) {
     loadCampaigns();
   } else if (msg.type === 'campaign_paused') {
     loadCampaigns();
+  } else if (msg.type === 'campaign_stopped') {
+    showToast(`⏹ Campaign "${msg.data?.name || ''}" stopped`, 'info');
+    loadCampaigns();
   } else if (msg.type === 'campaign_waiting') {
     showToast('Campaign is active but outside calling hours — will resume automatically', 'info');
   }
@@ -1716,11 +1719,14 @@ async function loadCampaigns() {
         : c.status === 'paused'    ? 'badge pending'
         : c.status === 'scheduled' ? 'badge'
         : c.status === 'completed' ? 'badge'
+        : c.status === 'cancelled' ? 'badge'
         : 'badge pending';
       const statusStyle = c.status === 'scheduled'
         ? 'style="background:rgba(139,92,246,.15);color:#a78bfa;border:1px solid rgba(139,92,246,.25)"'
         : c.status === 'completed'
         ? 'style="background:var(--bg-hover);color:var(--text3)"'
+        : c.status === 'cancelled'
+        ? 'style="background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.25)"'
         : '';
       const schedAt = c.scheduledAt
         ? ` · ${new Date(c.scheduledAt).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}`
@@ -1740,7 +1746,13 @@ async function loadCampaigns() {
         <td><span class="${statusCls}" ${statusStyle}>${statusLabel}</span></td>
         <td style="display:flex;gap:6px;align-items:center;white-space:nowrap">
           ${c.status === 'active'
-            ? `<button class="btn btn-sm" style="background:var(--amber);color:#fff;border:none" onclick="pauseCampaign('${c.id}')"><i class="ti ti-player-pause"></i> Pause</button>`
+            ? `<button class="btn btn-sm" style="background:var(--amber);color:#fff;border:none" onclick="pauseCampaign('${c.id}')"><i class="ti ti-player-pause"></i> Pause</button>
+               <button class="btn btn-sm" style="background:var(--red,#ef4444);color:#fff;border:none" onclick="stopCampaign('${c.id}','${c.name.replace(/'/g,"\\'")}')"><i class="ti ti-player-stop"></i> Stop</button>`
+            : c.status === 'scheduled'
+            ? `<button class="btn btn-sm" style="background:var(--red,#ef4444);color:#fff;border:none" onclick="stopCampaign('${c.id}','${c.name.replace(/'/g,"\\'")}')"><i class="ti ti-x"></i> Cancel</button>`
+            : c.status === 'paused'
+            ? `<button class="btn btn-sm" style="background:var(--green);color:#fff;border:none" onclick="startCampaign('${c.id}')"><i class="ti ti-player-play"></i> Resume</button>
+               <button class="btn btn-sm" style="background:var(--red,#ef4444);color:#fff;border:none" onclick="stopCampaign('${c.id}','${c.name.replace(/'/g,"\\'")}')"><i class="ti ti-player-stop"></i> Stop</button>`
             : `<button class="btn btn-sm" style="background:var(--green);color:#fff;border:none" onclick="startCampaign('${c.id}')"><i class="ti ti-player-play"></i> Start</button>`
           }
           <label class="btn btn-ghost btn-sm" title="Upload leads for this campaign" style="cursor:pointer">
@@ -2114,6 +2126,18 @@ async function pauseCampaign(id) {
     loadCampaigns();
   } catch (err) {
     showToast('Could not pause campaign', 'error');
+  }
+}
+
+async function stopCampaign(id, name) {
+  const label = name || 'this campaign';
+  if (!confirm(`Stop "${label}"? This will end the campaign and no further calls will be made.`)) return;
+  try {
+    await api(`/api/campaigns/${id}/stop`, { method: 'POST' });
+    showToast('⏹ Campaign stopped', 'success');
+    loadCampaigns();
+  } catch (err) {
+    showToast('Could not stop campaign', 'error');
   }
 }
 
