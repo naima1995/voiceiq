@@ -255,9 +255,10 @@ function handleLiveEvent(msg) {
     const phone = msg.data?.phone || '';
     const err   = msg.data?.error || 'unknown error';
     showToast(`Call failed (${phone}): ${err}`, 'error');
-  } else if (msg.type === 'campaign_dial_attempt') {
-    const name  = msg.data?.name || msg.data?.phone || '';
-    showToast(`Dialling ${name}…`, 'info');
+  } else if (msg.type === 'campaign_batch_start') {
+    const count   = msg.data?.count || 0;
+    const reached = msg.data?.reached || 0;
+    showToast(`Dialling batch of ${count} (${reached} reached so far)`, 'info');
   } else if (msg.type === 'campaign_started') {
     loadCampaigns();
   } else if (msg.type === 'campaign_paused') {
@@ -1711,7 +1712,7 @@ async function loadCampaigns() {
     }
 
     const colors = ['var(--accent)', 'var(--purple)', 'var(--green)', 'var(--amber)'];
-    tbody.innerHTML = campaigns.map((c, i) => {
+    tbody.innerHTML = campaigns.map((c, i) => { try {
       const color    = colors[i % colors.length];
       const pct      = c.leadCount > 0 ? Math.round((c.reached / c.leadCount) * 100) : 0;
       const convRate = c.reached  > 0 ? ((c.booked / c.reached) * 100).toFixed(1) + '%' : '—';
@@ -1763,7 +1764,10 @@ async function loadCampaigns() {
           <button class="btn btn-ghost btn-sm" onclick="deleteCampaign('${c.id}')"><i class="ti ti-trash"></i></button>
         </td>
       </tr>`;
-    }).join('');
+    } catch (rowErr) {
+      console.error('Campaign row render error', rowErr, c);
+      return `<tr><td colspan="8" style="color:var(--text3);font-size:12px;padding:8px 16px">Error rendering campaign row</td></tr>`;
+    }}).join('');
   } catch (err) {
     tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text3)">Could not load campaigns</td></tr>`;
   }
