@@ -55,13 +55,23 @@ document.addEventListener('click', e => {
   if (menu && chip && !chip.contains(e.target)) menu.style.display = 'none';
 });
 
+// Current signed-in user — set on every login/session restore
+window._currentUser = null;
+
+function isAdmin() { return window._currentUser?.role === 'admin'; }
+
 function setUserUI(user) {
+  window._currentUser = user;
   const initials = user.name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
   const el = id => document.getElementById(id);
   if (el('user-avatar'))    el('user-avatar').textContent    = initials;
   if (el('user-name'))      el('user-name').textContent      = user.name;
   if (el('user-menu-name')) el('user-menu-name').textContent = user.name;
   if (el('user-menu-email'))el('user-menu-email').textContent= user.email;
+
+  // Hide calendar integration section for non-admin users
+  const calSection = el('calendar-section');
+  if (calSection) calSection.style.display = isAdmin() ? '' : 'none';
 }
 
 async function doLogin() {
@@ -3428,7 +3438,7 @@ async function deleteKB(id, name) {
 async function loadCalendarStatus() {
   const badge       = document.getElementById('gcal-badge');
   const emailEl     = document.getElementById('gcal-email');
-  const card        = document.getElementById('gcal-card');
+  const card        = document.getElementById('calendar-section');
   const connectBtn  = document.getElementById('gcal-connect-btn');
   const disconnectBtn = document.getElementById('gcal-disconnect-btn');
   if (!badge) return;
