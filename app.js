@@ -296,15 +296,27 @@ function showToast(message, type = 'info') {
 }
 
 // ─── Load & render all dashboard data ────────────────────────────────────────
-async function loadDashboard() {
+let _dashboardTimer = null;
+function loadDashboard() {
+  // Debounce — rapid WebSocket events won't hammer the API
+  clearTimeout(_dashboardTimer);
+  _dashboardTimer = setTimeout(_doLoadDashboard, 400);
+}
+async function _doLoadDashboard() {
   try {
-    const [analyticsRes, agentsRes, callsRes, eventsRes, campaignsRes] = await Promise.allSettled([
+    const [analyticsRes, agentsRes, callsRes, campaignsRes] = await Promise.allSettled([
       api('/api/calls/analytics/summary'),
       api('/api/agents'),
       api('/api/calls'),
-      api('/api/calendar/events?maxResults=5&daysAhead=1'),
       api('/api/campaigns'),
     ]);
+    // Only fetch calendar events if we know the calendar is connected
+    let eventsRes = { status: 'fulfilled', value: { events: [] } };
+    if (window._calendarConnected) {
+      eventsRes = await Promise.allSettled([
+        api('/api/calendar/events?maxResults=5&daysAhead=1'),
+      ]).then(r => r[0]);
+    }
 
     // Metric cards — from real computed analytics
     if (analyticsRes.status === 'fulfilled') {
@@ -1164,8 +1176,10 @@ let _calAnchor = new Date(); // reference date for current view
 let _calEvents = [];
 
 async function loadCalendarEvents() {
+  if (window._calendarConnected === false) return [];
   try {
     const data = await api('/api/calendar/events?maxResults=200&daysAhead=90');
+    window._calendarConnected = !!data.connected;
     return data.events || [];
   } catch (err) {
     console.warn('Calendar load error:', err.message);
@@ -3445,6 +3459,7 @@ async function loadCalendarStatus() {
 
   try {
     const data = await api('/api/calendar/status');
+    window._calendarConnected = !!data.connected;
     if (data.connected) {
       badge.textContent = 'Connected';
       badge.className = 'badge active';
